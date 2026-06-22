@@ -1,0 +1,46 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                              nanovllm_profile_generate         0.00%       0.000us         0.00%       0.000us       0.000us     866.166ms      1477.04%     866.166ms     866.166ms             1
+                              nanovllm_profile_generate        28.14%     244.252ms       100.00%     868.012ms     868.012ms       0.000us         0.00%      49.917ms      49.917ms             1
+                                           aten::linear         0.82%       7.075ms        11.51%      99.885ms      23.647us       0.000us         0.00%      36.625ms       8.671us          4224
+                                           aten::matmul         0.61%       5.323ms         8.89%      77.175ms      18.271us       0.000us         0.00%      36.625ms       8.671us          4224
+                                               aten::mm         6.30%      54.652ms         8.28%      71.852ms      17.010us      36.616ms        62.44%      36.625ms       8.671us          4224
+void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_...         0.00%       0.000us         0.00%       0.000us       0.000us      27.813ms        47.43%      27.813ms       8.757us          3176
+## Call CompiledFxGraph f7fqxmeuurldvft22jdrlxdofzsb...         0.00%       0.000us         0.00%       0.000us       0.000us      21.444ms        36.57%      21.444ms      20.941us          1024
+void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_...         0.00%       0.000us         0.00%       0.000us       0.000us       7.086ms        12.08%       7.086ms       6.975us          1016
+void flash::flash_fwd_splitkv_kernel<Flash_fwd_kerne...         0.00%       0.000us         0.00%       0.000us       0.000us       6.489ms        11.06%       6.489ms       6.386us          1016
+## Call CompiledFxGraph f4ne4huo5oztnfciafgvkov6qksd...         0.00%       0.000us         0.00%       0.000us       0.000us       5.795ms         9.88%       5.795ms      45.271us           128
+                             Torch-Compiled Region: 1/1         1.74%      15.132ms         9.16%      79.545ms      77.680us       0.000us         0.00%       3.168ms       3.093us          1024
+## Call CompiledFxGraph f7fqxmeuurldvft22jdrlxdofzsb...         3.80%      32.984ms         6.40%      55.543ms      54.241us       0.000us         0.00%       3.168ms       3.093us          1024
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         1.91%      16.541ms         2.60%      22.559ms      11.015us       3.168ms         5.40%       3.168ms       1.547us          2048
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         0.00%       0.000us         0.00%       0.000us       0.000us       3.168ms         5.40%       3.168ms       1.547us          2048
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         2.86%      24.827ms         3.75%      32.587ms      14.975us       2.746ms         4.68%       2.746ms       1.262us          2176
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         0.00%       0.000us         0.00%       0.000us       0.000us       2.746ms         4.68%       2.746ms       1.262us          2176
+void flash::flash_fwd_splitkv_combine_kernel<Flash_f...         0.00%       0.000us         0.00%       0.000us       0.000us       2.743ms         4.68%       2.743ms       2.700us          1016
+                             Torch-Compiled Region: 0/3         3.79%      32.873ms        14.00%     121.482ms      59.317us       0.000us         0.00%       2.590ms       1.265us          2048
+## Call CompiledFxGraph fhf7wdejvnq2i7owq7wt6uocbdts...         4.98%      43.223ms         7.99%      69.349ms      33.862us       0.000us         0.00%       2.590ms       1.265us          2048
+     triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0         2.13%      18.511ms         3.01%      26.125ms      12.757us       2.589ms         4.42%       2.590ms       1.265us          2048
+                             Torch-Compiled Region: 2/1         4.51%      39.163ms        15.81%     137.199ms      66.992us       0.000us         0.00%       2.590ms       1.264us          2048
+## Call CompiledFxGraph fqngq4j3ttt4eihwvobmrowolr74...         6.12%      53.080ms         9.62%      83.529ms      40.786us       0.000us         0.00%       2.590ms       1.264us          2048
+## Call CompiledFxGraph fqngq4j3ttt4eihwvobmrowolr74...         0.00%       0.000us         0.00%       0.000us       0.000us       2.590ms         4.42%       2.590ms       1.264us          2048
+     triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0         0.00%       0.000us         0.00%       0.000us       0.000us       2.589ms         4.42%       2.589ms       1.264us          2048
+## Call CompiledFxGraph fhf7wdejvnq2i7owq7wt6uocbdts...         0.00%       0.000us         0.00%       0.000us       0.000us       2.589ms         4.42%       2.589ms       1.264us          2048
+void cublasLt::splitKreduce_kernel<32, 16, int, __nv...         0.00%       0.000us         0.00%       0.000us       0.000us       1.308ms         2.23%       1.308ms       1.267us          1032
+                             Torch-Compiled Region: 3/1         2.04%      17.718ms         6.56%      56.963ms      55.628us       0.000us         0.00%       1.241ms       1.211us          1024
+## Call CompiledFxGraph fjsyhxoym3b7iqibtij4bzinbv3v...         2.40%      20.840ms         3.73%      32.415ms      31.655us       0.000us         0.00%       1.241ms       1.211us          1024
+                      triton_poi_fused_mul_silu_split_0         0.94%       8.184ms         1.33%      11.575ms      11.304us       1.241ms         2.12%       1.241ms       1.211us          1024
+                      triton_poi_fused_mul_silu_split_0         0.00%       0.000us         0.00%       0.000us       0.000us       1.241ms         2.12%       1.241ms       1.211us          1024
+## Call CompiledFxGraph fjsyhxoym3b7iqibtij4bzinbv3v...         0.00%       0.000us         0.00%       0.000us       0.000us       1.241ms         2.12%       1.241ms       1.211us          1024
+                             Torch-Compiled Region: 4/1         0.33%       2.825ms         1.81%      15.744ms     123.000us       0.000us         0.00%       1.202ms       9.391us           128
+## Call CompiledFxGraph f4ne4huo5oztnfciafgvkov6qksd...         0.74%       6.385ms         1.33%      11.537ms      90.129us       0.000us         0.00%       1.202ms       9.391us           128
+                                   store_kvcache_kernel         0.00%       0.000us         0.00%       0.000us       0.000us       1.110ms         1.89%       1.110ms       1.084us          1024
+triton_red_fused__softmax__to_copy_amax_argmax_clamp...         0.19%       1.626ms         0.24%       2.050ms      16.012us       1.011ms         1.72%       1.011ms       7.901us           128
+triton_red_fused__softmax__to_copy_amax_argmax_clamp...         0.00%       0.000us         0.00%       0.000us       0.000us       1.011ms         1.72%       1.011ms       7.901us           128
+                                 cudaDeviceGetAttribute         0.20%       1.703ms         0.20%       1.703ms       0.233us     580.118us         0.99%     580.118us       0.079us          7304
+                                               aten::to         0.13%       1.130ms         1.40%      12.166ms       7.307us       0.000us         0.00%     399.425us       0.240us          1665
+                                         aten::_to_copy         0.28%       2.399ms         1.27%      11.036ms      12.303us       0.000us         0.00%     399.425us       0.445us           897
+                                            aten::copy_         0.32%       2.793ms         0.78%       6.737ms       7.511us     399.425us         0.68%     399.425us       0.445us           897
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+Self CPU time total: 868.016ms
+Self CUDA time total: 58.642ms

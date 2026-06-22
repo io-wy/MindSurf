@@ -1,0 +1,34 @@
+{
+  "python": "3.12.3 (main, Mar 23 2026, 19:04:32) [GCC 13.3.0]",
+  "executable": "/home/oscar/minimind/.venv/bin/python",
+  "platform": "Linux-6.8.0-124-generic-x86_64-with-glibc2.39",
+  "machine": "x86_64",
+  "torch": "2.11.0+cu128",
+  "torch_cuda": "12.8",
+  "torch_major_minor": "2.11",
+  "cuda_major_tag": "cu12",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "gpu_capability": [
+    8,
+    9
+  ],
+  "cxx11_abi": true,
+  "python_tag": "cp312",
+  "top_wheel_tags": [
+    "cp312-cp312-manylinux_2_39_x86_64",
+    "cp312-cp312-manylinux_2_38_x86_64",
+    "cp312-cp312-manylinux_2_37_x86_64",
+    "cp312-cp312-manylinux_2_36_x86_64",
+    "cp312-cp312-manylinux_2_35_x86_64",
+    "cp312-cp312-manylinux_2_34_x86_64",
+    "cp312-cp312-manylinux_2_33_x86_64",
+    "cp312-cp312-manylinux_2_32_x86_64",
+    "cp312-cp312-manylinux_2_31_x86_64",
+    "cp312-cp312-manylinux_2_30_x86_64",
+    "cp312-cp312-manylinux_2_29_x86_64",
+    "cp312-cp312-manylinux_2_28_x86_64"
+  ],
+  "flash_attn_installed": false,
+  "candidate_wheel_name_pattern": "flash_attn-<version>+cu12torch2.11cxx11abiTRUE-cp312-cp312-linux_x86_64.whl"
+}

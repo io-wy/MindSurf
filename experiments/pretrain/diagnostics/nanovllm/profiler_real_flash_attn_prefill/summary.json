@@ -1,0 +1,15 @@
+{
+  "model_dir": "/home/oscar/minimind/experiments/pretrain/exports/stage12_ext80_replay_qwen",
+  "prompt_chars": 1024,
+  "requests": 4,
+  "max_tokens": 1,
+  "output_tokens": 4,
+  "elapsed_seconds": 0.037077260902151465,
+  "output_tokens_per_second": 107.88283445630402,
+  "torch": "2.11.0+cu128",
+  "torch_cuda": "12.8",
+  "gpu": "NVIDIA GeForce RTX 4090",
+  "trace": "/home/oscar/minimind/experiments/pretrain/diagnostics/nanovllm/profiler_real_flash_attn_prefill/torch_profiler_trace.json",
+  "key_averages_cuda": "/home/oscar/minimind/experiments/pretrain/diagnostics/nanovllm/profiler_real_flash_attn_prefill/key_averages_cuda.txt",
+  "key_averages_cpu": "/home/oscar/minimind/experiments/pretrain/diagnostics/nanovllm/profiler_real_flash_attn_prefill/key_averages_cpu.txt"
+}

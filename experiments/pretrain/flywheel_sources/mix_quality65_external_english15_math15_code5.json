@@ -1,0 +1,25 @@
+{
+  "description": "Stage10 external mix: quality65 + TinyStories English15 + GSM8K math15 + CodeContests code5.",
+  "sources": [
+    {
+      "name": "quality_core",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_quality_core_200000.jsonl",
+      "weight": 0.65
+    },
+    {
+      "name": "external_tinystories",
+      "path": "experiments/pretrain/flywheel_sources/external_tinystories_21965.jsonl",
+      "weight": 0.15
+    },
+    {
+      "name": "external_gsm8k",
+      "path": "experiments/pretrain/flywheel_sources/external_gsm8k_7473.jsonl",
+      "weight": 0.15
+    },
+    {
+      "name": "external_code_contests",
+      "path": "experiments/pretrain/flywheel_sources/external_code_contests_281.jsonl",
+      "weight": 0.05
+    }
+  ]
+}

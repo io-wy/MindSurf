@@ -1,0 +1,46 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                              nanovllm_profile_generate         0.00%       0.000us         0.00%       0.000us       0.000us        1.120s     26058.37%        1.120s        1.120s             1
+                              nanovllm_profile_generate         4.19%      47.090ms       100.00%        1.124s        1.124s       0.000us         0.00%       4.378ms       4.378ms             1
+                                           aten::linear         0.04%     461.611us         1.50%      16.832ms      63.756us       0.000us         0.00%       2.138ms       8.098us           264
+                                           aten::matmul         0.03%     303.173us         1.36%      15.232ms      57.696us       0.000us         0.00%       2.138ms       8.098us           264
+                                               aten::mm         0.36%       3.990ms         1.33%      14.929ms      56.548us       2.079ms        48.36%       2.138ms       8.098us           264
+## Call CompiledFxGraph f5my64ot23v4g2tchyiitdbjgzoq...         0.00%       0.000us         0.00%       0.000us       0.000us       1.181ms        27.46%       1.181ms      21.082us            56
+void cutlass::Kernel2<cutlass_80_wmma_tensorop_bf16_...         0.00%       0.000us         0.00%       0.000us       0.000us     790.906us        18.39%     790.906us      12.358us            64
+                                            aten::index         0.14%       1.616ms         0.75%       8.430ms      49.299us     549.151us        12.77%     552.638us       3.232us           171
+std::enable_if<!(false), void>::type internal::gemvx...         0.00%       0.000us         0.00%       0.000us       0.000us     539.474us        12.55%     539.474us       4.817us           112
+                     aten::scaled_dot_product_attention         0.08%     954.225us         0.45%       5.013ms      78.331us       0.000us         0.00%     534.042us       8.344us            64
+              aten::_scaled_dot_product_flash_attention         0.03%     312.877us         0.36%       4.059ms      63.422us       0.000us         0.00%     534.042us       8.344us            64
+                         aten::_flash_attention_forward         0.06%     623.897us         0.31%       3.462ms      54.092us     497.667us        11.57%     534.042us       8.344us            64
+void pytorch_flash::flash_fwd_kernel<Flash_fwd_kerne...         0.00%       0.000us         0.00%       0.000us       0.000us     466.539us        10.85%     466.539us       8.331us            56
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     433.240us        10.08%     433.240us       3.834us           113
+std::enable_if<!(false), void>::type internal::gemvx...         0.00%       0.000us         0.00%       0.000us       0.000us     432.502us        10.06%     432.502us       7.723us            56
+## Call CompiledFxGraph f3ayn33vo2jtzantakncj5emygke...         0.00%       0.000us         0.00%       0.000us       0.000us     432.085us        10.05%     432.085us      54.011us             8
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         0.26%       2.871ms         0.35%       3.945ms      15.905us     300.879us         7.00%     300.879us       1.213us           248
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         0.00%       0.000us         0.00%       0.000us       0.000us     300.879us         7.00%     300.879us       1.213us           248
+void cutlass::Kernel2<cutlass_80_tensorop_bf16_s1681...         0.00%       0.000us         0.00%       0.000us       0.000us     246.656us         5.74%     246.656us      10.277us            24
+## Call CompiledFxGraph f7fqxmeuurldvft22jdrlxdofzsb...         0.00%       0.000us         0.00%       0.000us       0.000us     185.872us         4.32%     185.872us      23.234us             8
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         0.10%       1.174ms         0.14%       1.604ms      12.531us     161.911us         3.77%     161.911us       1.265us           128
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         0.00%       0.000us         0.00%       0.000us       0.000us     161.911us         3.77%     161.911us       1.265us           128
+                             Torch-Compiled Region: 2/2         0.21%       2.335ms         0.72%       8.116ms      72.461us       0.000us         0.00%     141.373us       1.262us           112
+## Call CompiledFxGraph fxxo424hmypclr6nktuosqgtc2ii...         0.29%       3.314ms         0.46%       5.209ms      46.507us       0.000us         0.00%     141.373us       1.262us           112
+## Call CompiledFxGraph fxxo424hmypclr6nktuosqgtc2ii...         0.00%       0.000us         0.00%       0.000us       0.000us     141.373us         3.29%     141.373us       1.262us           112
+                             Torch-Compiled Region: 1/2         0.08%     908.626us         0.41%       4.577ms      81.737us       0.000us         0.00%     137.281us       2.451us            56
+## Call CompiledFxGraph f5my64ot23v4g2tchyiitdbjgzoq...         0.16%       1.839ms         0.29%       3.206ms      57.253us       0.000us         0.00%     137.281us       2.451us            56
+                             Torch-Compiled Region: 0/5         0.17%       1.965ms         0.61%       6.845ms      61.118us       0.000us         0.00%     127.481us       1.138us           112
+## Call CompiledFxGraph f3boooyqcr34x6zrpzri3yunf345...         0.23%       2.545ms         0.36%       4.073ms      36.364us       0.000us         0.00%     127.481us       1.138us           112
+## Call CompiledFxGraph f3boooyqcr34x6zrpzri3yunf345...         0.00%       0.000us         0.00%       0.000us       0.000us     127.481us         2.96%     127.481us       1.138us           112
+void at::native::index_elementwise_kernel<128, 4, at...         0.00%       0.000us         0.00%       0.000us       0.000us     115.911us         2.70%     115.911us       2.070us            56
+                                           aten::arange         0.03%     372.090us         0.13%       1.451ms      12.955us      52.632us         1.22%     107.184us       0.957us           112
+                                               aten::to         0.07%     762.289us         4.84%      54.440ms     176.180us       0.000us         0.00%     101.445us       0.328us           309
+                                         aten::_to_copy         0.07%     796.197us         4.71%      52.936ms     367.614us       0.000us         0.00%     101.445us       0.704us           144
+                                            aten::copy_         0.05%     570.939us         0.09%       1.040ms       8.961us     101.445us         2.36%     101.445us       0.875us           116
+                                     aten::floor_divide         0.04%     426.027us         0.58%       6.553ms     117.011us      81.517us         1.90%      85.837us       1.533us            56
+                                        aten::remainder         0.04%     402.033us         0.84%       9.406ms     167.963us      77.420us         1.80%      81.545us       1.456us            56
+void at::native::vectorized_elementwise_kernel<2, at...         0.00%       0.000us         0.00%       0.000us       0.000us      81.517us         1.90%      81.517us       1.456us            56
+                             Torch-Compiled Region: 4/1         0.02%     218.242us         0.11%       1.281ms     160.168us       0.000us         0.00%      77.899us       9.737us             8
+## Call CompiledFxGraph f3ayn33vo2jtzantakncj5emygke...         0.04%     492.780us         0.09%     965.357us     120.670us       0.000us         0.00%      77.899us       9.737us             8
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+Self CPU time total: 1.124s
+Self CUDA time total: 4.300ms

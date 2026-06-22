@@ -1,0 +1,13 @@
+{
+  "tokens": 4096,
+  "num_heads": 8,
+  "head_dim": 96,
+  "D": 768,
+  "BLOCK_D": 1024,
+  "dtype": "bfloat16",
+  "max_key_diff": 0.0,
+  "max_value_diff": 0.0,
+  "triton_seconds_per_call": 9.437089320272207e-06,
+  "python_seconds_per_call": 0.06066621249774471,
+  "speedup_vs_python": 6428.4876871330525
+}

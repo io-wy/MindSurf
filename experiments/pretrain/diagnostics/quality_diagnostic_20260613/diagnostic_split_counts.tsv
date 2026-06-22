@@ -1,0 +1,13 @@
+bucket	rows_written	rows_available	path	mean_chars	mean_repeat	mean_mojibake
+all_heldout	512	4000	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/all_heldout.jsonl	389.34	0.06509	0.00000
+code_like	283	283	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/code_like.jsonl	710.78	0.16842	0.00000
+english_or_code_heavy	512	614	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/english_or_code_heavy.jsonl	522.20	0.12645	0.00000
+length_long	315	315	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/length_long.jsonl	1575.80	0.17002	0.00000
+length_medium	512	2385	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/length_medium.jsonl	376.07	0.05906	0.00000
+length_short	512	1300	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/length_short.jsonl	126.19	0.05073	0.00000
+math_like	512	573	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/math_like.jsonl	403.64	0.10748	0.00000
+mojibake_light	512	4000	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/mojibake_light.jsonl	389.34	0.06509	0.00000
+quality_fail	512	774	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/quality_fail.jsonl	755.40	0.16238	0.00000
+quality_pass	512	3226	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/quality_pass.jsonl	301.51	0.04175	0.00000
+repeat_high	512	778	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/repeat_high.jsonl	629.92	0.21100	0.00000
+repeat_low	512	3222	/home/oscar/minimind/experiments/pretrain/diagnostic_splits/repeat_low.jsonl	331.24	0.02986	0.00000

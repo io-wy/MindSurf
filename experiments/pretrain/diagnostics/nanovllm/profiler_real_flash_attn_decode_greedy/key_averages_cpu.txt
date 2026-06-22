@@ -1,0 +1,46 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                              nanovllm_profile_generate        29.99%     232.435ms       100.00%     774.997ms     774.997ms       0.000us         0.00%      49.708ms      49.708ms             1
+                                               aten::mm         6.62%      51.323ms         8.70%      67.428ms      15.963us      36.592ms        62.69%      36.598ms       8.664us          4224
+                               TorchDynamo Cache Lookup         5.87%      45.463ms         5.87%      45.463ms       7.249us       0.000us         0.00%       0.000us       0.000us          6272
+## Call CompiledFxGraph fqngq4j3ttt4eihwvobmrowolr74...         5.44%      42.136ms         9.18%      71.130ms      34.732us       0.000us         0.00%       2.589ms       1.264us          2048
+                             Torch-Compiled Region: 2/1         4.65%      36.017ms        15.74%     121.998ms      59.569us       0.000us         0.00%       2.589ms       1.264us          2048
+                                      Pregraph bytecode         4.46%      34.569ms         4.46%      34.569ms       5.512us       0.000us         0.00%       0.000us       0.000us          6272
+                                         cuLaunchKernel         4.35%      33.699ms         4.35%      33.699ms       2.925us       0.000us         0.00%       0.000us       0.000us         11520
+## Call CompiledFxGraph fhf7wdejvnq2i7owq7wt6uocbdts...         4.27%      33.056ms         7.40%      57.377ms      28.016us       0.000us         0.00%       2.586ms       1.263us          2048
+                             Torch-Compiled Region: 0/3         3.85%      29.819ms        13.68%     106.042ms      51.778us       0.000us         0.00%       2.586ms       1.263us          2048
+## Call CompiledFxGraph f7fqxmeuurldvft22jdrlxdofzsb...         3.25%      25.209ms         6.02%      46.659ms      45.565us       0.000us         0.00%       3.158ms       3.084us          1024
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         3.09%      23.958ms         4.01%      31.050ms      14.269us       2.746ms         4.70%       2.746ms       1.262us          2176
+     triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0         2.25%      17.462ms         3.14%      24.321ms      11.875us       2.586ms         4.43%       2.586ms       1.263us          2048
+## Call CompiledFxGraph fjsyhxoym3b7iqibtij4bzinbv3v...         2.12%      16.422ms         3.68%      28.556ms      27.886us       0.000us         0.00%       1.226ms       1.197us          1024
+                             Torch-Compiled Region: 3/1         2.10%      16.257ms         6.66%      51.634ms      50.424us       0.000us         0.00%       1.226ms       1.197us          1024
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         2.05%      15.903ms         2.77%      21.449ms      10.473us       3.158ms         5.41%       3.158ms       1.542us          2048
+                 AOTDispatcher Runtime Wrapper Prologue         2.03%      15.770ms         2.03%      15.770ms       2.514us       0.000us         0.00%       0.000us       0.000us          6272
+                             Torch-Compiled Region: 1/1         1.77%      13.743ms         8.91%      69.060ms      67.441us       0.000us         0.00%       3.158ms       3.084us          1024
+                                       cudaLaunchKernel         1.31%      10.121ms         1.31%      10.121ms       3.038us     438.165us         0.75%     438.165us       0.132us          3331
+                                            aten::empty         1.04%       8.062ms         1.25%       9.654ms       2.433us       0.000us         0.00%       0.000us       0.000us          3968
+                      triton_poi_fused_mul_silu_split_0         0.98%       7.630ms         1.39%      10.759ms      10.507us       1.226ms         2.10%       1.226ms       1.197us          1024
+                                           aten::linear         0.74%       5.745ms        11.50%      89.099ms      21.093us       0.000us         0.00%      36.598ms       8.664us          4224
+                                                aten::t         0.72%       5.571ms         1.55%      12.010ms       2.843us       0.000us         0.00%       0.000us       0.000us          4224
+                                    aten::empty_strided         0.66%       5.123ms         0.66%       5.123ms       2.667us       0.000us         0.00%       0.000us       0.000us          1921
+                                       aten::as_strided         0.62%       4.810ms         0.62%       4.810ms       0.570us       0.000us         0.00%       0.000us       0.000us          8445
+                                           aten::matmul         0.51%       3.916ms         9.21%      71.344ms      16.890us       0.000us         0.00%      36.598ms       8.664us          4224
+                                        aten::transpose         0.48%       3.708ms         0.83%       6.438ms       1.524us       0.000us         0.00%       0.000us       0.000us          4224
+                                Activity Buffer Request         0.47%       3.653ms         0.47%       3.653ms       1.218ms       6.783us         0.01%       6.783us       2.261us             3
+                                        cudaMemcpyAsync         0.44%       3.398ms         0.44%       3.398ms       3.792us       0.000us         0.00%       0.000us       0.000us           896
+                             Torch-Compiled Region: 0/2         0.37%       2.861ms         1.15%       8.890ms      69.451us       0.000us         0.00%     156.213us       1.220us           128
+## Call CompiledFxGraph fo4trhgyzz2njsc6c2n3lzoo4psl...         0.36%       2.810ms         0.63%       4.865ms      38.011us       0.000us         0.00%     156.213us       1.220us           128
+                                       cuLaunchKernelEx         0.36%       2.772ms         0.36%       2.772ms       2.707us     163.673us         0.28%     163.673us       0.160us          1024
+                                            aten::copy_         0.34%       2.647ms         0.85%       6.571ms       7.326us     396.816us         0.68%     396.816us       0.442us           897
+                                 aten::split_with_sizes         0.29%       2.239ms         0.40%       3.132ms       3.058us       0.000us         0.00%       0.000us       0.000us          1024
+                                             aten::view         0.25%       1.957ms         0.25%       1.957ms       0.478us       0.000us         0.00%       0.000us       0.000us          4098
+                                           aten::argmax         0.22%       1.720ms         0.31%       2.421ms      18.912us     967.312us         1.66%     967.312us       7.557us           128
+                                 cudaDeviceGetAttribute         0.22%       1.669ms         0.22%       1.669ms       0.229us     601.439us         1.03%     601.439us       0.082us          7304
+                                         aten::_to_copy         0.18%       1.431ms         1.26%       9.748ms      10.868us       0.000us         0.00%     396.816us       0.442us           897
+                                       aten::empty_like         0.17%       1.355ms         0.61%       4.732ms       4.621us       0.000us         0.00%       0.000us       0.000us          1024
+                                        aten::unsqueeze         0.16%       1.248ms         0.28%       2.188ms       2.153us       0.000us         0.00%       0.000us       0.000us          1016
+                                          aten::flatten         0.14%       1.116ms         0.24%       1.893ms       1.849us       0.000us         0.00%       0.000us       0.000us          1024
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+Self CPU time total: 775.001ms
+Self CUDA time total: 58.373ms

@@ -1,1 +1,0 @@
-"""Celery asynchronous tasks."""
