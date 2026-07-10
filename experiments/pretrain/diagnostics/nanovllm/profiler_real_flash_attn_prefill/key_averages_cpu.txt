@@ -1,0 +1,46 @@
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                                                   Name    Self CPU %      Self CPU   CPU total %     CPU total  CPU time avg     Self CUDA   Self CUDA %    CUDA total  CUDA time avg    # of Calls
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+                       Runtime Triggered Module Loading        34.26%       6.668ms        34.26%       6.668ms       1.667ms      37.878us         5.71%      37.878us       9.469us             4
+                              nanovllm_profile_generate        20.59%       4.008ms        99.97%      19.460ms      19.460ms       0.000us         0.00%     728.798us     728.798us             1
+                                Activity Buffer Request         6.23%       1.213ms         6.23%       1.213ms       1.213ms       0.000us         0.00%       0.000us       0.000us             1
+                                               aten::mm         3.54%     688.529us        32.56%       6.337ms     192.030us     439.269us        66.18%     474.974us      14.393us            33
+## Call CompiledFxGraph fqngq4j3ttt4eihwvobmrowolr74...         2.61%     508.177us         4.21%     819.126us      51.195us       0.000us         0.00%      28.190us       1.762us            16
+                               TorchDynamo Cache Lookup         2.57%     500.056us         2.57%     500.056us      10.001us       0.000us         0.00%       0.000us       0.000us            50
+## Call CompiledFxGraph fhf7wdejvnq2i7owq7wt6uocbdts...         2.06%     400.200us         3.34%     650.344us      40.646us       0.000us         0.00%      28.729us       1.796us            16
+                             Torch-Compiled Region: 2/1         1.93%     376.495us         6.88%       1.340ms      83.761us       0.000us         0.00%      28.190us       1.762us            16
+                                         cuLaunchKernel         1.93%     374.993us         1.93%     374.993us       4.121us       0.000us         0.00%       0.000us       0.000us            91
+                                      Pregraph bytecode         1.77%     344.914us         1.77%     344.914us       6.898us       0.000us         0.00%       0.000us       0.000us            50
+                                    FlashAttnVarlenFunc         1.73%     336.892us        11.98%       2.333ms     291.589us       0.000us         0.00%     131.450us      16.431us             8
+                             Torch-Compiled Region: 0/3         1.64%     319.236us         5.94%       1.156ms      72.273us       0.000us         0.00%      28.729us       1.796us            16
+## Call CompiledFxGraph f7fqxmeuurldvft22jdrlxdofzsb...         1.56%     303.188us         3.18%     619.892us      77.487us       0.000us         0.00%      26.396us       3.299us             8
+                 flash_attn::_flash_attn_varlen_forward         1.41%     274.286us        10.10%       1.967ms     245.872us      95.846us        14.44%     131.450us      16.431us             8
+     triton_per_fused__to_copy_add_mean_mul_pow_rsqrt_0         1.36%     264.174us         1.78%     345.972us      20.351us      30.077us         4.53%      30.077us       1.769us            17
+                                             cudaMalloc         1.07%     208.993us         1.07%     208.993us     104.497us       0.000us         0.00%       0.000us       0.000us             2
+## Call CompiledFxGraph fjsyhxoym3b7iqibtij4bzinbv3v...         1.01%     197.107us         1.64%     319.989us      39.999us       0.000us         0.00%      15.131us       1.891us             8
+     triton_red_fused__to_copy_add_mean_mul_pow_rsqrt_0         0.91%     177.311us         1.29%     250.144us      15.634us      28.729us         4.33%      28.729us       1.796us            16
+                 AOTDispatcher Runtime Wrapper Prologue         0.84%     164.007us         0.84%     164.007us       3.280us       0.000us         0.00%       0.000us       0.000us            50
+                             Torch-Compiled Region: 3/1         0.84%     163.556us         2.81%     547.631us      68.454us       0.000us         0.00%      15.131us       1.891us             8
+triton_poi_fused__to_copy_add_cat_index_mul_split_su...         0.84%     163.063us         1.14%     222.030us      13.877us      26.396us         3.98%      26.396us       1.650us            16
+                             Torch-Compiled Region: 1/1         0.74%     144.859us         4.33%     842.173us     105.272us       0.000us         0.00%      26.396us       3.299us             8
+                                       cudaLaunchKernel         0.73%     142.843us        27.57%       5.366ms     185.043us       0.000us         0.00%      21.213us       0.731us            29
+                                  Lazy Function Loading         0.66%     127.770us         0.66%     127.770us      42.590us      33.431us         5.04%      33.431us      11.144us             3
+                                            aten::empty         0.48%      93.124us         6.95%       1.353ms      42.284us       0.000us         0.00%       0.000us       0.000us            32
+                      triton_poi_fused_mul_silu_split_0         0.46%      89.287us         0.63%     122.882us      15.360us      15.131us         2.28%      15.131us       1.891us             8
+                                    aten::empty_strided         0.37%      72.366us         0.37%      72.366us       4.257us       0.000us         0.00%       0.000us       0.000us            17
+## Call CompiledFxGraph fo4trhgyzz2njsc6c2n3lzoo4psl...         0.36%      70.356us         0.54%     105.379us     105.379us       0.000us         0.00%       1.887us       1.887us             1
+                                           aten::linear         0.33%      63.854us        33.90%       6.599ms     199.966us       0.000us         0.00%     474.974us      14.393us            33
+                             Torch-Compiled Region: 0/2         0.33%      63.419us         0.98%     190.699us     190.699us       0.000us         0.00%       1.887us       1.887us             1
+## Call CompiledFxGraph f4ne4huo5oztnfciafgvkov6qksd...         0.32%      61.352us         0.56%     108.375us     108.375us       0.000us         0.00%       9.278us       9.278us             1
+                                                aten::t         0.31%      60.063us         0.75%     146.768us       4.448us       0.000us         0.00%       0.000us       0.000us            33
+                                        aten::transpose         0.29%      56.632us         0.45%      86.705us       2.627us       0.000us         0.00%       0.000us       0.000us            33
+                                        cudaMemcpyAsync         0.27%      52.877us         0.27%      52.877us       6.610us       0.000us         0.00%       0.000us       0.000us             8
+                                        cudaMemsetAsync         0.27%      52.659us         0.27%      52.659us       6.582us       0.000us         0.00%       0.000us       0.000us             8
+                                            aten::copy_         0.26%      51.348us         0.59%     115.806us      12.867us       5.342us         0.80%       5.342us       0.594us             9
+                                           aten::matmul         0.26%      51.256us        32.82%       6.388ms     193.583us       0.000us         0.00%     474.974us      14.393us            33
+                                       aten::as_strided         0.24%      47.678us         0.24%      47.678us       0.769us       0.000us         0.00%       0.000us       0.000us            62
+                                         aten::_to_copy         0.19%      36.454us         0.97%     188.152us      20.906us       0.000us         0.00%       5.342us       0.594us             9
+                             Torch-Compiled Region: 4/1         0.17%      33.919us         0.80%     156.467us     156.467us       0.000us         0.00%       9.278us       9.278us             1
+-------------------------------------------------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------  ------------
+Self CPU time total: 19.465ms
+Self CUDA time total: 663.792us

@@ -1,0 +1,24 @@
+[
+  {
+    "prompt_chars": 128,
+    "requests": 4,
+    "max_tokens": 64,
+    "elapsed_seconds": 0.3642005459405482,
+    "output_tokens": 256,
+    "output_tokens_per_second": 702.909435072042,
+    "warmup": true,
+    "python_store_fallback": false,
+    "sample_text": "####\nDavid\n####\nSoccer\n####\nI'm sorry, but I'm not sure what you want to order? Are you looking for some sorted type of vegetables, such as pinterest, battery, or something else? Can you provide more context?"
+  },
+  {
+    "prompt_chars": 512,
+    "requests": 4,
+    "max_tokens": 64,
+    "elapsed_seconds": 0.27497137105092406,
+    "output_tokens": 256,
+    "output_tokens_per_second": 931.0060135409129,
+    "warmup": true,
+    "python_store_fallback": false,
+    "sample_text": "#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### ## \n## #### \n"
+  }
+]

@@ -1,0 +1,15 @@
+{"id":"fact_njupt_city","category":"fact","prompt":"问题：南京邮电大学位于哪个城市？\n答案：","choices":[" 南京"," 杭州"," 上海"," 北京"],"answer":0}
+{"id":"fact_china_capital","category":"fact","prompt":"问题：中国的首都是哪里？\n答案：","choices":[" 北京"," 南京"," 上海"," 广州"],"answer":0}
+{"id":"math_linear_3x5","category":"math","prompt":"问题：如果一个数的三倍加上 5 等于 29，这个数是多少？\n答案：","choices":[" 8"," 12"," 29"," 35"],"answer":0}
+{"id":"math_multiply_small","category":"math","prompt":"问题：12 乘以 7 等于多少？\n答案：","choices":[" 84"," 19"," 72"," 96"],"answer":0}
+{"id":"math_square","category":"math","prompt":"问题：14 的平方是多少？\n答案：","choices":[" 196"," 28"," 144"," 169"],"answer":0}
+{"id":"long_context_fruit","category":"long_context","prompt":"阅读信息：小明周一买了苹果，周二买了香蕉，周三买了橙子。\n问题：小明周二买了什么？\n答案：","choices":[" 香蕉"," 苹果"," 橙子"," 西瓜"],"answer":0}
+{"id":"long_context_owner","category":"long_context","prompt":"阅读信息：红色书包属于小李，蓝色书包属于小王，绿色书包属于小张。\n问题：蓝色书包属于谁？\n答案：","choices":[" 小王"," 小李"," 小张"," 小明"],"answer":0}
+{"id":"english_sky","category":"english","prompt":"Question: Why does the sky look blue?\nAnswer: Because air scatters more ","choices":[" blue light"," red apples"," heavy rain"," loud sound"],"answer":0}
+{"id":"english_water","category":"english","prompt":"Question: Water freezes at 0 degrees Celsius. What does it become?\nAnswer:","choices":[" ice"," steam"," sand"," fire"],"answer":0}
+{"id":"code_python_def","category":"code","prompt":"问题：在 Python 中定义函数通常使用哪个关键字？\n答案：","choices":[" def"," class"," import"," return"],"answer":0}
+{"id":"code_loop","category":"code","prompt":"问题：下面哪个 Python 关键字常用于循环遍历序列？\n答案：","choices":[" for"," try"," lambda"," with"],"answer":0}
+{"id":"reason_attention_tradeoff","category":"reasoning","prompt":"问题：在 MHA、GQA、MQA 中，通常 KV cache 最小的是哪一种？\n答案：","choices":[" MQA"," MHA"," GQA"," 三者一样"],"answer":0}
+{"id":"calibration_unknown","category":"calibration","prompt":"问题：如果你不知道某个事实，最合适的做法是什么？\n答案：","choices":[" 说明不确定并查证"," 随便编一个答案"," 重复用户问题"," 永远回答是"],"answer":0}
+{"id":"common_sense_day","category":"commonsense","prompt":"问题：一周通常有几天？\n答案：","choices":[" 7 天"," 5 天"," 10 天"," 12 天"],"answer":0}
+{"id":"common_sense_hot","category":"commonsense","prompt":"问题：水烧开时通常会变成什么？\n答案：","choices":[" 水蒸气"," 冰块"," 石头"," 金属"],"answer":0}

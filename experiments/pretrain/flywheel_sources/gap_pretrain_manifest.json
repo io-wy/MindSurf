@@ -1,0 +1,72 @@
+{
+  "sources": {
+    "sft_path": "/home/oscar/minimind/dataset/sft_t2t_mini.jsonl",
+    "agent_path": "/home/oscar/minimind/dataset/agent_rl.jsonl",
+    "agent_math_path": "/home/oscar/minimind/dataset/agent_rl_math.jsonl"
+  },
+  "seen": {
+    "general": 739976,
+    "english": 16337,
+    "code": 41359,
+    "long": 156415,
+    "calibration": 16971,
+    "math": 19414
+  },
+  "written": {
+    "general": {
+      "rows": 60000,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_general_60000.jsonl"
+    },
+    "english": {
+      "rows": 16337,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_english_16337.jsonl"
+    },
+    "code": {
+      "rows": 30000,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_code_30000.jsonl"
+    },
+    "long": {
+      "rows": 30000,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_long_30000.jsonl"
+    },
+    "calibration": {
+      "rows": 16971,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_calibration_16971.jsonl"
+    },
+    "math": {
+      "rows": 19414,
+      "path": "/home/oscar/minimind/experiments/pretrain/flywheel_sources/gap_math_19414.jsonl"
+    }
+  },
+  "rejected": {
+    "duplicate": 162612,
+    "quality": 364778
+  },
+  "filters": {
+    "bad_phrases": [
+      "jingyaogong",
+      "我是由",
+      "背后的模型",
+      "模型版本",
+      "训练数据来源",
+      "作为AI",
+      "作为 AI",
+      "我无法观看",
+      "我无法阅读",
+      "我没有味觉",
+      "我没有个人",
+      "无法浏览",
+      "I cannot",
+      "Please check",
+      "random number",
+      "current weather"
+    ],
+    "general": "assistant content only; 80-2000 chars; low repetition; no identity boilerplate",
+    "math": "agent math user query plus ground-truth answer; not from eval benchmark",
+    "note": "Do not train on local_mcq_benchmark_v1 items."
+  },
+  "mixes": [
+    "/home/oscar/minimind/experiments/pretrain/flywheel_sources/mix_quality55_gap_math15_code10_english10_long5_calib5.json",
+    "/home/oscar/minimind/experiments/pretrain/flywheel_sources/mix_quality65_gap_math15_code10_english5_long5.json"
+  ]
+}

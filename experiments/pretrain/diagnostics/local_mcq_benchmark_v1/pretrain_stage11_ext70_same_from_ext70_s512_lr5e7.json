@@ -1,0 +1,2252 @@
+{
+  "data_path": "experiments/pretrain/eval_suites/local_mcq_benchmark_v1.jsonl",
+  "weight_path": "experiments/pretrain/platform_runs/pretrain_stage11_ext70_same_from_ext70_s512_lr5e7/01_continue/pretrain_stage11_ext70_same_from_ext70_s512_lr5e7_continue_768.pth",
+  "total": 48,
+  "correct": 23,
+  "accuracy": 0.4791666666666667,
+  "length_norm": "mean",
+  "max_seq_len": 512,
+  "category_summary": {
+    "calibration_reasoning": {
+      "correct": 3,
+      "total": 8,
+      "accuracy": 0.375
+    },
+    "code": {
+      "correct": 4,
+      "total": 8,
+      "accuracy": 0.5
+    },
+    "english": {
+      "correct": 3,
+      "total": 8,
+      "accuracy": 0.375
+    },
+    "long_context": {
+      "correct": 4,
+      "total": 8,
+      "accuracy": 0.5
+    },
+    "math": {
+      "correct": 1,
+      "total": 8,
+      "accuracy": 0.125
+    },
+    "zh_fact": {
+      "correct": 8,
+      "total": 8,
+      "accuracy": 1.0
+    }
+  },
+  "seconds": 1.128,
+  "rows": [
+    {
+      "id": "fact_njupt_city",
+      "category": "zh_fact",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 1.1797129313151042,
+      "pred_score": 1.1797129313151042,
+      "margin": 1.8267873128255208,
+      "choices": [
+        " 南京",
+        " 杭州",
+        " 上海",
+        " 北京"
+      ],
+      "choice_scores": [
+        {
+          "score": 1.1797129313151042,
+          "nll_sum": 3.5391387939453125,
+          "nll_mean": 1.1797129313151042,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.006500244140625,
+          "nll_sum": 12.0260009765625,
+          "nll_mean": 3.006500244140625,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 3.1892598470052085,
+          "nll_sum": 9.567779541015625,
+          "nll_mean": 3.1892598470052085,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.390625,
+          "nll_sum": 8.78125,
+          "nll_mean": 4.390625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "fact_china_capital",
+      "category": "zh_fact",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 2.8203125,
+      "pred_score": 2.8203125,
+      "margin": 0.3614501953125,
+      "choices": [
+        " 上海",
+        " 北京",
+        " 广州",
+        " 南京"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.1817626953125,
+          "nll_sum": 9.5452880859375,
+          "nll_mean": 3.1817626953125,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.8203125,
+          "nll_sum": 5.640625,
+          "nll_mean": 2.8203125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 3.8125,
+          "nll_sum": 11.4375,
+          "nll_mean": 3.8125,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.7893880208333335,
+          "nll_sum": 11.3681640625,
+          "nll_mean": 3.7893880208333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "fact_water_formula",
+      "category": "zh_fact",
+      "gold": 2,
+      "pred": 2,
+      "correct": 1,
+      "gold_score": 2.3017578125,
+      "pred_score": 2.3017578125,
+      "margin": 0.8961588541666665,
+      "choices": [
+        " CO2",
+        " NaCl",
+        " H2O",
+        " O2"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.1979166666666665,
+          "nll_sum": 9.59375,
+          "nll_mean": 3.1979166666666665,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.20703125,
+          "nll_sum": 9.62109375,
+          "nll_mean": 3.20703125,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.3017578125,
+          "nll_sum": 6.9052734375,
+          "nll_mean": 2.3017578125,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.19140625,
+          "nll_sum": 8.3828125,
+          "nll_mean": 4.19140625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "fact_sun_star",
+      "category": "zh_fact",
+      "gold": 3,
+      "pred": 3,
+      "correct": 1,
+      "gold_score": 2.5565592447916665,
+      "pred_score": 2.5565592447916665,
+      "margin": 0.44265874226888036,
+      "choices": [
+        " 行星",
+        " 卫星",
+        " 彗星",
+        " 恒星"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.0523948669433594,
+          "nll_sum": 9.157184600830078,
+          "nll_mean": 3.0523948669433594,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.0633646647135415,
+          "nll_sum": 9.190093994140625,
+          "nll_mean": 3.0633646647135415,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.999217987060547,
+          "nll_sum": 11.996871948242188,
+          "nll_mean": 2.999217987060547,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 2.5565592447916665,
+          "nll_sum": 7.669677734375,
+          "nll_mean": 2.5565592447916665,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "fact_week_days",
+      "category": "zh_fact",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 3.515625,
+      "pred_score": 3.515625,
+      "margin": 0.109375,
+      "choices": [
+        " 7 天",
+        " 5 天",
+        " 10 天",
+        " 12 天"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.515625,
+          "nll_sum": 10.546875,
+          "nll_mean": 3.515625,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.048177083333333,
+          "nll_sum": 12.14453125,
+          "nll_mean": 4.048177083333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.7161458333333335,
+          "nll_sum": 11.1484375,
+          "nll_mean": 3.7161458333333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.625,
+          "nll_sum": 10.875,
+          "nll_mean": 3.625,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "fact_cpu_meaning",
+      "category": "zh_fact",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 1.8007914225260417,
+      "pred_score": 1.8007914225260417,
+      "margin": 1.3808492024739583,
+      "choices": [
+        " 图形处理器",
+        " 中央处理器",
+        " 内存条",
+        " 硬盘"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.1455078125,
+          "nll_sum": 16.58203125,
+          "nll_mean": 4.1455078125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 1.8007914225260417,
+          "nll_sum": 10.80474853515625,
+          "nll_mean": 1.8007914225260417,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 3.7083333333333335,
+          "nll_sum": 11.125,
+          "nll_mean": 3.7083333333333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.181640625,
+          "nll_sum": 9.544921875,
+          "nll_mean": 3.181640625,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "fact_python_language",
+      "category": "zh_fact",
+      "gold": 2,
+      "pred": 2,
+      "correct": 1,
+      "gold_score": 4.421875,
+      "pred_score": 4.421875,
+      "margin": 1.0,
+      "choices": [
+        " 操作系统",
+        " 显示器品牌",
+        " 编程语言",
+        " 数据线"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.421875,
+          "nll_sum": 10.84375,
+          "nll_mean": 5.421875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.81787109375,
+          "nll_sum": 23.271484375,
+          "nll_mean": 5.81787109375,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 4.421875,
+          "nll_sum": 8.84375,
+          "nll_mean": 4.421875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.447916666666667,
+          "nll_sum": 19.34375,
+          "nll_mean": 6.447916666666667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "fact_boiling_water",
+      "category": "zh_fact",
+      "gold": 3,
+      "pred": 3,
+      "correct": 1,
+      "gold_score": 2.557861328125,
+      "pred_score": 2.557861328125,
+      "margin": 1.710367838541667,
+      "choices": [
+        " 冰块",
+        " 沙子",
+        " 金属",
+        " 水蒸气"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.65625,
+          "nll_sum": 13.96875,
+          "nll_mean": 4.65625,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.567708333333333,
+          "nll_sum": 13.703125,
+          "nll_mean": 4.567708333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.268229166666667,
+          "nll_sum": 12.8046875,
+          "nll_mean": 4.268229166666667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.557861328125,
+          "nll_sum": 10.2314453125,
+          "nll_mean": 2.557861328125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "math_linear",
+      "category": "math",
+      "gold": 0,
+      "pred": 3,
+      "correct": 0,
+      "gold_score": 6.1875,
+      "pred_score": 1.58984375,
+      "margin": 3.59765625,
+      "choices": [
+        " 8",
+        " 12",
+        " 24",
+        " 29"
+      ],
+      "choice_scores": [
+        {
+          "score": 6.1875,
+          "nll_sum": 6.1875,
+          "nll_mean": 6.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 6.3125,
+          "nll_sum": 6.3125,
+          "nll_mean": 6.3125,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.1875,
+          "nll_sum": 5.1875,
+          "nll_mean": 5.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 1.58984375,
+          "nll_sum": 3.1796875,
+          "nll_mean": 1.58984375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "math_square",
+      "category": "math",
+      "gold": 1,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 6.5625,
+      "pred_score": 3.6875,
+      "margin": 0.828125,
+      "choices": [
+        " 28",
+        " 196",
+        " 144",
+        " 169"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.515625,
+          "nll_sum": 9.03125,
+          "nll_mean": 4.515625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.5625,
+          "nll_sum": 13.125,
+          "nll_mean": 6.5625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 3.6875,
+          "nll_sum": 7.375,
+          "nll_mean": 3.6875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.234375,
+          "nll_sum": 10.46875,
+          "nll_mean": 5.234375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "math_fraction",
+      "category": "math",
+      "gold": 2,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 2.1184895833333335,
+      "pred_score": 1.9563802083333333,
+      "margin": 0.16210937500000022,
+      "choices": [
+        " 1/4",
+        " 1/2",
+        " 3/4",
+        " 1"
+      ],
+      "choice_scores": [
+        {
+          "score": 2.2486979166666665,
+          "nll_sum": 6.74609375,
+          "nll_mean": 2.2486979166666665,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 1.9563802083333333,
+          "nll_sum": 5.869140625,
+          "nll_mean": 1.9563802083333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.1184895833333335,
+          "nll_sum": 6.35546875,
+          "nll_mean": 2.1184895833333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 5.15625,
+          "nll_sum": 5.15625,
+          "nll_mean": 5.15625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "math_multiply",
+      "category": "math",
+      "gold": 3,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 5.703125,
+      "pred_score": 4.96875,
+      "margin": 0.734375,
+      "choices": [
+        " 19",
+        " 72",
+        " 96",
+        " 84"
+      ],
+      "choice_scores": [
+        {
+          "score": 9.6875,
+          "nll_sum": 9.6875,
+          "nll_mean": 9.6875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 4.96875,
+          "nll_sum": 9.9375,
+          "nll_mean": 4.96875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.1796875,
+          "nll_sum": 12.359375,
+          "nll_mean": 6.1796875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.703125,
+          "nll_sum": 11.40625,
+          "nll_mean": 5.703125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "math_even",
+      "category": "math",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 3.25,
+      "pred_score": 3.25,
+      "margin": 0.5078125,
+      "choices": [
+        " 42",
+        " 37",
+        " 59",
+        " 81"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.25,
+          "nll_sum": 6.5,
+          "nll_mean": 3.25,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 3.7578125,
+          "nll_sum": 7.515625,
+          "nll_mean": 3.7578125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.28125,
+          "nll_sum": 10.5625,
+          "nll_mean": 5.28125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 4.578125,
+          "nll_sum": 9.15625,
+          "nll_mean": 4.578125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "math_percent",
+      "category": "math",
+      "gold": 1,
+      "pred": 3,
+      "correct": 0,
+      "gold_score": 6.375,
+      "pred_score": 5.15625,
+      "margin": 1.21875,
+      "choices": [
+        " 2",
+        " 20",
+        " 40",
+        " 100"
+      ],
+      "choice_scores": [
+        {
+          "score": 7.46875,
+          "nll_sum": 7.46875,
+          "nll_mean": 7.46875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 6.375,
+          "nll_sum": 6.375,
+          "nll_mean": 6.375,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 8.25,
+          "nll_sum": 8.25,
+          "nll_mean": 8.25,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.15625,
+          "nll_sum": 5.15625,
+          "nll_mean": 5.15625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "math_order",
+      "category": "math",
+      "gold": 2,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 6.59375,
+      "pred_score": 5.71875,
+      "margin": 0.875,
+      "choices": [
+        " 20",
+        " 24",
+        " 14",
+        " 9"
+      ],
+      "choice_scores": [
+        {
+          "score": 7.90625,
+          "nll_sum": 7.90625,
+          "nll_mean": 7.90625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.71875,
+          "nll_sum": 5.71875,
+          "nll_mean": 5.71875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 6.59375,
+          "nll_sum": 6.59375,
+          "nll_mean": 6.59375,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 8.5625,
+          "nll_sum": 8.5625,
+          "nll_mean": 8.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "math_average",
+      "category": "math",
+      "gold": 3,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 4.84375,
+      "pred_score": 3.5625,
+      "margin": 1.28125,
+      "choices": [
+        " 4",
+        " 8",
+        " 18",
+        " 6"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.5625,
+          "nll_sum": 3.5625,
+          "nll_mean": 3.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.6875,
+          "nll_sum": 5.6875,
+          "nll_mean": 5.6875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 8.6875,
+          "nll_sum": 8.6875,
+          "nll_mean": 8.6875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 4.84375,
+          "nll_sum": 4.84375,
+          "nll_mean": 4.84375,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "code_python_def",
+      "category": "code",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 6.03125,
+      "pred_score": 6.03125,
+      "margin": 3.28125,
+      "choices": [
+        " def",
+        " class",
+        " import",
+        " return"
+      ],
+      "choice_scores": [
+        {
+          "score": 6.03125,
+          "nll_sum": 6.03125,
+          "nll_mean": 6.03125,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 9.5625,
+          "nll_sum": 9.5625,
+          "nll_mean": 9.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 10.9375,
+          "nll_sum": 10.9375,
+          "nll_mean": 10.9375,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 9.3125,
+          "nll_sum": 9.3125,
+          "nll_mean": 9.3125,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "code_loop_for",
+      "category": "code",
+      "gold": 1,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 8.0625,
+      "pred_score": 4.021240234375,
+      "margin": 3.736572265625,
+      "choices": [
+        " try",
+        " for",
+        " lambda",
+        " raise"
+      ],
+      "choice_scores": [
+        {
+          "score": 11.0,
+          "nll_sum": 11.0,
+          "nll_mean": 11.0,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 8.0625,
+          "nll_sum": 8.0625,
+          "nll_mean": 8.0625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 4.021240234375,
+          "nll_sum": 12.063720703125,
+          "nll_mean": 4.021240234375,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 7.7578125,
+          "nll_sum": 15.515625,
+          "nll_mean": 7.7578125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "code_list_append",
+      "category": "code",
+      "gold": 2,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 6.65625,
+      "pred_score": 3.60546875,
+      "margin": 1.59765625,
+      "choices": [
+        " split",
+        " join",
+        " append",
+        " strip"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.60546875,
+          "nll_sum": 10.81640625,
+          "nll_mean": 3.60546875,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 5.203125,
+          "nll_sum": 10.40625,
+          "nll_mean": 5.203125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.65625,
+          "nll_sum": 13.3125,
+          "nll_mean": 6.65625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.286458333333333,
+          "nll_sum": 18.859375,
+          "nll_mean": 6.286458333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "code_json_type",
+      "category": "code",
+      "gold": 3,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 3.7781982421875,
+      "pred_score": 3.494664510091146,
+      "margin": 0.283533732096354,
+      "choices": [
+        " 方括号 []",
+        " 圆括号 ()",
+        " 尖括号 <>",
+        " 花括号 {}"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.494664510091146,
+          "nll_sum": 20.967987060546875,
+          "nll_mean": 3.494664510091146,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 3.9519449869791665,
+          "nll_sum": 23.711669921875,
+          "nll_mean": 3.9519449869791665,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 4.585257393973214,
+          "nll_sum": 32.0968017578125,
+          "nll_mean": 4.585257393973214,
+          "tokens": 7,
+          "target_tokens_before_truncation": 7
+        },
+        {
+          "score": 3.7781982421875,
+          "nll_sum": 22.669189453125,
+          "nll_mean": 3.7781982421875,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        }
+      ]
+    },
+    {
+      "id": "code_import",
+      "category": "code",
+      "gold": 0,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 11.1875,
+      "pred_score": 4.591471354166667,
+      "margin": 2.181966145833333,
+      "choices": [
+        " import",
+        " yield",
+        " break",
+        " except"
+      ],
+      "choice_scores": [
+        {
+          "score": 11.1875,
+          "nll_sum": 11.1875,
+          "nll_mean": 11.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 4.591471354166667,
+          "nll_sum": 13.7744140625,
+          "nll_mean": 4.591471354166667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 14.1875,
+          "nll_sum": 14.1875,
+          "nll_mean": 14.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 6.7734375,
+          "nll_sum": 13.546875,
+          "nll_mean": 6.7734375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "code_bool",
+      "category": "code",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 4.43359375,
+      "pred_score": 4.43359375,
+      "margin": 0.06640625,
+      "choices": [
+        " true",
+        " True",
+        " TRUE",
+        " yes"
+      ],
+      "choice_scores": [
+        {
+          "score": 9.5625,
+          "nll_sum": 9.5625,
+          "nll_mean": 9.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 4.43359375,
+          "nll_sum": 8.8671875,
+          "nll_mean": 4.43359375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 4.5,
+          "nll_sum": 18.0,
+          "nll_mean": 4.5,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 5.451171875,
+          "nll_sum": 10.90234375,
+          "nll_mean": 5.451171875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "code_len",
+      "category": "code",
+      "gold": 2,
+      "pred": 2,
+      "correct": 1,
+      "gold_score": 5.6875,
+      "pred_score": 5.6875,
+      "margin": 0.6953125,
+      "choices": [
+        " size()",
+        " count()",
+        " len()",
+        " length()"
+      ],
+      "choice_scores": [
+        {
+          "score": 8.203125,
+          "nll_sum": 16.40625,
+          "nll_mean": 8.203125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.390625,
+          "nll_sum": 12.78125,
+          "nll_mean": 6.390625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.6875,
+          "nll_sum": 11.375,
+          "nll_mean": 5.6875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.3828125,
+          "nll_sum": 12.765625,
+          "nll_mean": 6.3828125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "code_git_commit",
+      "category": "code",
+      "gold": 3,
+      "pred": 3,
+      "correct": 1,
+      "gold_score": 3.283935546875,
+      "pred_score": 3.283935546875,
+      "margin": 0.957275390625,
+      "choices": [
+        " git clone",
+        " git status",
+        " git branch",
+        " git commit"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.959716796875,
+          "nll_sum": 19.8388671875,
+          "nll_mean": 4.959716796875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 4.686279296875,
+          "nll_sum": 18.7451171875,
+          "nll_mean": 4.686279296875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 4.2412109375,
+          "nll_sum": 21.2060546875,
+          "nll_mean": 4.2412109375,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 3.283935546875,
+          "nll_sum": 13.1357421875,
+          "nll_mean": 3.283935546875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "english_sky",
+      "category": "english",
+      "gold": 0,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 8.140625,
+      "pred_score": 2.978125,
+      "margin": 1.740625,
+      "choices": [
+        " blue light",
+        " red apples",
+        " heavy rain",
+        " loud sound"
+      ],
+      "choice_scores": [
+        {
+          "score": 8.140625,
+          "nll_sum": 16.28125,
+          "nll_mean": 8.140625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.458333333333333,
+          "nll_sum": 16.375,
+          "nll_mean": 5.458333333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.978125,
+          "nll_sum": 14.890625,
+          "nll_mean": 2.978125,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 4.71875,
+          "nll_sum": 18.875,
+          "nll_mean": 4.71875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "english_water_freeze",
+      "category": "english",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 4.78125,
+      "pred_score": 4.78125,
+      "margin": 0.2578125,
+      "choices": [
+        " steam",
+        " ice",
+        " sand",
+        " fire"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.0390625,
+          "nll_sum": 15.1171875,
+          "nll_mean": 5.0390625,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.78125,
+          "nll_sum": 9.5625,
+          "nll_mean": 4.78125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 7.265625,
+          "nll_sum": 14.53125,
+          "nll_mean": 7.265625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 6.96875,
+          "nll_sum": 13.9375,
+          "nll_mean": 6.96875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "english_translation_cat",
+      "category": "english",
+      "gold": 2,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 8.5625,
+      "pred_score": 4.88671875,
+      "margin": 0.478515625,
+      "choices": [
+        " dog",
+        " bird",
+        " cat",
+        " fish"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.365234375,
+          "nll_sum": 10.73046875,
+          "nll_mean": 5.365234375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 4.88671875,
+          "nll_sum": 9.7734375,
+          "nll_mean": 4.88671875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 8.5625,
+          "nll_sum": 8.5625,
+          "nll_mean": 8.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.41015625,
+          "nll_sum": 10.8203125,
+          "nll_mean": 5.41015625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "english_antonym_hot",
+      "category": "english",
+      "gold": 3,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 5.818359375,
+      "pred_score": 5.5390625,
+      "margin": 0.279296875,
+      "choices": [
+        " warm",
+        " large",
+        " fast",
+        " cold"
+      ],
+      "choice_scores": [
+        {
+          "score": 12.5625,
+          "nll_sum": 12.5625,
+          "nll_mean": 12.5625,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 11.3125,
+          "nll_sum": 11.3125,
+          "nll_mean": 11.3125,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.5390625,
+          "nll_sum": 11.078125,
+          "nll_mean": 5.5390625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.818359375,
+          "nll_sum": 11.63671875,
+          "nll_mean": 5.818359375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "english_sentence_subject",
+      "category": "english",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 2.3701171875,
+      "pred_score": 2.3701171875,
+      "margin": 0.012890815734863281,
+      "choices": [
+        " the student",
+        " the book",
+        " the classroom",
+        " the teacher"
+      ],
+      "choice_scores": [
+        {
+          "score": 2.3701171875,
+          "nll_sum": 7.1103515625,
+          "nll_mean": 2.3701171875,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.3515625,
+          "nll_sum": 6.703125,
+          "nll_mean": 3.3515625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 4.560546875,
+          "nll_sum": 18.2421875,
+          "nll_mean": 4.560546875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 2.3830080032348633,
+          "nll_sum": 9.532032012939453,
+          "nll_mean": 2.3830080032348633,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "english_plural_child",
+      "category": "english",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 4.7578125,
+      "pred_score": 4.7578125,
+      "margin": 1.408854166666667,
+      "choices": [
+        " childs",
+        " children",
+        " childes",
+        " child"
+      ],
+      "choice_scores": [
+        {
+          "score": 6.166666666666667,
+          "nll_sum": 18.5,
+          "nll_mean": 6.166666666666667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.7578125,
+          "nll_sum": 9.515625,
+          "nll_mean": 4.7578125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 9.296875,
+          "nll_sum": 18.59375,
+          "nll_mean": 9.296875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 7.28125,
+          "nll_sum": 7.28125,
+          "nll_mean": 7.28125,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        }
+      ]
+    },
+    {
+      "id": "english_color_grass",
+      "category": "english",
+      "gold": 2,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 8.1875,
+      "pred_score": 5.236328125,
+      "margin": 0.935546875,
+      "choices": [
+        " blue",
+        " black",
+        " green",
+        " purple"
+      ],
+      "choice_scores": [
+        {
+          "score": 9.0,
+          "nll_sum": 9.0,
+          "nll_mean": 9.0,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.236328125,
+          "nll_sum": 10.47265625,
+          "nll_mean": 5.236328125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 8.1875,
+          "nll_sum": 8.1875,
+          "nll_mean": 8.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 6.171875,
+          "nll_sum": 12.34375,
+          "nll_mean": 6.171875,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "english_complete",
+      "category": "english",
+      "gold": 3,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 5.447916666666667,
+      "pred_score": 3.5078125,
+      "margin": 1.940104166666667,
+      "choices": [
+        " sleepy",
+        " loud",
+        " square",
+        " thirsty"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.5078125,
+          "nll_sum": 14.03125,
+          "nll_mean": 3.5078125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 5.953125,
+          "nll_sum": 11.90625,
+          "nll_mean": 5.953125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 12.1875,
+          "nll_sum": 12.1875,
+          "nll_mean": 12.1875,
+          "tokens": 1,
+          "target_tokens_before_truncation": 1
+        },
+        {
+          "score": 5.447916666666667,
+          "nll_sum": 16.34375,
+          "nll_mean": 5.447916666666667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "long_fruit",
+      "category": "long_context",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 3.1000411987304686,
+      "pred_score": 3.1000411987304686,
+      "margin": 1.4222366333007814,
+      "choices": [
+        " 香蕉",
+        " 苹果",
+        " 橙子",
+        " 西瓜"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.1000411987304686,
+          "nll_sum": 15.500205993652344,
+          "nll_mean": 3.1000411987304686,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 6.5,
+          "nll_sum": 13.0,
+          "nll_mean": 6.5,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 4.52227783203125,
+          "nll_sum": 18.089111328125,
+          "nll_mean": 4.52227783203125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 5.015635967254639,
+          "nll_sum": 20.062543869018555,
+          "nll_mean": 5.015635967254639,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "long_bag_owner",
+      "category": "long_context",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 2.6263020833333335,
+      "pred_score": 2.6263020833333335,
+      "margin": 0.51953125,
+      "choices": [
+        " 小李",
+        " 小王",
+        " 小张",
+        " 小明"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.1458333333333335,
+          "nll_sum": 9.4375,
+          "nll_mean": 3.1458333333333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.6263020833333335,
+          "nll_sum": 7.87890625,
+          "nll_mean": 2.6263020833333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.6666666666666665,
+          "nll_sum": 11.0,
+          "nll_mean": 3.6666666666666665,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 5.359375,
+          "nll_sum": 10.71875,
+          "nll_mean": 5.359375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "long_meeting_time",
+      "category": "long_context",
+      "gold": 2,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 1.587097440447126,
+      "pred_score": 1.4584009647369385,
+      "margin": 0.1286964757101876,
+      "choices": [
+        " 周三上午九点",
+        " 周五晚上八点",
+        " 周四下午三点",
+        " 周一早上七点"
+      ],
+      "choice_scores": [
+        {
+          "score": 1.4584009647369385,
+          "nll_sum": 11.667207717895508,
+          "nll_mean": 1.4584009647369385,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        },
+        {
+          "score": 2.4124698638916016,
+          "nll_sum": 19.299758911132812,
+          "nll_mean": 2.4124698638916016,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        },
+        {
+          "score": 1.587097440447126,
+          "nll_sum": 11.109682083129883,
+          "nll_mean": 1.587097440447126,
+          "tokens": 7,
+          "target_tokens_before_truncation": 7
+        },
+        {
+          "score": 2.309720993041992,
+          "nll_sum": 18.477767944335938,
+          "nll_mean": 2.309720993041992,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        }
+      ]
+    },
+    {
+      "id": "long_server_port",
+      "category": "long_context",
+      "gold": 3,
+      "pred": 3,
+      "correct": 1,
+      "gold_score": 3.12744140625,
+      "pred_score": 3.12744140625,
+      "margin": 0.21826171875,
+      "choices": [
+        " 19090",
+        " 19091",
+        " 19093",
+        " 19092"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.027180989583333,
+          "nll_sum": 15.08154296875,
+          "nll_mean": 5.027180989583333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.345703125,
+          "nll_sum": 13.3828125,
+          "nll_mean": 3.345703125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 3.66015625,
+          "nll_sum": 14.640625,
+          "nll_mean": 3.66015625,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 3.12744140625,
+          "nll_sum": 12.509765625,
+          "nll_mean": 3.12744140625,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "long_book_author",
+      "category": "long_context",
+      "gold": 0,
+      "pred": 1,
+      "correct": 0,
+      "gold_score": 2.1727561950683594,
+      "pred_score": 1.6692886352539062,
+      "margin": 0.5034675598144531,
+      "choices": [
+        " 王老师",
+        " 陈老师",
+        " 李老师",
+        " 张老师"
+      ],
+      "choice_scores": [
+        {
+          "score": 2.1727561950683594,
+          "nll_sum": 8.691024780273438,
+          "nll_mean": 2.1727561950683594,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 1.6692886352539062,
+          "nll_sum": 8.346443176269531,
+          "nll_mean": 1.6692886352539062,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 2.5975465774536133,
+          "nll_sum": 10.390186309814453,
+          "nll_mean": 2.5975465774536133,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 3.586057186126709,
+          "nll_sum": 14.344228744506836,
+          "nll_mean": 3.586057186126709,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        }
+      ]
+    },
+    {
+      "id": "long_gpu_user",
+      "category": "long_context",
+      "gold": 1,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 1.89581298828125,
+      "pred_score": 1.8124796549479167,
+      "margin": 0.08333333333333326,
+      "choices": [
+        " GPU0",
+        " GPU1",
+        " CPU",
+        " 硬盘"
+      ],
+      "choice_scores": [
+        {
+          "score": 1.8124796549479167,
+          "nll_sum": 5.43743896484375,
+          "nll_mean": 1.8124796549479167,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 1.89581298828125,
+          "nll_sum": 5.68743896484375,
+          "nll_mean": 1.89581298828125,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.391754150390625,
+          "nll_sum": 4.78350830078125,
+          "nll_mean": 2.391754150390625,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 3.945068359375,
+          "nll_sum": 11.835205078125,
+          "nll_mean": 3.945068359375,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        }
+      ]
+    },
+    {
+      "id": "long_password_rule",
+      "category": "long_context",
+      "gold": 2,
+      "pred": 2,
+      "correct": 1,
+      "gold_score": 2.0885416666666665,
+      "pred_score": 2.0885416666666665,
+      "margin": 2.4895833333333335,
+      "choices": [
+        " 应该",
+        " 随便",
+        " 不应该",
+        " 只写一半"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.578125,
+          "nll_sum": 9.15625,
+          "nll_mean": 4.578125,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        },
+        {
+          "score": 5.145833333333333,
+          "nll_sum": 15.4375,
+          "nll_mean": 5.145833333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.0885416666666665,
+          "nll_sum": 6.265625,
+          "nll_mean": 2.0885416666666665,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.690625,
+          "nll_sum": 23.453125,
+          "nll_mean": 4.690625,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        }
+      ]
+    },
+    {
+      "id": "long_dataset_split",
+      "category": "long_context",
+      "gold": 3,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 5.0693359375,
+      "pred_score": 3.0265706380208335,
+      "margin": 0.15775553385416652,
+      "choices": [
+        " 训练集",
+        " 验证集",
+        " 开发集",
+        " 测试集"
+      ],
+      "choice_scores": [
+        {
+          "score": 3.0265706380208335,
+          "nll_sum": 9.0797119140625,
+          "nll_mean": 3.0265706380208335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 3.184326171875,
+          "nll_sum": 9.552978515625,
+          "nll_mean": 3.184326171875,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 5.119791666666667,
+          "nll_sum": 15.359375,
+          "nll_mean": 5.119791666666667,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 5.0693359375,
+          "nll_sum": 10.138671875,
+          "nll_mean": 5.0693359375,
+          "tokens": 2,
+          "target_tokens_before_truncation": 2
+        }
+      ]
+    },
+    {
+      "id": "calib_unknown",
+      "category": "calibration_reasoning",
+      "gold": 0,
+      "pred": 3,
+      "correct": 0,
+      "gold_score": 5.94921875,
+      "pred_score": 4.5150390625,
+      "margin": 0.7798828125000004,
+      "choices": [
+        " 说明不确定并查证",
+        " 随便编一个答案",
+        " 重复用户问题",
+        " 永远回答是"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.94921875,
+          "nll_sum": 35.6953125,
+          "nll_mean": 5.94921875,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 5.294921875,
+          "nll_sum": 31.76953125,
+          "nll_mean": 5.294921875,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 7.2578125,
+          "nll_sum": 29.03125,
+          "nll_mean": 7.2578125,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 4.5150390625,
+          "nll_sum": 22.5751953125,
+          "nll_mean": 4.5150390625,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        }
+      ]
+    },
+    {
+      "id": "reason_attention_kv",
+      "category": "calibration_reasoning",
+      "gold": 1,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 2.8528645833333335,
+      "pred_score": 1.9275716145833333,
+      "margin": 0.4799804687500002,
+      "choices": [
+        " MHA",
+        " MQA",
+        " GQA",
+        " 三者一样"
+      ],
+      "choice_scores": [
+        {
+          "score": 1.9275716145833333,
+          "nll_sum": 5.78271484375,
+          "nll_mean": 1.9275716145833333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.8528645833333335,
+          "nll_sum": 8.55859375,
+          "nll_mean": 2.8528645833333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 2.4075520833333335,
+          "nll_sum": 7.22265625,
+          "nll_mean": 2.4075520833333335,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.703125,
+          "nll_sum": 23.515625,
+          "nll_mean": 4.703125,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        }
+      ]
+    },
+    {
+      "id": "safety_no_password",
+      "category": "calibration_reasoning",
+      "gold": 2,
+      "pred": 2,
+      "correct": 1,
+      "gold_score": 4.509375,
+      "pred_score": 4.509375,
+      "margin": 0.030609130859375,
+      "choices": [
+        " 网站名称",
+        " 操作目标",
+        " 密码或验证码",
+        " 页面截图"
+      ],
+      "choice_scores": [
+        {
+          "score": 4.864583333333333,
+          "nll_sum": 14.59375,
+          "nll_mean": 4.864583333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 7.833333333333333,
+          "nll_sum": 23.5,
+          "nll_mean": 7.833333333333333,
+          "tokens": 3,
+          "target_tokens_before_truncation": 3
+        },
+        {
+          "score": 4.509375,
+          "nll_sum": 22.546875,
+          "nll_mean": 4.509375,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 4.539984130859375,
+          "nll_sum": 22.699920654296875,
+          "nll_mean": 4.539984130859375,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        }
+      ]
+    },
+    {
+      "id": "reason_tradeoff",
+      "category": "calibration_reasoning",
+      "gold": 3,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 5.600961538461538,
+      "pred_score": 5.1875,
+      "margin": 0.40625,
+      "choices": [
+        " 增大词表",
+        " 删除注意力",
+        " 增加训练数据",
+        " 减少 KV cache 以提升推理效率"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.59375,
+          "nll_sum": 27.96875,
+          "nll_mean": 5.59375,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 6.0009765625,
+          "nll_sum": 24.00390625,
+          "nll_mean": 6.0009765625,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 5.1875,
+          "nll_sum": 20.75,
+          "nll_mean": 5.1875,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 5.600961538461538,
+          "nll_sum": 72.8125,
+          "nll_mean": 5.600961538461538,
+          "tokens": 13,
+          "target_tokens_before_truncation": 13
+        }
+      ]
+    },
+    {
+      "id": "calib_eval_loss",
+      "category": "calibration_reasoning",
+      "gold": 0,
+      "pred": 0,
+      "correct": 1,
+      "gold_score": 5.876420454545454,
+      "pred_score": 5.876420454545454,
+      "margin": 0.025923295454545858,
+      "choices": [
+        " 可能不能反映生成、推理和任务能力",
+        " 一定完全正确",
+        " 不需要验证集",
+        " 会自动防止幻觉"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.876420454545454,
+          "nll_sum": 64.640625,
+          "nll_mean": 5.876420454545454,
+          "tokens": 11,
+          "target_tokens_before_truncation": 11
+        },
+        {
+          "score": 5.90234375,
+          "nll_sum": 23.609375,
+          "nll_mean": 5.90234375,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 6.16015625,
+          "nll_sum": 24.640625,
+          "nll_mean": 6.16015625,
+          "tokens": 4,
+          "target_tokens_before_truncation": 4
+        },
+        {
+          "score": 7.1328125,
+          "nll_sum": 42.796875,
+          "nll_mean": 7.1328125,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        }
+      ]
+    },
+    {
+      "id": "reason_data_quality",
+      "category": "calibration_reasoning",
+      "gold": 1,
+      "pred": 1,
+      "correct": 1,
+      "gold_score": 5.456207275390625,
+      "pred_score": 5.456207275390625,
+      "margin": 0.133392333984375,
+      "choices": [
+        " 显存变成无限",
+        " 模型学到重复和噪声",
+        " 训练不需要 tokenizer",
+        " 推理速度必然翻倍"
+      ],
+      "choice_scores": [
+        {
+          "score": 6.661458333333333,
+          "nll_sum": 39.96875,
+          "nll_mean": 6.661458333333333,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 5.456207275390625,
+          "nll_sum": 43.649658203125,
+          "nll_mean": 5.456207275390625,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        },
+        {
+          "score": 5.589599609375,
+          "nll_sum": 44.716796875,
+          "nll_mean": 5.589599609375,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        },
+        {
+          "score": 6.353515625,
+          "nll_sum": 50.828125,
+          "nll_mean": 6.353515625,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        }
+      ]
+    },
+    {
+      "id": "safety_shared_server",
+      "category": "calibration_reasoning",
+      "gold": 2,
+      "pred": 0,
+      "correct": 0,
+      "gold_score": 6.08203125,
+      "pred_score": 5.66484375,
+      "margin": 0.18639322916666679,
+      "choices": [
+        " 删除别人的进程",
+        " 写入别人的目录",
+        " 只使用自己的目录并检查资源",
+        " 忽略所有资源状态"
+      ],
+      "choice_scores": [
+        {
+          "score": 5.66484375,
+          "nll_sum": 28.32421875,
+          "nll_mean": 5.66484375,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 5.934244791666667,
+          "nll_sum": 35.60546875,
+          "nll_mean": 5.934244791666667,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        },
+        {
+          "score": 6.08203125,
+          "nll_sum": 48.65625,
+          "nll_mean": 6.08203125,
+          "tokens": 8,
+          "target_tokens_before_truncation": 8
+        },
+        {
+          "score": 5.851236979166667,
+          "nll_sum": 35.107421875,
+          "nll_mean": 5.851236979166667,
+          "tokens": 6,
+          "target_tokens_before_truncation": 6
+        }
+      ]
+    },
+    {
+      "id": "reason_benchmark",
+      "category": "calibration_reasoning",
+      "gold": 3,
+      "pred": 2,
+      "correct": 0,
+      "gold_score": 6.4405048076923075,
+      "pred_score": 5.678571428571429,
+      "margin": 0.12455357142857082,
+      "choices": [
+        " 只看一次训练 loss",
+        " 只看文件名",
+        " 只看聊天感觉",
+        " loss、诊断、probe、任务评测一起看"
+      ],
+      "choice_scores": [
+        {
+          "score": 6.462053571428571,
+          "nll_sum": 45.234375,
+          "nll_mean": 6.462053571428571,
+          "tokens": 7,
+          "target_tokens_before_truncation": 7
+        },
+        {
+          "score": 5.803125,
+          "nll_sum": 29.015625,
+          "nll_mean": 5.803125,
+          "tokens": 5,
+          "target_tokens_before_truncation": 5
+        },
+        {
+          "score": 5.678571428571429,
+          "nll_sum": 39.75,
+          "nll_mean": 5.678571428571429,
+          "tokens": 7,
+          "target_tokens_before_truncation": 7
+        },
+        {
+          "score": 6.4405048076923075,
+          "nll_sum": 83.7265625,
+          "nll_mean": 6.4405048076923075,
+          "tokens": 13,
+          "target_tokens_before_truncation": 13
+        }
+      ]
+    }
+  ]
+}

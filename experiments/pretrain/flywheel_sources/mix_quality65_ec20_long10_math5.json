@@ -1,0 +1,25 @@
+{
+  "description": "Stage5 pretraining mix: increase english/code from 15% to 20%, keep long=10% and math=5%, no repair text.",
+  "sources": [
+    {
+      "name": "quality_core",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_quality_core_200000.jsonl",
+      "weight": 0.65
+    },
+    {
+      "name": "english_code",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_domain_english_code_80000.jsonl",
+      "weight": 0.2
+    },
+    {
+      "name": "long",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_domain_long_18276.jsonl",
+      "weight": 0.1
+    },
+    {
+      "name": "math",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_domain_math_60000.jsonl",
+      "weight": 0.05
+    }
+  ]
+}

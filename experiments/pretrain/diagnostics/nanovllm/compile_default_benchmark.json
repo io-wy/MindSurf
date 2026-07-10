@@ -1,0 +1,24 @@
+[
+  {
+    "prompt_chars": 128,
+    "requests": 4,
+    "max_tokens": 64,
+    "elapsed_seconds": 0.3533714199438691,
+    "output_tokens": 256,
+    "output_tokens_per_second": 724.4502117366029,
+    "warmup": true,
+    "python_store_fallback": false,
+    "sample_text": "#### 模块化抽象运算符\n#### 抽象运算符\n#### 抽象运算符\n#### 抽象运算符\n#### 抽象运算符表\n#### 抽象运算符表\n#### 抽象运算符表\n#### 抽象运算符表\n#### "
+  },
+  {
+    "prompt_chars": 512,
+    "requests": 4,
+    "max_tokens": 64,
+    "elapsed_seconds": 0.278055464848876,
+    "output_tokens": 256,
+    "output_tokens_per_second": 920.6796210214275,
+    "warmup": true,
+    "python_store_fallback": false,
+    "sample_text": "#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### \n#### #### \n#### \n#### \n#### "
+  }
+]

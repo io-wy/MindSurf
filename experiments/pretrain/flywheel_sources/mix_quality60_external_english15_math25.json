@@ -1,0 +1,20 @@
+{
+  "description": "Stage11 external mix: quality60 + TinyStories English15 + GSM8K math25; tests whether stronger clean math share can move MCQ math without adding code.",
+  "sources": [
+    {
+      "name": "quality_core",
+      "path": "experiments/pretrain/flywheel_sources/pretrain_quality_core_200000.jsonl",
+      "weight": 0.6
+    },
+    {
+      "name": "external_tinystories",
+      "path": "experiments/pretrain/flywheel_sources/external_tinystories_21965.jsonl",
+      "weight": 0.15
+    },
+    {
+      "name": "external_gsm8k",
+      "path": "experiments/pretrain/flywheel_sources/external_gsm8k_7473.jsonl",
+      "weight": 0.25
+    }
+  ]
+}

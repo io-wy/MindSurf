@@ -1,0 +1,122 @@
+{
+  "run_name": "stage12_ext80_replay_native_profile",
+  "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+  "settings": {
+    "batch_sizes": [
+      1,
+      4
+    ],
+    "prompt_tokens": [
+      128,
+      512,
+      1024
+    ],
+    "max_new_tokens": 64,
+    "include_no_cache": false,
+    "dtype": "bfloat16"
+  },
+  "rows": [
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 1,
+      "prompt_tokens": 128,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.1212063649436459,
+      "decode_seconds": 0.2600126981269568,
+      "prefill_tokens_per_second": 1056.0501509925882,
+      "decode_tokens_per_second": 246.1418248456105,
+      "kv_cache_mb_final": 4.5,
+      "max_allocated_gb": 0.17888164520263672,
+      "max_reserved_gb": 0.3046875
+    },
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 1,
+      "prompt_tokens": 512,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.005417387001216412,
+      "decode_seconds": 0.2202026635641232,
+      "prefill_tokens_per_second": 94510.50845823574,
+      "decode_tokens_per_second": 290.64135267084606,
+      "kv_cache_mb_final": 13.5,
+      "max_allocated_gb": 0.19649410247802734,
+      "max_reserved_gb": 0.328125
+    },
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 1,
+      "prompt_tokens": 1024,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.0035192479845136404,
+      "decode_seconds": 0.22034126752987504,
+      "prefill_tokens_per_second": 290971.2542299052,
+      "decode_tokens_per_second": 290.4585269816628,
+      "kv_cache_mb_final": 25.5,
+      "max_allocated_gb": 0.22243213653564453,
+      "max_reserved_gb": 0.294921875
+    },
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 4,
+      "prompt_tokens": 128,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.004083691048435867,
+      "decode_seconds": 0.23584571795072407,
+      "prefill_tokens_per_second": 125376.77163312979,
+      "decode_tokens_per_second": 1085.4553655855937,
+      "kv_cache_mb_final": 18.0,
+      "max_allocated_gb": 0.20926904678344727,
+      "max_reserved_gb": 0.328125
+    },
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 4,
+      "prompt_tokens": 512,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.0046941780019551516,
+      "decode_seconds": 0.23240201931912452,
+      "prefill_tokens_per_second": 436285.1172552461,
+      "decode_tokens_per_second": 1101.5394821009354,
+      "kv_cache_mb_final": 54.0,
+      "max_allocated_gb": 0.2789444923400879,
+      "max_reserved_gb": 0.314453125
+    },
+    {
+      "run_name": "stage12_ext80_replay_native_profile",
+      "weight_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+      "device": "cuda:0",
+      "dtype": "bfloat16",
+      "batch_size": 4,
+      "prompt_tokens": 1024,
+      "max_new_tokens": 64,
+      "use_cache": true,
+      "prefill_seconds": 0.008229059050790966,
+      "decode_seconds": 0.22199476067908108,
+      "prefill_tokens_per_second": 497748.28139145486,
+      "decode_tokens_per_second": 1153.1803688379719,
+      "kv_cache_mb_final": 102.0,
+      "max_allocated_gb": 0.37906694412231445,
+      "max_reserved_gb": 0.470703125
+    }
+  ]
+}

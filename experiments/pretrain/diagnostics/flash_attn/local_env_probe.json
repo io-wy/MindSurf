@@ -1,0 +1,34 @@
+{
+  "python": "3.13.12 (tags/v3.13.12:1cbe481, Feb  3 2026, 18:22:25) [MSC v.1944 64 bit (AMD64)]",
+  "executable": "D:\\environment\\tools\\python\\python.exe",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "machine": "AMD64",
+  "torch": "2.11.0+cu128",
+  "torch_cuda": "12.8",
+  "torch_major_minor": "2.11",
+  "cuda_major_tag": "cu12",
+  "cuda_available": true,
+  "gpu": "NVIDIA GeForce RTX 5070 Laptop GPU",
+  "gpu_capability": [
+    12,
+    0
+  ],
+  "cxx11_abi": true,
+  "python_tag": "cp313",
+  "top_wheel_tags": [
+    "cp313-cp313-win_amd64",
+    "cp313-abi3-win_amd64",
+    "cp313-none-win_amd64",
+    "cp312-abi3-win_amd64",
+    "cp311-abi3-win_amd64",
+    "cp310-abi3-win_amd64",
+    "cp39-abi3-win_amd64",
+    "cp38-abi3-win_amd64",
+    "cp37-abi3-win_amd64",
+    "cp36-abi3-win_amd64",
+    "cp35-abi3-win_amd64",
+    "cp34-abi3-win_amd64"
+  ],
+  "flash_attn_installed": false,
+  "candidate_wheel_name_pattern": null
+}

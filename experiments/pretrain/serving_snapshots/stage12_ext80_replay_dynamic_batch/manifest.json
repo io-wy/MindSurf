@@ -1,0 +1,91 @@
+{
+  "name": "stage12_ext80_replay_dynamic_batch_aof_v1",
+  "snapshot_id": "stage12_ext80_replay_dynamic_batch_aof_v1",
+  "created_at": "2026-06-16T07:03:52.406932+00:00",
+  "git_rev": null,
+  "checkpoint": {
+    "path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+    "bytes": 170720109,
+    "sha256": "6191196253db6c051d5d1b29a00565e7c2b9e825f4e8a87abc1d6f0d7bebba5a"
+  },
+  "qwen_export": {
+    "path": "experiments/pretrain/exports/stage12_ext80_replay_qwen",
+    "config": {
+      "architectures": [
+        "Qwen3ForCausalLM"
+      ],
+      "attention_bias": false,
+      "attention_dropout": 0.0,
+      "dtype": "bfloat16",
+      "head_dim": 96,
+      "hidden_act": "silu",
+      "hidden_size": 768,
+      "initializer_range": 0.02,
+      "intermediate_size": 3072,
+      "layer_types": [
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention",
+        "full_attention"
+      ],
+      "max_position_embeddings": 2048,
+      "max_window_layers": 28,
+      "model_type": "qwen3",
+      "num_attention_heads": 8,
+      "num_hidden_layers": 8,
+      "num_key_value_heads": 8,
+      "rms_norm_eps": 1e-06,
+      "rope_scaling": null,
+      "rope_theta": 1000000.0,
+      "sliding_window": null,
+      "tie_word_embeddings": true,
+      "transformers_version": "4.57.6",
+      "use_cache": true,
+      "use_sliding_window": false,
+      "vocab_size": 6400
+    }
+  },
+  "append_logs": [
+    {
+      "path": "experiments/pretrain/serving_snapshots/stage12_ext80_replay_dynamic_batch/append-000001.jsonl",
+      "sha256": "533c25f18981bff0a28e770960401e7430ab1b37f5556101513c438808a17c7d",
+      "first_seq": 1,
+      "last_seq": 25
+    }
+  ],
+  "serve": {
+    "host": "0.0.0.0",
+    "port": 8998,
+    "dynamic_batching": true,
+    "batch_max_size": 4,
+    "batch_wait_ms": 8.0,
+    "command": ".venv/bin/python scripts/serve_openai_api.py --weight_path experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth --hidden_size 768 --num_hidden_layers 8 --num_attention_heads 8 --num_key_value_heads 8 --intermediate_size 3072 --max_seq_len 2048 --host 0.0.0.0 --port 8998 --dynamic_batching --batch_max_size 4 --batch_wait_ms 8.0"
+  },
+  "benchmark": {
+    "command": ".venv/bin/python experiments/pretrain/scripts/benchmark_openai_api_latency.py --endpoint http://127.0.0.1:8998/v1/chat/completions --model minimind --output_dir experiments/pretrain/serving_snapshots/stage12_ext80_replay_dynamic_batch/api_latency --prompt_chars 128 512 1024 --concurrency 1 2 4 8 --requests_per_case 4 --max_tokens 64 --no-stream",
+    "output_dir": "experiments/pretrain/serving_snapshots/stage12_ext80_replay_dynamic_batch/api_latency"
+  },
+  "code": {
+    "server": "scripts/serve_openai_api.py",
+    "api_benchmark": "experiments/pretrain/scripts/benchmark_openai_api_latency.py",
+    "nano_vllm_benchmark": "experiments/pretrain/scripts/benchmark_nanovllm.py",
+    "nano_vllm_attention_patch": "experiments/pretrain/vendor/nano-vllm/nanovllm/layers/attention.py",
+    "flash_attn_fallback": "experiments/pretrain/vendor/flash_attn_fallback/flash_attn/__init__.py"
+  },
+  "runtime_dependencies": {
+    "flash_attn_wheel_candidate": {
+      "path": "experiments/pretrain/wheelhouse/flash_attn/flash_attn-2.8.3+cu12torch2.11cxx11abiTRUE-cp312-cp312-linux_x86_64.whl",
+      "bytes": 253666682,
+      "sha256": "3d0c8e60f820321eedd7166e79c33cb816263d8be6e35c3f5ba8fe2df6fea697"
+    }
+  },
+  "notes": [
+    "This snapshot is for serving reproducibility, not a new training result.",
+    "Native API dynamic batching is the current stable serving path.",
+    "nano-vLLM fallback results are smoke evidence only until real flash_attn is installed and profiled."
+  ]
+}

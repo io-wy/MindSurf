@@ -1,0 +1,163 @@
+{
+  "description": "MiniMind pretraining experiments prepared from local optimization results. Paths are relative to the repo root unless absolute.",
+  "defaults": {
+    "python": ".venv/bin/python",
+    "output_root": "experiments/pretrain/platform_runs",
+    "train_script": "experiments/pretrain/scripts/train_pretrain_optimized.py",
+    "eval_script": "experiments/pretrain/scripts/eval_pretrain_loss.py",
+    "tokenizer_path": "model",
+    "data_path": "experiments/pretrain/strict_splits/pretrain_strict_train.jsonl",
+    "common_train": {
+      "hidden_size": 768,
+      "num_hidden_layers": 8,
+      "epochs": 1,
+      "accumulation_steps": 1,
+      "num_workers": 0,
+      "dtype": "bfloat16",
+      "stream_packed": true,
+      "fused_adamw": true,
+      "shuffle_buffer": 2048,
+      "min_lr_ratio": 0.1,
+      "log_interval": 50,
+      "seed": 42
+    },
+    "eval_sets": [
+      {
+        "name": "strict_val",
+        "data_path": "experiments/pretrain/strict_splits/pretrain_strict_val_2k.jsonl",
+        "max_batches": 250
+      },
+      {
+        "name": "strict_test",
+        "data_path": "experiments/pretrain/strict_splits/pretrain_strict_test_2k.jsonl",
+        "max_batches": 250
+      }
+    ]
+  },
+  "experiments": [
+    {
+      "name": "smoke_s128_b8_s20",
+      "purpose": "Fast environment check before spending GPU time.",
+      "stages": [
+        {
+          "tag": "smoke",
+          "max_seq_len": 128,
+          "batch_size": 8,
+          "learning_rate": 0.0001,
+          "warmup_steps": 2,
+          "max_steps": 20,
+          "lr_schedule": "cosine",
+          "shuffle_buffer": 64
+        }
+      ]
+    },
+    {
+      "name": "reproduce_local_baseline_s384_5000",
+      "purpose": "Reproduce the local stable baseline on the platform.",
+      "stages": [
+        {
+          "tag": "baseline_s384",
+          "max_seq_len": 384,
+          "batch_size": 32,
+          "learning_rate": 0.0005,
+          "warmup_steps": 200,
+          "max_steps": 5000,
+          "lr_schedule": "cosine"
+        }
+      ]
+    },
+    {
+      "name": "best_general_cooldown_two_stage",
+      "purpose": "Best strict late holdout/generalization route from local experiments.",
+      "stages": [
+        {
+          "tag": "baseline_s384",
+          "max_seq_len": 384,
+          "batch_size": 32,
+          "learning_rate": 0.0005,
+          "warmup_steps": 200,
+          "max_steps": 5000,
+          "lr_schedule": "cosine"
+        },
+        {
+          "tag": "cooldown_s384",
+          "init_from_previous": true,
+          "max_seq_len": 384,
+          "batch_size": 32,
+          "learning_rate": 5e-05,
+          "warmup_steps": 20,
+          "max_steps": 1800,
+          "lr_schedule": "cosine"
+        }
+      ]
+    },
+    {
+      "name": "balanced_seq512_post_three_stage",
+      "purpose": "Recommended balanced base checkpoint for later SFT.",
+      "stages": [
+        {
+          "tag": "baseline_s384",
+          "max_seq_len": 384,
+          "batch_size": 32,
+          "learning_rate": 0.0005,
+          "warmup_steps": 200,
+          "max_steps": 5000,
+          "lr_schedule": "cosine"
+        },
+        {
+          "tag": "seq512_lr2e5",
+          "init_from_previous": true,
+          "max_seq_len": 512,
+          "batch_size": 24,
+          "learning_rate": 2e-05,
+          "warmup_steps": 20,
+          "max_steps": 1200,
+          "lr_schedule": "cosine"
+        },
+        {
+          "tag": "post_lr5e6",
+          "init_from_previous": true,
+          "max_seq_len": 512,
+          "batch_size": 24,
+          "learning_rate": 5e-06,
+          "warmup_steps": 10,
+          "max_steps": 600,
+          "lr_schedule": "cosine"
+        }
+      ]
+    },
+    {
+      "name": "wsd_s384_long_probe",
+      "purpose": "Platform-only scheduler probe: warmup-stable-decay may scale better for longer budgets.",
+      "stages": [
+        {
+          "tag": "wsd_s384",
+          "max_seq_len": 384,
+          "batch_size": 32,
+          "learning_rate": 0.0005,
+          "warmup_steps": 200,
+          "max_steps": 10000,
+          "lr_schedule": "wsd",
+          "lr_stable_ratio": 0.8
+        }
+      ]
+    },
+    {
+      "name": "scaling_probe_h512_l8",
+      "purpose": "Optional small-model scaling-law point; use to estimate token/model-size tradeoffs.",
+      "stages": [
+        {
+          "tag": "h512_l8_s384",
+          "hidden_size": 512,
+          "num_hidden_layers": 8,
+          "max_seq_len": 384,
+          "batch_size": 48,
+          "learning_rate": 0.0005,
+          "warmup_steps": 200,
+          "max_steps": 5000,
+          "lr_schedule": "cosine"
+        }
+      ]
+    }
+  ]
+}
