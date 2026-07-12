@@ -1,0 +1,58 @@
+[
+  {
+    "id": "baseline-pretrain-768",
+    "kind": "checkpoint",
+    "logical_path": "out/pretrain_768.pth",
+    "storage_path": "server://project/out/pretrain_768.pth",
+    "producing_run": null,
+    "restore": "Recover the old baseline checkpoint from an independent backup and verify its SHA-256 before use."
+  },
+  {
+    "id": "downstream-dpo-768",
+    "kind": "checkpoint",
+    "logical_path": "out/dpo_768.pth",
+    "storage_path": "server://project/out/dpo_768.pth",
+    "producing_run": null,
+    "restore": "Recover the downstream DPO checkpoint from an independent backup and verify its SHA-256 before use."
+  },
+  {
+    "id": "downstream-full-sft-768",
+    "kind": "checkpoint",
+    "logical_path": "out/full_sft_768.pth",
+    "storage_path": "server://project/out/full_sft_768.pth",
+    "producing_run": null,
+    "restore": "Recover the downstream full SFT checkpoint from an independent backup and verify its SHA-256 before use."
+  },
+  {
+    "id": "downstream-lora-medical-768",
+    "kind": "checkpoint",
+    "logical_path": "out/lora_medical_768.pth",
+    "storage_path": "server://project/out/lora_medical_768.pth",
+    "producing_run": null,
+    "restore": "Recover the downstream medical LoRA checkpoint from an independent backup and verify its SHA-256 before use."
+  },
+  {
+    "id": "full-pretraining-dataset",
+    "kind": "dataset",
+    "logical_path": "dataset/pretrain_t2t.jsonl",
+    "storage_path": "server://project/dataset/pretrain_t2t.jsonl",
+    "producing_run": null,
+    "restore": "Restore the full pretraining dataset from its external source and verify its SHA-256 before use."
+  },
+  {
+    "id": "full-sft-dataset",
+    "kind": "dataset",
+    "logical_path": "dataset/sft_t2t.jsonl",
+    "storage_path": "server://project/dataset/sft_t2t.jsonl",
+    "producing_run": null,
+    "restore": "Restore the full SFT dataset from its external source and verify its SHA-256 before use."
+  },
+  {
+    "id": "stage12-ext80-replay",
+    "kind": "checkpoint",
+    "logical_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+    "storage_path": "server://project/experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
+    "producing_run": "pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7",
+    "restore": "Recover the documented stage12 checkpoint from an independent backup and verify its SHA-256 before use."
+  }
+]

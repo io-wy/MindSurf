@@ -5,6 +5,7 @@ __pycache__/
 
 # Local environments
 .venv/
+.tools/
 
 # Local datasets and generated dataset cache
 dataset/*.jsonl
@@ -18,14 +19,15 @@ out/
 checkpoints/
 *.pth
 *.pt
+*.ckpt
 *.safetensors
 
 # Experiment runtime outputs
-experiments/**/logs/
+experiments/**/logs/**
 experiments/**/status/
 experiments/**/smoke_data/
 experiments/**/smoke_out/
-experiments/**/platform_runs/
+experiments/**/platform_runs/**
 experiments/**/strict_splits/
 !experiments/pretrain/strict_splits/
 !experiments/pretrain/strict_splits/pretrain_strict_val_2k.jsonl
@@ -34,16 +36,33 @@ experiments/**/strict_splits/
 !experiments/pretrain/strict_splits/strict_splits_meta.json
 experiments/**/runtime_reference/
 
+# Pretraining-only runtime and generated assets
+/experiments/pretrain/platform_runs/**
+!/experiments/pretrain/platform_runs/**/
+!/experiments/pretrain/platform_runs/**/*.json
+!/experiments/pretrain/platform_runs/**/*.csv
+!/experiments/pretrain/platform_runs/**/*.tsv
+!/experiments/pretrain/platform_runs/**/*.md
+/experiments/pretrain/logs/**
+!/experiments/pretrain/logs/**/
+!/experiments/pretrain/logs/**/*.json
+!/experiments/pretrain/logs/**/*.csv
+!/experiments/pretrain/logs/**/*.tsv
+!/experiments/pretrain/logs/**/*.md
+/experiments/pretrain/wheelhouse/
+/experiments/pretrain/vendor/
+/experiments/pretrain/**/vendor/
+/experiments/pretrain/**/*.sqlite
+/experiments/pretrain/**/*.sqlite3
+/experiments/pretrain/**/*.db
+/experiments/pretrain/**/*.ncu-rep
+/experiments/pretrain/**/*.nsys-rep
+/experiments/pretrain/**/torch_profiler_trace.json
+
 # Large local profiling/build artifacts
-experiments/pretrain/vendor/
-experiments/pretrain/wheelhouse/
 experiments/pretrain/flywheel_sources/*.jsonl
 experiments/pretrain/diagnostics/**/*.log
 experiments/pretrain/diagnostics/**/*_raw.jsonl
-experiments/pretrain/diagnostics/**/*.sqlite
-experiments/pretrain/diagnostics/**/*.ncu-rep
-experiments/pretrain/diagnostics/**/*.nsys-rep
-experiments/pretrain/diagnostics/**/torch_profiler_trace.json
 
 # Local/private handoff material
 docs/archive/
