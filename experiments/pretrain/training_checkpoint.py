@@ -110,7 +110,12 @@ def load_training_checkpoint(
     scaler: Any,
     map_location: str | torch.device = "cpu",
 ) -> dict[str, Any]:
-    payload = torch.load(Path(path), map_location=map_location, weights_only=False)
+    # Stage the complete payload on CPU. Besides model tensors, it contains the
+    # CPU RNG state required by torch.set_rng_state; mapping the whole payload
+    # to CUDA makes that state invalid. load_state_dict moves trainable state to
+    # each parameter's device after deserialization.
+    del map_location
+    payload = torch.load(Path(path), map_location="cpu", weights_only=False)
     if payload.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(
             f"unsupported checkpoint schema_version={payload.get('schema_version')!r}; "

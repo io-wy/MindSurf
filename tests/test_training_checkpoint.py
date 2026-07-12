@@ -89,3 +89,32 @@ def test_resume_rejects_incompatible_training_shape() -> None:
 
     with pytest.raises(ValueError, match="max_seq_len"):
         validate_resume_config(saved, current)
+
+
+def test_checkpoint_stages_serialized_state_on_cpu_before_restore(tmp_path: Path) -> None:
+    from experiments.pretrain.training_checkpoint import (
+        load_training_checkpoint,
+        save_training_checkpoint,
+    )
+
+    model = torch.nn.Linear(2, 1)
+    optimizer = torch.optim.AdamW(model.parameters(), lr=0.01)
+    checkpoint_path = tmp_path / "state.pt"
+    save_training_checkpoint(
+        checkpoint_path,
+        model=model,
+        optimizer=optimizer,
+        scaler=None,
+        progress={"global_step": 0, "optimizer_step": 0, "consumed_blocks": 0, "epoch": 0},
+        run_config={},
+    )
+
+    restored = load_training_checkpoint(
+        checkpoint_path,
+        model=model,
+        optimizer=optimizer,
+        scaler=None,
+        map_location="meta",
+    )
+
+    assert restored["progress"]["global_step"] == 0
