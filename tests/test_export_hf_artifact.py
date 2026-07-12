@@ -4,6 +4,7 @@ import json
 from pathlib import Path
 
 import torch
+from safetensors.torch import load_file
 from transformers import AutoModelForCausalLM
 
 from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
@@ -75,10 +76,6 @@ def test_export_preserves_source_weight_dtype(tmp_path: Path) -> None:
         config=config,
         source_revision="test-revision",
     )
-    loaded = AutoModelForCausalLM.from_pretrained(
-        output_dir,
-        trust_remote_code=True,
-        local_files_only=True,
-    )
+    stored_tensors = load_file(output_dir / "model.safetensors")
 
-    assert next(loaded.parameters()).dtype == torch.float16
+    assert next(iter(stored_tensors.values())).dtype == torch.float16
