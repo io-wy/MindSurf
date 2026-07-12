@@ -1,0 +1,48 @@
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist
+build
+.venv
+venv
+
+# Testing
+.coverage
+htmlcov
+.pytest_cache
+.tox
+
+# IDE
+.idea
+.vscode
+
+# DVC / ML
+.dvc
+dvc.lock
+wandb
+mlruns
+mlartifacts
+models/*
+!models/.gitkeep
+data/*
+!data/.gitkeep
+notebooks
+
+# Logs
+*.log
+logs
+
+# OS
+.DS_Store
+
+# Docs
+*.md
+!README.md

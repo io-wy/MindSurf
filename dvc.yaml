@@ -1,0 +1,41 @@
+# DVC pipeline definition
+# Run: dvc repro
+
+stages:
+  preprocess:
+    cmd: uv run scripts/preprocess.py --input data/raw --output data/processed/train.txt
+    deps:
+      - data/raw
+      - scripts/preprocess.py
+    outs:
+      - data/processed/train.txt
+
+  train:
+    cmd: uv run scripts/train.py training=pretrain model=minimind data=default
+    deps:
+      - data/processed/train.txt
+      - scripts/train.py
+      - src/python_starter/core
+      - configs
+    params:
+      - configs/model/minimind.yaml:
+          - vocab_size
+          - n_embed
+          - n_layer
+          - n_head
+      - configs/training/pretrain.yaml:
+          - num_epochs
+          - batch_size
+          - learning_rate
+    outs:
+      - models/checkpoints/pretrain
+
+  evaluate:
+    cmd: uv run scripts/evaluate.py --checkpoint models/checkpoints/pretrain/final_model.pt --data data/raw/test.txt
+    deps:
+      - models/checkpoints/pretrain/final_model.pt
+      - data/raw/test.txt
+      - scripts/evaluate.py
+    metrics:
+      - metrics.json:
+          cache: false

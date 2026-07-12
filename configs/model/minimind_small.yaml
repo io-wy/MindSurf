@@ -1,0 +1,9 @@
+# @package _group_
+vocab_size: 6400
+n_embed: 256
+n_layer: 4
+n_head: 4
+max_seq_len: 512
+dropout: 0.0
+hidden_dim: 1024  # 4 * n_embed
+tie_weights: true

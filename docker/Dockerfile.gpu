@@ -1,0 +1,60 @@
+# =============================================================================
+# GPU-optimized production image (CUDA 12.2)
+# =============================================================================
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS builder
+
+WORKDIR /app
+
+# Install Python and build tools
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-venv \
+    python3-pip \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+
+# Override torch source to use CUDA index
+RUN uv sync --no-dev --frozen --index-url https://download.pytorch.org/whl/cu122
+
+# =============================================================================
+# Runtime stage
+# =============================================================================
+FROM nvidia/cuda:12.2.0-runtime-ubuntu22.04 AS runtime
+
+WORKDIR /app
+
+# Install Python runtime
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    python3.12 \
+    python3.12-venv \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy uv and virtual environment
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=builder /app/.venv /app/.venv
+
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src:$PYTHONPATH"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV NVIDIA_VISIBLE_DEVICES=all
+ENV CUDA_MODULE_LOADING=LAZY
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+
+EXPOSE 8000
+
+CMD ["uvicorn", "python_starter.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

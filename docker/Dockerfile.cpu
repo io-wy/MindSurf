@@ -1,0 +1,53 @@
+# =============================================================================
+# CPU-optimized production image
+# =============================================================================
+FROM python:3.12-slim AS builder
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+
+# Copy dependency files
+COPY pyproject.toml uv.lock ./
+RUN uv sync --no-dev --frozen
+
+# =============================================================================
+# Runtime stage
+# =============================================================================
+FROM python:3.12-slim AS runtime
+
+WORKDIR /app
+
+# Install runtime dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy uv and virtual environment
+COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
+COPY --from=builder /app/.venv /app/.venv
+
+# Ensure virtual environment is used
+ENV PATH="/app/.venv/bin:$PATH"
+ENV PYTHONPATH="/app/src:$PYTHONPATH"
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Copy application code
+COPY src/ ./src/
+COPY scripts/ ./scripts/
+COPY configs/ ./configs/
+COPY alembic/ ./alembic/
+COPY alembic.ini ./
+
+EXPOSE 8000
+
+# Default: run FastAPI server
+CMD ["uvicorn", "python_starter.api.main:app", "--host", "0.0.0.0", "--port", "8000"]

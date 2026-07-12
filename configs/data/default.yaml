@@ -1,0 +1,7 @@
+# @package _group_
+train_path: data/raw/train.txt
+val_path: data/raw/val.txt
+test_path: data/raw/test.txt
+max_length: 512
+stride: 512
+tokenizer_name: gpt2

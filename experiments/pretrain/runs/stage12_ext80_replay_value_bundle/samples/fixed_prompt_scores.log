@@ -1,3 +1,0 @@
-COMMAND: /home/oscar/minimind/.venv/bin/python /home/oscar/minimind/experiments/pretrain/scripts/score_fixed_prompt_samples.py /home/oscar/minimind/experiments/pretrain/runs/stage12_ext80_replay_value_bundle/samples/fixed_prompts.jsonl
-
-/home/oscar/minimind/experiments/pretrain/runs/stage12_ext80_replay_value_bundle/samples/fixed_prompts.jsonl	0.4575	2

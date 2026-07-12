@@ -1,243 +1,491 @@
-# MiniMind 预训练复现与优化
+# Python ML Starter
 
-目前可复现的主线是：
+A production-ready Python starter for neural network development, inspired by [minimind](https://github.com/jingyaogong/minimind). It provides a complete engineering foundation for training, evaluating, and serving transformer-based language models.
 
-```text
-strict split
--> MHA + FFN3072 从头 WSD 训练
--> quality continuation
--> 少量外部干净英文/数学数据
--> quality80 replay
--> strict loss + MCQ + fixed prompts + 服务吞吐评估
-```
+**Highlights:**
+- Hydra-driven configuration for reproducible experiments
+- Unified experiment tracking (W&B + MLflow) with graceful degradation
+- FastAPI inference service with fail-open DB/Redis
+- Async training jobs via Celery
+- Full CI/CD with ruff, mypy, pytest, and Docker multi-platform builds
+- CPU/GPU dual Dockerfile variants
 
-## 当前最好结果
+---
 
-当前基座候选是 `stage12_ext80_replay`。
+## Tech Stack
 
-| 项 | 值 |
-| --- | --- |
-| 结构 | `hidden=768, layers=8, heads=8, kv_heads=8, intermediate_size=3072` |
-| 注意力 | MHA |
-| 参数量 | 约 `80.43M` |
-| 权重 | `experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth` |
-| 评估包 | `experiments/pretrain/runs/stage12_ext80_replay_value_bundle/` |
+| Layer | Technology |
+|-------|-----------|
+| Package Manager | [uv](https://docs.astral.sh/uv/) |
+| ML Framework | PyTorch 2.x |
+| API | FastAPI + Uvicorn |
+| Database | PostgreSQL + SQLAlchemy 2.0 (async) + Alembic |
+| Cache/Queue | Redis + Celery |
+| Config | Hydra + pydantic-settings |
+| Experiment Tracking | Weights & Biases + MLflow |
+| Data Versioning | DVC |
+| Code Quality | ruff + mypy + pre-commit |
+| Testing | pytest + coverage (80% threshold) |
+| Containers | Docker + docker-compose (CPU/GPU) |
 
-固定评估结果：
+---
 
-| 指标 | 结果 |
-| --- | ---: |
-| strict val loss, `eval_seq_len=1024` | `2.31377` |
-| strict test loss, `eval_seq_len=1024` | `2.33291` |
-| MCQ v1 | `23/48` |
-| fixed prompt score | `0.4575` |
+## First-Time Setup
 
-这个结果只能说明它是当前最好的基座候选。MCQ 和固定 prompt 里还有数学差、校准推理差、重复输出的问题。
+### Prerequisites
 
-## 结构实验
+- Python 3.11+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/)
+- Docker & Docker Compose (optional, for services)
 
-固定 `hidden=768, layers=8, heads=8, seq384, WSD, 10000 steps` 后，对比 MHA、GQA 和 FFN 宽度。
-
-| 对照 | 参数量 | strict val loss | strict test loss | 结论 |
-| --- | ---: | ---: | ---: | --- |
-| GQA, `kv_heads=4, FFN=2432` | 约 `63.91M` | `2.4356` | `2.4489` | 原默认线 |
-| MHA, `kv_heads=8, FFN=2432` | 约 `68.63M` | `2.4235` | `2.4386` | MHA 更好 |
-| GQA, `kv_heads=4, FFN=3072` | 约 `75.71M` | `2.4263` | `2.4405` | 加宽 FFN 有收益，但不够 |
-| GQA, `kv_heads=4, FFN=3328` | 约 `80.43M` | `2.4121` | `2.4263` | 同参数量仍弱于 MHA |
-| MHA, `kv_heads=8, FFN=3072` | 约 `80.43M` | `2.4022` | `2.4177` | 当前结构主线 |
-
-结论：先用MHA。GQA/MQA 的价值主要在推理省显存和提速，
-
-## 数据实验
-
-做过三类有效尝试。
-
-| 阶段 | 做法 | 结果 |
-| --- | --- | --- |
-| quality continuation | 从 strict train 里过滤低质量文本，再续训 | strict loss 继续下降 |
-| 外部干净数据 | 加少量英文、数学、TinyStories 风格数据 | MCQ 从早期候选 `20/48` 到 `23/48` |
-| quality80 replay | 外部数据后回到质量过滤主线 | fixed prompt 更稳 |
-
-做过但不继续的方向：
-
-- 低学习率 continuation：有时能降 loss，但收益小，容易变成反复磨同一个 checkpoint。
-- checkpoint averaging：能小幅平滑，不解决能力短板。
-- 手写坏例回流：能修个别答案，但 strict val/test 变差。
-
-后面如果继续做预训练优化，优先做数据质量和评估集，不优先继续堆低学习率续训。
-
-## 评估
-
-统一入口：
+### 1. Clone & Configure Environment
 
 ```bash
-.venv/bin/python experiments/pretrain/scripts/evaluate_checkpoint_bundle.py \
-  --run_name stage12_ext80_replay_value_bundle \
-  --weight_path experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth \
-  --source_run_dir experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7 \
-  --hidden_size 768 \
-  --num_hidden_layers 8 \
-  --num_attention_heads 8 \
-  --num_key_value_heads 8 \
-  --intermediate_size 3072 \
-  --eval_seq_len 1024 \
-  --mcq_seq_len 512 \
-  --max_input_tokens 384 \
-  --max_new_tokens 96 \
-  --prompt_format pretrain \
-  --overwrite
+cd python_starter
+cp .env.example .env
+# Edit .env with your settings (see Environment Variables below)
 ```
 
-输出位置：
-
-| 文件 | 内容 |
-| --- | --- |
-| `report.md` | 单个 checkpoint 的摘要 |
-| `manifest.json` | 权重、参数、命令、评估产物 |
-| `evals/` | strict val/test loss |
-| `mcq/` | 选择题明细 |
-| `samples/` | 固定 prompt 输出和简单打分 |
-
-MCQ v1 分项：
-
-| 类别 | 正确数 | 总数 | acc |
-| --- | ---: | ---: | ---: |
-| zh_fact | 8 | 8 | 1.000 |
-| code | 4 | 8 | 0.500 |
-| long_context | 4 | 8 | 0.500 |
-| english | 3 | 8 | 0.375 |
-| calibration_reasoning | 3 | 8 | 0.375 |
-| math | 1 | 8 | 0.125 |
-
-这里能看出当前短板：数学和校准推理最弱。下一轮评估应该补分领域 PPL 和更稳定的固定题集。
-
-## 服务和推理
-
-服务入口是 `scripts/serve_openai_api.py`。
-
-支持内容：
-
-- OpenAI-compatible `/v1/chat/completions`
-- 非流式 dynamic batching
-- `temperature=0` greedy 路径
-- `/healthz`
-
-启动当前默认服务：
+### 2. Install Dependencies
 
 ```bash
-bash experiments/pretrain/scripts/start_openai_service_tmux.sh
+uv sync --extra dev
 ```
 
-恢复服务前先校验 snapshot：
+This creates a `.venv` virtual environment and installs all production + dev dependencies. The lock file `uv.lock` ensures reproducible installs across machines.
+
+### 3. Start Development Services
 
 ```bash
-bash experiments/pretrain/scripts/restore_openai_service_tmux.sh
+docker compose up -d postgres redis mlflow
 ```
 
-检查服务：
+This starts:
+- **PostgreSQL** on port `5432`
+- **Redis** on port `6379`
+- **MLflow UI** on port `5000`
+
+### 4. Run Database Migrations
 
 ```bash
-bash experiments/pretrain/scripts/status_openai_service_tmux.sh
-bash experiments/pretrain/scripts/smoke_openai_service.sh
+uv run alembic upgrade head
 ```
 
-## Dynamic batching
-
-固定 `temperature=0, top_p=1.0, max_tokens=64, no-stream` 后，`batch_max_size=4, batch_wait_ms=8` 的结果如下。
-
-| prompt chars | concurrency | no batch ms | dynamic batch ms | speedup |
-| ---: | ---: | ---: | ---: | ---: |
-| 128 | 1 | 228.9 | 237.2 | 0.97x |
-| 128 | 2 | 459.2 | 246.0 | 1.87x |
-| 128 | 4 | 911.4 | 235.5 | 3.87x |
-| 128 | 8 | 1750.6 | 468.6 | 3.74x |
-| 512 | 4 | 905.5 | 238.4 | 3.80x |
-| 1024 | 8 | 1796.2 | 468.3 | 3.84x |
-
-单请求会慢一点。并发大于 1 后收益明显。
-
-真实流量里 prompt 长度不同，所以 batching key 不再按输入长度分组，只按 `temperature/top_p/max_tokens` 分组。不同长度交给 tokenizer padding。
-
-混合长度 smoke：
-
-```json
-{
-  "batches": 1,
-  "jobs": 4,
-  "max_batch_size": 4,
-  "last_batch_size": 4,
-  "last_input_token_counts": [32, 67, 107, 187]
-}
-```
-
-## flash-attn 和 profiler
-
-项目内有私有 `nvcc`：
-
-```text
-/home/oscar/minimind/.tools/cuda-nvcc-12.9.86
-```
-
-官方 `flash_attn-2.8.3` wheel 已构建并安装到 `.venv`：
-
-```text
-experiments/pretrain/wheelhouse/flash_attn_official/flash_attn-2.8.3-cp312-cp312-linux_x86_64.whl
-sha256=b56e6c91c12ebafcfcd2061f38167e1bbe3ac6b116c63bfe65623b798fd3137a
-```
-
-`flash_attn_smoke.py` 已通过，`max_abs=0.000244140625`。
-
-nano-vLLM 回归：
-
-| 条件 | 结果 |
-| --- | ---: |
-| prompt `128/512/1024`, requests `4`, max tokens `64`, greedy | `969.8 / 958.8 / 927.6 tok/s` |
-| torch profiler, prompt `128`, requests `4`, max tokens `64` | `350.1 tok/s` |
-
-Profiler 看到的主要时间在 GEMM、FlashAttention 和小 kernel 调度上。`store_kvcache_kernel` 约 `1.9%` self CUDA。现在不优先手搓kernel，除非后续 profiler 证明它变成主瓶颈。
-
-## 复现实验
-
-严格数据切分：
+Migrations are stored in `alembic/versions/`. To create a new migration after changing ORM models:
 
 ```bash
-.venv/bin/python experiments/pretrain/scripts/prepare_strict_splits.py --write-train
+uv run alembic revision --autogenerate -m "describe change"
 ```
 
-MHA + FFN3072 从头 WSD：
+### 5. Start API Server
 
 ```bash
-bash experiments/pretrain/scripts/run_ffn_width_variant.sh \
-  --run_name ffn3072_mha_wsd_s384_10000 \
-  --intermediate_size 3072 \
-  --num_key_value_heads 8
+uv run uvicorn python_starter.api.main:app --reload
 ```
 
-WSD 后处理：
+Visit http://localhost:8000/docs for interactive API documentation.
+
+### 6. Start Celery Worker (optional, for async training)
 
 ```bash
-bash experiments/pretrain/scripts/run_ffn_post_wsd_variant.sh \
-  ffn3072_cooldown_seq768 \
-  experiments/pretrain/platform_runs/ffn3072_mha_wsd_s384_10000/01_wsd_s384/ffn3072_mha_wsd_s384_10000_wsd_s384_768.pth \
-  3072 \
-  8
+uv run celery -A python_starter.tasks.celery_app worker --loglevel=info
 ```
 
-## 文件地图
+---
 
-| 路径 | 用途 |
-| --- | --- |
-| `model/model_minimind.py` | MiniMind 结构，含 MHA/GQA/MQA 参数 |
-| `experiments/pretrain/scripts/train_pretrain_optimized.py` | 预训练入口 |
-| `experiments/pretrain/scripts/evaluate_checkpoint_bundle.py` | 统一评估入口 |
-| `experiments/pretrain/scripts/benchmark_openai_api_latency.py` | OpenAI API latency benchmark |
-| `experiments/pretrain/scripts/check_dynamic_batch_mixed.py` | 混合长度 batching smoke |
-| `experiments/pretrain/diagnostics/api_latency/batching_analysis.md` | batching 对比结果 |
-| `experiments/pretrain/diagnostics/nanovllm/trace_analysis.md` | nano-vLLM profiler 结论 |
-| `experiments/pretrain/serving_snapshots/` | 服务 snapshot 和 append log |
+## VS Code Development Environment
 
-## 下一步
+This starter includes a fully configured `.vscode/` directory. Open the project in VS Code and it will prompt you to install recommended extensions.
 
-1. 固定 prompt，先覆盖数学、代码、英文、长上下文、校准推理。
-2. 补分领域 PPL，不再把所有文本混成一个 loss。
-3. 继续做数据质量实验，少做低学习率反复续训。
+### Recommended Extensions
+
+| Extension | Purpose |
+|-----------|---------|
+| `ms-python.python` | Python language support |
+| `ms-python.debugpy` | Debugger |
+| `charliermarsh.ruff` | Linting and formatting (replaces black/isort/flake8/pylint) |
+| `ms-python.mypy-type-checker` | Type checking |
+| `redhat.vscode-yaml` | YAML validation |
+| `tamasfe.even-better-toml` | TOML editing |
+| `GitHub.vscode-github-actions` | GitHub Actions workflow support |
+| `ms-azuretools.vscode-docker` | Docker integration |
+
+### Workspace Settings
+
+These settings are automatically applied when you open the project:
+
+| Setting | What It Does |
+|---------|-------------|
+| `python.defaultInterpreterPath` | Points to `.venv` so VS Code finds the uv-managed environment |
+| `python.analysis.extraPaths` | Adds `src/` to Python path for import resolution |
+| `python.analysis.typeCheckingMode` | Enables basic type checking inline |
+| `editor.formatOnSave` | Auto-formats on every save |
+| `editor.defaultFormatter` | Uses ruff for all files |
+| `editor.codeActionsOnSave` | Auto-fixes ruff issues and organizes imports on save |
+| `files.exclude` | Hides cache dirs (`__pycache__`, `.pytest_cache`, `wandb`, `mlruns`, etc.) |
+| `search.exclude` | Excludes `.venv`, `uv.lock`, `coverage.xml` from search |
+| `python.testing.pytestEnabled` | Enables pytest test discovery in the Testing panel |
+| `yaml.schemas` | Validates GitHub Actions workflow YAML against schema |
+
+### Debug Configurations
+
+Press `F5` to launch any of these:
+
+| Configuration | What It Runs |
+|---------------|-------------|
+| **FastAPI: debug server** | Uvicorn with `--reload` on port 8000 |
+| **Python: Current File** | Debug the currently open Python file |
+| **Python: Train Script** | `scripts/train.py` with default Hydra args |
+| **Python: Inference Script** | `scripts/inference.py` with sample args |
+| **Python: Pytest Current File** | Run and debug the current test file |
+| **Celery: Worker Debug** | Celery worker with concurrency=1 for easier debugging |
+
+### Tasks
+
+Open Command Palette (`Ctrl+Shift+P`) → `Tasks: Run Task`:
+
+| Task | Command |
+|------|---------|
+| `uv: sync` | `uv sync --extra dev` |
+| `uv: lock` | `uv lock` |
+| `ruff: check` | Lint all source code |
+| `ruff: format` | Format all source code |
+| `mypy: typecheck` | Type check all source code |
+| `pytest: all` | Run full test suite |
+| `pytest: coverage` | Run tests with HTML + terminal coverage |
+| `alembic: migrate` | Create auto-generated migration (prompts for message) |
+| `alembic: upgrade` | Apply pending migrations |
+| `docker: up` | Start postgres + redis + mlflow |
+| `docker: down` | Stop all docker compose services |
+| `pre-commit: run all` | Run all pre-commit hooks on all files |
+
+---
+
+## Project Structure
+
+```
+python_starter/
+├── .github/workflows/        # CI/CD pipelines
+│   ├── ci.yml                # Main orchestrator: quality → test → build-docker
+│   ├── quality.yml           # ruff + mypy checks
+│   ├── test.yml              # pytest with coverage
+│   ├── build-docker.yml      # CPU/GPU image builds
+│   └── release.yml           # GitHub release on version tags
+│
+├── .vscode/                  # VS Code workspace configuration
+│   ├── extensions.json       # Recommended extensions
+│   ├── settings.json         # Workspace settings (formatting, paths, excludes)
+│   ├── launch.json           # Debug configurations
+│   ├── tasks.json            # Run tasks (lint, test, docker, alembic)
+│   └── mcp.json              # MCP server config for VS Code
+│
+├── configs/                  # Hydra YAML configurations
+│   ├── default.yaml          # Default config composition (model + training + data)
+│   ├── model/                # Model architectures (minimind, minimind_small)
+│   ├── training/             # Training configs (pretrain, sft, dpo)
+│   └── data/                 # Dataset configs
+│
+├── data/                     # Datasets (DVC tracked, .gitignored)
+│   ├── raw/                  # Original data
+│   └── processed/            # Preprocessed data
+│
+├── docker/                   # Container definitions
+│   ├── Dockerfile.cpu        # CPU-optimized multi-stage build
+│   └── Dockerfile.gpu        # CUDA 12.2 base image
+│
+├── models/                   # Model checkpoints (DVC tracked, .gitignored)
+├── notebooks/                # Jupyter notebooks (optional)
+├── scripts/                  # CLI entry points
+│   ├── train.py              # Unified training (Hydra-driven)
+│   ├── inference.py          # Local inference CLI
+│   ├── evaluate.py           # Evaluation / perplexity
+│   └── preprocess.py         # Data cleaning / filtering
+│
+├── src/python_starter/       # Main source package (src-layout)
+│   ├── api/                  # FastAPI application
+│   │   ├── main.py           # App factory + lifespan
+│   │   ├── dependencies.py   # FastAPI dependency injection
+│   │   ├── models.py         # SQLAlchemy ORM models
+│   │   ├── routers/          # API route handlers
+│   │   │   ├── health.py     # /health, /health/ready
+│   │   │   ├── inference.py  # /inference
+│   │   │   └── experiments.py# /experiments CRUD + jobs
+│   │   └── schemas/          # Pydantic request/response models
+│   │
+│   ├── core/                 # ML core code
+│   │   ├── model.py          # TransformerLM (decoder-only, RoPE, SwiGLU)
+│   │   ├── trainer.py        # Generic training loop (AMP, cosine schedule)
+│   │   ├── dataset.py        # TextDataset, SFTDataset
+│   │   ├── tokenizer.py      # HuggingFace tokenizer wrapper
+│   │   └── utils.py          # Seed, device detection, param counting
+│   │
+│   ├── experiments/          # Experiment tracking
+│   │   ├── tracker.py        # Unified W&B + MLflow wrapper
+│   │   └── registry.py       # MLflow model registry operations
+│   │
+│   ├── tasks/                # Celery async tasks
+│   │   ├── celery_app.py     # Celery instance configuration
+│   │   └── training.py       # Async training job task
+│   │
+│   └── infrastructure/       # Shared infrastructure
+│       ├── config.py         # pydantic-settings (env vars + .env)
+│       ├── database.py       # Async PostgreSQL (SQLAlchemy 2.0, fail-open)
+│       ├── redis_client.py   # Redis client (fail-open)
+│       └── logging.py        # structlog configuration
+│
+├── tests/                    # pytest suite
+│   ├── conftest.py           # Fixtures (mock DB, fake Redis, API client)
+│   ├── test_api.py           # API endpoint tests
+│   ├── test_model.py         # Model architecture tests
+│   └── test_trainer.py       # Trainer tests
+│
+├── alembic/                  # Database migrations
+│   ├── env.py                # Async migration environment
+│   └── versions/             # Generated migration scripts
+│
+├── .env.example              # Environment variable template
+├── .gitignore                # Git ignore rules
+├── .dockerignore             # Docker build context exclusions
+├── .dvcignore                # DVC ignore rules
+├── .pre-commit-config.yaml   # Pre-commit hooks (ruff, trailing-whitespace)
+├── .mcp.json                 # MCP server configuration
+├── AGENTS.md                 # Repository guidelines for AI agents
+├── pyproject.toml            # uv dependencies + ruff + mypy + pytest config
+├── alembic.ini               # Alembic configuration
+├── docker-compose.yml        # Dev services (postgres, redis, mlflow, api, worker)
+├── docker-compose.gpu.yml    # GPU overlay for docker-compose
+├── dvc.yaml                  # DVC pipeline (preprocess → train → evaluate)
+└── README.md                 # This file
+```
+
+### Key Configuration Files
+
+| File | Purpose | Developer Notes |
+|------|---------|-----------------|
+| `pyproject.toml` | Single source of truth for dependencies, tool configs (ruff, mypy, pytest, coverage) | Edit this to add packages or change tool settings |
+| `.env` / `.env.example` | Runtime secrets and settings (DB URLs, API keys, ports) | Copy `.env.example` → `.env` and customize |
+| `configs/*.yaml` | Hydra configuration for training experiments | Override via CLI: `training.learning_rate=1e-4` |
+| `alembic.ini` | Database migration settings | Auto-generated; rarely needs manual edits |
+| `dvc.yaml` | Data version control pipeline stages | Run `dvc repro` to execute the full pipeline |
+| `.pre-commit-config.yaml` | Git hooks that run before each commit | Install with `uv run pre-commit install` |
+| `.mcp.json` | MCP (Model Context Protocol) server config | Enables AI tools to interact with the codebase |
+
+---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and customize:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `ENV` | `development` | `development` / `test` / `production` |
+| `DEBUG` | `false` | Enable debug logging |
+| `API_HOST` | `0.0.0.0` | FastAPI bind address |
+| `API_PORT` | `8000` | FastAPI port |
+| `POSTGRES_URL` | `postgresql+asyncpg://dev:dev@localhost:5432/appdb` | Async PostgreSQL connection |
+| `REDIS_URL` | `redis://localhost:6379/0` | Redis connection |
+| `CELERY_BROKER_URL` | `redis://localhost:6379/1` | Celery message broker |
+| `CELERY_RESULT_BACKEND` | `redis://localhost:6379/2` | Celery result store |
+| `WANDB_PROJECT` | `python-starter` | Weights & Biases project name |
+| `WANDB_API_KEY` | — | W&B API key (optional) |
+| `MLFLOW_TRACKING_URI` | `http://localhost:5000` | MLflow server URI |
+| `MLFLOW_EXPERIMENT_NAME` | `default` | Default MLflow experiment |
+| `CUDA_VISIBLE_DEVICES` | `0` | GPU device selection |
+| `DEFAULT_DEVICE` | `auto` | `auto` / `cuda` / `cpu` / `mps` |
+| `SECRET_KEY` | *(dev default)* | JWT/signing key (change in production!) |
+
+---
+
+## Coding Style & Naming Conventions
+
+- **Language:** Python 3.11+ with strict type hints (`from __future__ import annotations` at the top of every file).
+- **Linting:** `ruff` is the source of truth; keep code warning-free. `mypy --strict` for type checking.
+- **Imports:** `isort` style (handled by ruff). Group order: stdlib → third-party → first-party (`python_starter`).
+- **Modules:** `snake_case` filenames. Packages: lowercase.
+- **Classes:** `PascalCase`. Functions/variables: `snake_case`. Constants: `UPPER_SNAKE_CASE`.
+- **Private internals:** prefix with underscore (`_internal_fn`).
+- **Avoid mutable defaults;** prefer immutable data structures.
+
+---
+
+## ML Development Guidelines
+
+- **Model configs** live in `configs/model/*.yaml`; training configs in `configs/training/*.yaml`.
+- Use `ModelConfig` dataclass for model hyperparameters; pass config objects, not raw kwargs.
+- Training scripts must be **Hydra-driven** (`@hydra.main`) for reproducible experiments.
+- Always set random seeds via `set_seed()` for reproducibility.
+- Log metrics to both W&B and MLflow via `ExperimentTracker`.
+- Save checkpoints with `Trainer.save_checkpoint()`; never modify checkpoints in-place.
+
+---
+
+## Testing Guidelines
+
+- Test files: `tests/test_*.py`.
+- Fixtures in `tests/conftest.py`: mocked DB (aiosqlite), fake Redis (fakeredis), API client.
+- **Minimum coverage threshold: 80%** (enforced by CI).
+- Mock external services (W&B, MLflow) in unit tests.
+- Use `pytest.mark.slow` for integration tests that require real services.
+
+---
+
+## Commit & Pull Request Guidelines
+
+- Prefer **Conventional Commits**: `feat:`, `fix:`, `docs:`, `refactor:`, `chore:`, `ci:`, `test:`.
+- Link issues in the footer: `Closes #123`.
+- PRs should include: brief scope/intent, validation steps, and pass `uv run ruff check && uv run mypy && uv run pytest`.
+- Keep changes focused; avoid unrelated refactors.
+
+---
+
+## Training
+
+### Pretraining
+
+```bash
+uv run scripts/train.py training=pretrain model=minimind data=default
+```
+
+### Supervised Fine-Tuning
+
+```bash
+uv run scripts/train.py training=sft model=minimind_small data=default
+```
+
+### Custom Overrides
+
+```bash
+uv run scripts/train.py training=pretrain model=minimind data=default \
+    training.num_epochs=5 training.learning_rate=1e-4
+```
+
+### Via Celery (Async)
+
+Submit a training job through the API:
+
+```bash
+curl -X POST http://localhost:8000/experiments/jobs \
+  -H "Content-Type: application/json" \
+  -d '{"experiment_name": "my-exp", "config_overrides": {"training.num_epochs": 3}}'
+```
+
+---
+
+## Inference
+
+```bash
+uv run scripts/inference.py \
+    --checkpoint models/checkpoints/pretrain/final_model.pt \
+    --prompt "Once upon a time" \
+    --max-length 128 \
+    --temperature 0.7 \
+    --top-p 0.9
+```
+
+Or use the API:
+
+```bash
+curl -X POST http://localhost:8000/inference \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello world", "max_length": 32}'
+```
+
+---
+
+## Evaluation
+
+```bash
+uv run scripts/evaluate.py \
+    --checkpoint models/checkpoints/pretrain/final_model.pt \
+    --data data/raw/test.txt
+```
+
+---
+
+## API Endpoints
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Liveness probe |
+| `/health/ready` | GET | Readiness probe (DB + Redis status) |
+| `/inference` | POST | Run model inference |
+| `/inference/models` | GET | List available models |
+| `/experiments` | POST | Create experiment |
+| `/experiments` | GET | List experiments (paginated) |
+| `/experiments/{id}` | GET | Get experiment detail |
+| `/experiments/{id}/status` | PATCH | Update experiment status |
+| `/experiments/{id}/metrics` | POST | Update experiment metrics |
+| `/experiments/{id}/models` | POST | Register a trained model |
+| `/experiments/{id}/models` | GET | List models for an experiment |
+| `/experiments/jobs` | POST | Submit async training job |
+| `/experiments/jobs/{id}` | GET | Get training job status |
+
+---
+
+## Development Commands
+
+```bash
+# Code quality
+uv run ruff check src tests scripts
+uv run ruff format src tests scripts
+uv run mypy src tests scripts
+
+# Tests
+uv run pytest
+uv run pytest --cov-report=html   # Open htmlcov/index.html
+uv run pytest -m "not slow"       # Skip slow integration tests
+
+# Pre-commit hooks
+uv run pre-commit install
+uv run pre-commit run --all-files
+
+# Database migrations
+uv run alembic revision --autogenerate -m "Add new table"
+uv run alembic upgrade head
+uv run alembic downgrade -1
+```
+
+---
+
+## Docker
+
+### CPU Mode
+
+```bash
+docker compose up --build
+```
+
+### GPU Mode
+
+Requires [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html).
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.gpu.yml up --build
+```
+
+### Services Overview
+
+The `docker-compose.yml` defines these services:
+
+| Service | Image | Port | Purpose |
+|---------|-------|------|---------|
+| `postgres` | postgres:17-alpine | 5432 | Application database |
+| `redis` | redis:7-alpine | 6379 | Cache + Celery broker |
+| `mlflow` | ghcr.io/mlflow/mlflow | 5000 | Experiment tracking UI |
+| `api` | Dockerfile.cpu | 8000 | FastAPI server |
+| `worker` | Dockerfile.cpu | — | Celery training worker |
+
+---
+
+## Security & Configuration Tips
+
+- Use `.env` for secrets; never commit `.env*` or `secrets/` files.
+- `SECRET_KEY` must be changed in production (min 32 chars).
+- Database and Redis connections are **fail-open**: the API starts even if dependencies are unavailable, printing warnings and degrading gracefully.
+- Docker: use non-root user in production images.
+
+---
+
+## License
+
+MIT

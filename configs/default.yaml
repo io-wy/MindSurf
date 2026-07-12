@@ -1,0 +1,10 @@
+defaults:
+  - model: minimind
+  - training: pretrain
+  - data: default
+  - _self_
+
+experiment_name: default
+run_name: null
+seed: 42
+dataset_type: pretrain
