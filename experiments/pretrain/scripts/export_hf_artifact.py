@@ -42,7 +42,11 @@ def export_checkpoint(
     state = torch.load(source, map_location="cpu", weights_only=False)
     if isinstance(state, dict) and "model" in state:
         state = state["model"]
-    model = MiniMindForCausalLM(config).eval()
+    source_dtype = next(
+        (tensor.dtype for tensor in state.values() if torch.is_floating_point(tensor)),
+        torch.float32,
+    )
+    model = MiniMindForCausalLM(config).to(dtype=source_dtype).eval()
     model.load_state_dict(state, strict=True)
 
     MiniMindConfig.register_for_auto_class()

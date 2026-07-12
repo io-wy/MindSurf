@@ -50,3 +50,35 @@ def test_exported_artifact_loads_through_auto_model(tmp_path: Path) -> None:
     assert manifest["parameter_count"] == sum(parameter.numel() for parameter in source_model.parameters())
     assert manifest["source_weight"]["sha256"]
     assert json.loads((output_dir / "artifact_manifest.json").read_text(encoding="utf-8")) == manifest
+
+
+def test_export_preserves_source_weight_dtype(tmp_path: Path) -> None:
+    from experiments.pretrain.scripts.export_hf_artifact import export_checkpoint
+
+    config = MiniMindConfig(
+        hidden_size=32,
+        num_hidden_layers=1,
+        num_attention_heads=4,
+        num_key_value_heads=2,
+        intermediate_size=64,
+        max_position_embeddings=128,
+    )
+    source_model = MiniMindForCausalLM(config).half().eval()
+    weight_path = tmp_path / "tiny-fp16.pth"
+    torch.save(source_model.state_dict(), weight_path)
+    output_dir = tmp_path / "artifact-fp16"
+
+    export_checkpoint(
+        weight_path=weight_path,
+        output_dir=output_dir,
+        tokenizer_path=Path("model"),
+        config=config,
+        source_revision="test-revision",
+    )
+    loaded = AutoModelForCausalLM.from_pretrained(
+        output_dir,
+        trust_remote_code=True,
+        local_files_only=True,
+    )
+
+    assert next(loaded.parameters()).dtype == torch.float16
