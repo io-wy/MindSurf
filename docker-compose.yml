@@ -1,0 +1,110 @@
+# =============================================================================
+# Development services for Python ML Starter
+# =============================================================================
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    container_name: py-starter-postgres
+    environment:
+      POSTGRES_USER: dev
+      POSTGRES_PASSWORD: dev
+      POSTGRES_DB: appdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dev -d appdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: py-starter-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  mlflow:
+    image: ghcr.io/mlflow/mlflow:latest
+    container_name: py-starter-mlflow
+    ports:
+      - "5000:5000"
+    environment:
+      MLFLOW_BACKEND_STORE_URI: sqlite:///mlflow/mlflow.db
+      MLFLOW_DEFAULT_ARTIFACT_ROOT: /mlflow/artifacts
+    volumes:
+      - mlflow_data:/mlflow
+    command: >
+      mlflow server
+      --host 0.0.0.0
+      --port 5000
+      --backend-store-uri sqlite:///mlflow/mlflow.db
+      --default-artifact-root /mlflow/artifacts
+
+  api:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.cpu
+    container_name: py-starter-api
+    ports:
+      - "8000:8000"
+    environment:
+      ENV: development
+      POSTGRES_URL: postgresql+asyncpg://dev:dev@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      SECRET_KEY: dev-secret-change-me-in-production-32ch
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+
+  worker:
+    build:
+      context: .
+      dockerfile: ./docker/Dockerfile.cpu
+    container_name: py-starter-worker
+    environment:
+      ENV: development
+      POSTGRES_URL: postgresql+asyncpg://dev:dev@postgres:5432/appdb
+      REDIS_URL: redis://redis:6379/0
+      CELERY_BROKER_URL: redis://redis:6379/1
+      CELERY_RESULT_BACKEND: redis://redis:6379/2
+      MLFLOW_TRACKING_URI: http://mlflow:5000
+      CUDA_VISIBLE_DEVICES: ""
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mlflow:
+        condition: service_started
+    volumes:
+      - ./models:/app/models
+      - ./data:/app/data
+    command: >
+      celery -A python_starter.tasks.celery_app worker
+      --loglevel=info
+      --concurrency=2
+
+volumes:
+  postgres_data:
+  redis_data:
+  mlflow_data:

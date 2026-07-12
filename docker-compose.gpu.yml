@@ -1,0 +1,27 @@
+# GPU overlay for docker-compose
+# Usage: docker compose -f docker-compose.yml -f docker-compose.gpu.yml up
+
+services:
+  api:
+    build:
+      dockerfile: ./docker/Dockerfile.gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+
+  worker:
+    build:
+      dockerfile: ./docker/Dockerfile.gpu
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    environment:
+      CUDA_VISIBLE_DEVICES: "0"

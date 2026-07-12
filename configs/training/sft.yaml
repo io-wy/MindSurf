@@ -1,0 +1,14 @@
+# @package _group_
+output_dir: models/checkpoints/sft
+num_epochs: 3
+batch_size: 4
+learning_rate: 2.0e-4
+weight_decay: 0.01
+max_grad_norm: 1.0
+warmup_ratio: 0.05
+eval_every: 200
+save_every: 500
+logging_every: 10
+device: auto
+dtype: float32
+compile_model: false

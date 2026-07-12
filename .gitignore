@@ -1,54 +1,99 @@
-# Python / OS
+# =============================================================================
+# Python
+# =============================================================================
 __pycache__/
 *.py[cod]
-.DS_Store
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
 
-# Local environments
+# Virtual environments
+venv/
+env/
+ENV/
 .venv/
 
-# Local datasets and generated dataset cache
-dataset/*.jsonl
-dataset/.cache/
-dataset/._____temp/
-dataset/.msc
-dataset/.mv
+# =============================================================================
+# IDEs
+# =============================================================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
 
-# Model weights and training artifacts
-out/
-checkpoints/
-*.pth
-*.pt
-*.safetensors
+# =============================================================================
+# Testing
+# =============================================================================
+.coverage
+htmlcov/
+coverage.xml
+.pytest_cache/
+.tox/
 
-# Experiment runtime outputs
-experiments/**/logs/
-experiments/**/status/
-experiments/**/smoke_data/
-experiments/**/smoke_out/
-experiments/**/platform_runs/
-experiments/**/strict_splits/
-!experiments/pretrain/strict_splits/
-!experiments/pretrain/strict_splits/pretrain_strict_val_2k.jsonl
-!experiments/pretrain/strict_splits/pretrain_strict_test_2k.jsonl
-!experiments/pretrain/strict_splits/STRICT_SPLITS_MANIFEST.md
-!experiments/pretrain/strict_splits/strict_splits_meta.json
-experiments/**/runtime_reference/
+# =============================================================================
+# DVC
+# =============================================================================
+/dvc.lock
+/.dvc/cache
+/.dvc/tmp
 
-# Large local profiling/build artifacts
-experiments/pretrain/vendor/
-experiments/pretrain/wheelhouse/
-experiments/pretrain/flywheel_sources/*.jsonl
-experiments/pretrain/diagnostics/**/*.log
-experiments/pretrain/diagnostics/**/*_raw.jsonl
-experiments/pretrain/diagnostics/**/*.sqlite
-experiments/pretrain/diagnostics/**/*.ncu-rep
-experiments/pretrain/diagnostics/**/*.nsys-rep
-experiments/pretrain/diagnostics/**/torch_profiler_trace.json
+# =============================================================================
+# ML Artifacts
+# =============================================================================
+/models/*
+!/models/.gitkeep
+/data/*
+!/data/.gitkeep
+/data/raw/*
+!/data/raw/.gitkeep
+/data/processed/*
+!/data/processed/.gitkeep
 
-# Local/private handoff material
-docs/archive/
-docs/server/
+# Weights & Biases
+wandb/
 
-# Existing upstream ignores
-website/
-docs-minimind/
+# MLflow
+mlruns/
+mlartifacts/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb_checkpoints
+
+# =============================================================================
+# Logs
+# =============================================================================
+*.log
+logs/
+
+# =============================================================================
+# OS
+# =============================================================================
+.DS_Store
+Thumbs.db
+
+# =============================================================================
+# Secrets
+# =============================================================================
+.env
+.env.local
+.env.*.local
+secrets/
+*.key
+*.pem

@@ -1,0 +1,41 @@
+name: Code Quality
+
+on:
+  workflow_call:
+  push:
+    branches: [master, develop]
+  pull_request:
+    branches: [master, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  quality:
+    name: Lint & Type Check
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          version: "0.5.0"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: uv sync --extra dev
+
+      - name: Run ruff check
+        run: uv run ruff check src tests scripts
+
+      - name: Run ruff format check
+        run: uv run ruff format --check src tests scripts
+
+      - name: Run mypy
+        run: uv run mypy src tests scripts

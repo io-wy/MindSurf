@@ -1,0 +1,15 @@
+# @package _group_
+output_dir: models/checkpoints/dpo
+num_epochs: 1
+batch_size: 2
+learning_rate: 5.0e-5
+weight_decay: 0.01
+max_grad_norm: 1.0
+warmup_ratio: 0.1
+eval_every: 100
+save_every: 500
+logging_every: 5
+device: auto
+dtype: float32
+compile_model: false
+beta: 0.1  # DPO temperature parameter
