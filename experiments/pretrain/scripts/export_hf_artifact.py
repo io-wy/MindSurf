@@ -3,7 +3,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
+import shutil
 import sys
+import uuid
 from pathlib import Path
 from typing import Any
 
@@ -37,65 +40,75 @@ def export_checkpoint(
     destination = Path(output_dir).resolve()
     if not source.exists():
         raise FileNotFoundError(f"weight file not found: {source}")
-    destination.mkdir(parents=True, exist_ok=True)
+    if destination.exists():
+        raise FileExistsError(f"artifact destination already exists: {destination}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    staging = destination.parent / f".{destination.name}.staging-{uuid.uuid4().hex}"
+    staging.mkdir()
 
-    state = torch.load(source, map_location="cpu", weights_only=False)
-    if isinstance(state, dict) and "model" in state:
-        state = state["model"]
-    source_dtype = next(
-        (tensor.dtype for tensor in state.values() if torch.is_floating_point(tensor)),
-        torch.float32,
-    )
-    model = MiniMindForCausalLM(config).to(dtype=source_dtype).eval()
-    model.load_state_dict(state, strict=True)
+    try:
+        state = torch.load(source, map_location="cpu", weights_only=False)
+        if isinstance(state, dict) and "model" in state:
+            state = state["model"]
+        source_dtype = next(
+            (tensor.dtype for tensor in state.values() if torch.is_floating_point(tensor)),
+            torch.float32,
+        )
+        model = MiniMindForCausalLM(config).to(dtype=source_dtype).eval()
+        model.load_state_dict(state, strict=True)
 
-    MiniMindConfig.register_for_auto_class()
-    MiniMindModel.register_for_auto_class("AutoModel")
-    MiniMindForCausalLM.register_for_auto_class("AutoModelForCausalLM")
-    model.config.auto_map = {
-        "AutoConfig": "model_minimind.MiniMindConfig",
-        "AutoModel": "model_minimind.MiniMindModel",
-        "AutoModelForCausalLM": "model_minimind.MiniMindForCausalLM",
-    }
-    model.save_pretrained(destination, safe_serialization=True)
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
-    tokenizer.save_pretrained(destination)
+        MiniMindConfig.register_for_auto_class()
+        MiniMindModel.register_for_auto_class("AutoModel")
+        MiniMindForCausalLM.register_for_auto_class("AutoModelForCausalLM")
+        model.config.auto_map = {
+            "AutoConfig": "model_minimind.MiniMindConfig",
+            "AutoModel": "model_minimind.MiniMindModel",
+            "AutoModelForCausalLM": "model_minimind.MiniMindForCausalLM",
+        }
+        model.save_pretrained(staging, safe_serialization=True)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+        tokenizer.save_pretrained(staging)
 
-    artifact_files = []
-    for path in sorted(destination.iterdir(), key=lambda item: item.name):
-        if path.is_file() and path.name != "artifact_manifest.json":
-            artifact_files.append(
-                {
-                    "name": path.name,
-                    "size_bytes": path.stat().st_size,
-                    "sha256": sha256_file(path),
-                }
-            )
-    manifest = {
-        "schema_version": 1,
-        "source_revision": source_revision,
-        "source_weight": {
-            "path": str(source),
-            "size_bytes": source.stat().st_size,
-            "sha256": sha256_file(source),
-        },
-        "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
-        "model": {
-            "hidden_size": config.hidden_size,
-            "num_hidden_layers": config.num_hidden_layers,
-            "num_attention_heads": config.num_attention_heads,
-            "num_key_value_heads": config.num_key_value_heads,
-            "intermediate_size": config.intermediate_size,
-            "vocab_size": config.vocab_size,
-            "max_position_embeddings": config.max_position_embeddings,
-        },
-        "files": artifact_files,
-    }
-    (destination / "artifact_manifest.json").write_text(
-        json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
-        encoding="utf-8",
-        newline="\n",
-    )
+        artifact_files = []
+        for path in sorted(staging.iterdir(), key=lambda item: item.name):
+            if path.is_file() and path.name != "artifact_manifest.json":
+                artifact_files.append(
+                    {
+                        "name": path.name,
+                        "size_bytes": path.stat().st_size,
+                        "sha256": sha256_file(path),
+                    }
+                )
+        manifest = {
+            "schema_version": 1,
+            "source_revision": source_revision,
+            "source_weight": {
+                "path": str(source),
+                "size_bytes": source.stat().st_size,
+                "sha256": sha256_file(source),
+            },
+            "parameter_count": sum(parameter.numel() for parameter in model.parameters()),
+            "model": {
+                "hidden_size": config.hidden_size,
+                "num_hidden_layers": config.num_hidden_layers,
+                "num_attention_heads": config.num_attention_heads,
+                "num_key_value_heads": config.num_key_value_heads,
+                "intermediate_size": config.intermediate_size,
+                "vocab_size": config.vocab_size,
+                "max_position_embeddings": config.max_position_embeddings,
+            },
+            "files": artifact_files,
+        }
+        (staging / "artifact_manifest.json").write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2) + "\n",
+            encoding="utf-8",
+            newline="\n",
+        )
+        os.replace(staging, destination)
+    except BaseException:
+        if staging.parent == destination.parent and staging.name.startswith(f".{destination.name}.staging-"):
+            shutil.rmtree(staging, ignore_errors=True)
+        raise
     return manifest
 
 

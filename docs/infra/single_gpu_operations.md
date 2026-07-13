@@ -64,6 +64,16 @@ export TRACKIO_DIR="$PROJECT_ROOT/experiments/pretrain/status/trackio"
 
 Add `--trackio_space_id namespace/space` only when an approved remote dashboard is required. A missing Trackio installation fails before training starts when Trackio was explicitly requested; normal JSONL logging remains dependency-free.
 
+`--stop_after_steps` stops at the next optimizer boundary when gradient
+accumulation is enabled. Checkpoints intentionally exclude in-flight gradients,
+so this rounding is required for exact continuation. `consumed_blocks` is an
+absolute packed-stream cursor and includes any initial `--skip_blocks` prefix.
+
+HF artifact exports are immutable: choose a new output directory for every
+export. The exporter builds a complete sibling staging directory and renames it
+only after hashing the files; it refuses to mix a retry into an existing
+artifact directory.
+
 ## Release gate and promotion
 
 Validate hashes, evaluation thresholds, export equivalence, benchmark volume, errors, and high-concurrency latency:

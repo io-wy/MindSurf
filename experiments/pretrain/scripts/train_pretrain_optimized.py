@@ -337,7 +337,10 @@ def train(args):
     )
     global_step = 0
     optimizer_step = 0
-    consumed_blocks = 0
+    # This is an absolute cursor into the deterministic packed stream, not just
+    # a counter for the current invocation. That distinction matters when a
+    # fresh run deliberately starts after an initial prefix.
+    consumed_blocks = int(args.skip_blocks)
     start_epoch = 0
     if args.resume_checkpoint:
         resume_path = Path(args.resume_checkpoint)
@@ -437,7 +440,16 @@ def train(args):
     model.train()
     optimizer.zero_grad(set_to_none=True)
 
-    execution_limit = min(total_steps, args.stop_after_steps) if args.stop_after_steps > 0 else total_steps
+    execution_limit = total_steps
+    if args.stop_after_steps > 0:
+        requested_limit = min(total_steps, args.stop_after_steps)
+        # A checkpoint contains model/optimizer/RNG state but intentionally not
+        # in-flight parameter gradients. Stop only after an optimizer boundary
+        # so a resumed run is bit-for-bit equivalent to an uninterrupted run.
+        execution_limit = min(
+            total_steps,
+            math.ceil(requested_limit / args.accumulation_steps) * args.accumulation_steps,
+        )
     for epoch in range(start_epoch, args.epochs):
         for input_ids, labels in loader:
             if global_step >= execution_limit:
@@ -467,19 +479,8 @@ def train(args):
                         level="error",
                         step=global_step,
                     )
-                    save_training_checkpoint(
-                        checkpoint_path,
-                        model=model,
-                        optimizer=optimizer,
-                        scaler=scaler,
-                        progress={
-                            "global_step": global_step,
-                            "optimizer_step": optimizer_step,
-                            "consumed_blocks": consumed_blocks,
-                            "epoch": epoch,
-                        },
-                        run_config=run_config,
-                    )
+                    # Do not overwrite the last committed checkpoint with a
+                    # state whose current micro-batch was never applied.
                     tracker.finish(status="failed", summary={"reason": "non_finite_loss", "step": global_step})
                     raise FloatingPointError(f"non-finite loss at global_step={global_step}")
                 loss = total_loss / args.accumulation_steps

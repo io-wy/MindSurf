@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
 import torch
 from safetensors.torch import load_file
 from transformers import AutoModel, AutoModelForCausalLM
@@ -90,3 +91,34 @@ def test_export_preserves_source_weight_dtype(tmp_path: Path) -> None:
     stored_tensors = load_file(output_dir / "model.safetensors")
 
     assert next(iter(stored_tensors.values())).dtype == torch.float16
+
+
+def test_export_refuses_to_mix_with_an_existing_artifact(tmp_path: Path) -> None:
+    from experiments.pretrain.scripts.export_hf_artifact import export_checkpoint
+
+    config = MiniMindConfig(
+        hidden_size=32,
+        num_hidden_layers=1,
+        num_attention_heads=4,
+        num_key_value_heads=2,
+        intermediate_size=64,
+        max_position_embeddings=128,
+    )
+    weight_path = tmp_path / "tiny.pth"
+    torch.save(MiniMindForCausalLM(config).state_dict(), weight_path)
+    output_dir = tmp_path / "artifact"
+    output_dir.mkdir()
+    sentinel = output_dir / "do-not-overwrite.txt"
+    sentinel.write_text("original", encoding="utf-8")
+
+    with pytest.raises(FileExistsError, match="already exists"):
+        export_checkpoint(
+            weight_path=weight_path,
+            output_dir=output_dir,
+            tokenizer_path=Path("model"),
+            config=config,
+            source_revision="test-revision",
+        )
+
+    assert sentinel.read_text(encoding="utf-8") == "original"
+    assert not list(tmp_path.glob(".artifact.staging-*"))
