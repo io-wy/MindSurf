@@ -9,11 +9,12 @@ LOG_DIR="${LOG_DIR:-experiments/pretrain/diagnostics/service_smoke}"
 mkdir -p "$LOG_DIR"
 LOG="$LOG_DIR/openai_service.log"
 SUMMARY="$LOG_DIR/summary.json"
+WEIGHT_PATH="${WEIGHT_PATH:-experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_768.pth}"
 
 .venv/bin/python scripts/serve_openai_api.py \
-  --weight_path experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth \
-  --hidden_size 768 --num_hidden_layers 8 --num_attention_heads 8 --num_key_value_heads 8 \
-  --intermediate_size 3072 --max_seq_len 2048 --host 127.0.0.1 --port "$PORT" \
+  --weight_path "$WEIGHT_PATH" \
+  --hidden_size 768 --num_hidden_layers 8 --num_attention_heads 8 --num_key_value_heads 4 \
+  --intermediate_size 2432 --max_seq_len 2048 --host 127.0.0.1 --port "$PORT" \
   --dynamic_batching --batch_max_size 4 --batch_wait_ms 8.0 >"$LOG" 2>&1 &
 PID=$!
 trap 'kill "$PID" >/dev/null 2>&1 || true' EXIT

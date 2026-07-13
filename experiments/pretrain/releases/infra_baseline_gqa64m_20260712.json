@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "release_id": "infra-baseline-gqa64m-20260712",
+  "quality_tier": "infra_prerequisite",
+  "source_revision": "9cc385f",
+  "artifact_dir": "out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm",
+  "model": {
+    "parameter_count": 63912192,
+    "hidden_size": 768,
+    "num_hidden_layers": 8,
+    "num_attention_heads": 8,
+    "num_key_value_heads": 4,
+    "intermediate_size": 2432,
+    "max_position_embeddings": 2048,
+    "dtype": "float16"
+  },
+  "assets": {
+    "checkpoint": {
+      "path": "experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_768.pth",
+      "size_bytes": 137686702,
+      "sha256": "95a8f122dfebbcc040416de5aad6f42fdca9db85cef7ee990138ba229b8c1829"
+    },
+    "model": {
+      "path": "out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm/model.safetensors",
+      "size_bytes": 127834168,
+      "sha256": "19a65b35b9ab73e1f86a9e1968d576f76fa03ad1774824de09dac4d016a00be7"
+    },
+    "artifact_manifest": "out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm/artifact_manifest.json"
+  },
+  "evaluation": {
+    "strict_val": {
+      "path": "experiments/pretrain/runs/infra_baseline_gqa64m_lr5e4_40m_eval/evals/strict_val.json",
+      "field": "mean_loss",
+      "max": 3.0
+    },
+    "strict_test": {
+      "path": "experiments/pretrain/runs/infra_baseline_gqa64m_lr5e4_40m_eval/evals/strict_test.json",
+      "field": "mean_loss",
+      "max": 3.0
+    },
+    "mcq": {
+      "path": "experiments/pretrain/runs/infra_baseline_gqa64m_lr5e4_40m_eval/mcq/local_mcq_benchmark_v1.json",
+      "field": "accuracy",
+      "min": 0.3
+    },
+    "fixed_prompt_score": {
+      "path": "experiments/pretrain/runs/infra_baseline_gqa64m_lr5e4_40m_eval/samples/fixed_prompt_scores.json",
+      "field": "mean_score",
+      "min": 0.25
+    },
+    "fixed_prompt_empty": {
+      "path": "experiments/pretrain/runs/infra_baseline_gqa64m_lr5e4_40m_eval/samples/fixed_prompt_scores.json",
+      "field": "empty_count",
+      "max": 5
+    },
+    "export_diff": {
+      "path": "experiments/pretrain/diagnostics/hf_export/infra_baseline_vllm_validation_20260712.json",
+      "field": "max_abs_diff",
+      "max": 0.01
+    },
+    "generation_exact": {
+      "path": "experiments/pretrain/diagnostics/hf_export/infra_baseline_vllm_validation_20260712.json",
+      "field": "generation_all_exact",
+      "equals": true
+    }
+  },
+  "serving": {
+    "candidate_summary": "experiments/pretrain/diagnostics/api_latency/infra_vllm_10pct_20260712/api_latency_summary.json",
+    "baseline_summary": "experiments/pretrain/diagnostics/api_latency/infra_hf_native_20260712/api_latency_summary.json",
+    "minimum_total_requests": 672,
+    "maximum_total_errors": 0,
+    "comparisons": [
+      {
+        "prompt_chars": 128,
+        "concurrency": 16,
+        "max_candidate_ms": 350.0,
+        "max_ratio": 0.5
+      },
+      {
+        "prompt_chars": 512,
+        "concurrency": 16,
+        "max_candidate_ms": 350.0,
+        "max_ratio": 0.5
+      }
+    ],
+    "endpoints": [
+      "http://127.0.0.1:19099/health",
+      "http://127.0.0.1:19099/v1/models",
+      "http://127.0.0.1:19099/metrics"
+    ],
+    "routing": {
+      "low_concurrency_backend": "native",
+      "high_concurrency_backend": "vllm",
+      "vllm_concurrency_threshold": 8
+    }
+  }
+}

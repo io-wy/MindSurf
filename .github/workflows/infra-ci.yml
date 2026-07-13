@@ -1,0 +1,63 @@
+name: infra-ci
+
+on:
+  push:
+    branches: [pretrain]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: infra-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install CPU test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install torch==2.11.0 --index-url https://download.pytorch.org/whl/cpu
+          python -m pip install -r experiments/pretrain/requirements-ci.txt
+      - name: Run tests and compile checks
+        run: |
+          python -m pytest -q
+          python -m compileall -q model trainer scripts experiments/pretrain/scripts
+          bash -n \
+            experiments/pretrain/scripts/bootstrap_vllm_env.sh \
+            experiments/pretrain/scripts/serve_vllm.sh \
+            experiments/pretrain/scripts/start_vllm_tmux.sh \
+            experiments/pretrain/scripts/status_vllm_tmux.sh \
+            experiments/pretrain/scripts/stop_vllm_tmux.sh \
+            experiments/pretrain/scripts/smoke_vllm_service.sh \
+            experiments/pretrain/scripts/start_openai_service_tmux.sh \
+            experiments/pretrain/scripts/status_openai_service_tmux.sh \
+            experiments/pretrain/scripts/stop_openai_service_tmux.sh \
+            experiments/pretrain/scripts/smoke_openai_service.sh
+          git diff --check
+      - name: Verify deterministic asset manifest
+        run: |
+          python scripts/build_asset_manifest.py \
+            --sources experiments/pretrain/assets/asset_sources.json \
+            --root . \
+            --output /tmp/asset_manifest.json
+          cmp experiments/pretrain/assets/asset_manifest.json /tmp/asset_manifest.json
+      - name: Reject model binaries and secrets
+        shell: bash
+        run: |
+          if git ls-files | grep -E '\.(pth|pt|ckpt|safetensors)$'; then
+            echo "Model binaries must not be committed" >&2
+            exit 1
+          fi
+          if git grep -n -I -E '(BEGIN (RSA|OPENSSH) PRIVATE KEY|ghp_[A-Za-z0-9]{30,}|sk-[A-Za-z0-9]{20,})' -- .; then
+            echo "Potential credential found" >&2
+            exit 1
+          fi

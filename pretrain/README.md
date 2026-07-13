@@ -121,6 +121,11 @@ MCQ v1 分项：
 
 服务入口是 `scripts/serve_openai_api.py`。
 
+当前可恢复的 infrastructure 基线是 `infra-baseline-gqa64m-20260712`。它是约
+`63.91M` 参数的 GQA 模型，用于验证训练恢复、评估、HF 导出和双后端服务闭环；它不替代
+上面记录的 stage12 算法最佳结果。发布规格与门禁见
+`experiments/pretrain/releases/infra_baseline_gqa64m_20260712.json`。
+
 支持内容：
 
 - OpenAI-compatible `/v1/chat/completions`
@@ -146,6 +151,17 @@ bash experiments/pretrain/scripts/restore_openai_service_tmux.sh
 bash experiments/pretrain/scripts/status_openai_service_tmux.sh
 bash experiments/pretrain/scripts/smoke_openai_service.sh
 ```
+
+高并发使用经过门禁的 vLLM 后端：
+
+```bash
+bash experiments/pretrain/scripts/start_vllm_tmux.sh
+bash experiments/pretrain/scripts/status_vllm_tmux.sh
+bash experiments/pretrain/scripts/smoke_vllm_service.sh
+```
+
+单 GPU 环境恢复、训练观测、release promotion、指标和故障恢复命令见
+`docs/infra/single_gpu_operations.md`。
 
 ## Dynamic batching
 

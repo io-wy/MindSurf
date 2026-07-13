@@ -1,0 +1,9 @@
+# A resolver-tested, mutually compatible observability/Hugging Face stack.
+datasets==5.0.0
+huggingface-hub==1.23.0
+sentence-transformers==5.6.0
+swanlab==0.8.4
+trackio==0.30.3
+transformers==5.13.1
+trl==1.8.0
+wandb==0.28.0

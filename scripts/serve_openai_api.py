@@ -17,7 +17,7 @@ import uvicorn
 from threading import Lock, Thread
 from queue import Empty, Queue
 from fastapi import FastAPI, HTTPException
-from fastapi.responses import StreamingResponse
+from fastapi.responses import PlainTextResponse, StreamingResponse
 from pydantic import BaseModel
 from transformers import AutoTokenizer, AutoModelForCausalLM, TextStreamer
 from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
@@ -42,6 +42,60 @@ batch_stats = {
     "last_batch_size": 0,
     "last_input_token_counts": [],
 }
+request_stats_lock = Lock()
+request_stats = {
+    "requests": 0,
+    "errors": 0,
+    "duration_seconds_sum": 0.0,
+}
+
+
+@app.middleware("http")
+async def observe_chat_requests(request, call_next):
+    if request.url.path != "/v1/chat/completions":
+        return await call_next(request)
+    started = time.perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        return response
+    finally:
+        with request_stats_lock:
+            request_stats["requests"] += 1
+            request_stats["errors"] += int(status_code >= 500)
+            request_stats["duration_seconds_sum"] += time.perf_counter() - started
+
+
+def render_prometheus_metrics() -> str:
+    with request_stats_lock:
+        requests = dict(request_stats)
+    with batch_stats_lock:
+        batches = dict(batch_stats)
+    lines = [
+        "# TYPE minimind_requests_total counter",
+        f"minimind_requests_total {requests['requests']}",
+        "# TYPE minimind_request_errors_total counter",
+        f"minimind_request_errors_total {requests['errors']}",
+        "# TYPE minimind_request_duration_seconds_sum counter",
+        f"minimind_request_duration_seconds_sum {requests['duration_seconds_sum']}",
+        "# TYPE minimind_request_duration_seconds_count counter",
+        f"minimind_request_duration_seconds_count {requests['requests']}",
+        "# TYPE minimind_batches_total counter",
+        f"minimind_batches_total {batches['batches']}",
+        "# TYPE minimind_batch_jobs_total counter",
+        f"minimind_batch_jobs_total {batches['jobs']}",
+        "# TYPE minimind_batch_max_size gauge",
+        f"minimind_batch_max_size {batches['max_batch_size']}",
+        "# TYPE minimind_batch_queue_depth gauge",
+        f"minimind_batch_queue_depth {batch_request_queue.qsize()}",
+    ]
+    return "\n".join(lines) + "\n"
+
+
+@app.get("/metrics", response_class=PlainTextResponse)
+async def metrics():
+    return render_prometheus_metrics()
 
 
 @app.get("/healthz")

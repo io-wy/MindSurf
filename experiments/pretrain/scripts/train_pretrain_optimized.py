@@ -19,6 +19,16 @@ sys.path.insert(0, str(ROOT))
 
 from dataset.lm_dataset import PretrainDataset
 from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
+from experiments.pretrain.training_checkpoint import (
+    load_training_checkpoint,
+    save_training_checkpoint,
+    validate_resume_config,
+)
+from experiments.pretrain.experiment_tracking import (
+    ExperimentTracker,
+    detect_source_revision,
+    write_run_manifest,
+)
 from trainer.trainer_utils import get_model_params, setup_seed
 
 
@@ -61,7 +71,7 @@ class StreamingPackedPretrainDataset(IterableDataset):
     def __iter__(self):
         token_buffer = []
         block_buffer = []
-        seen_blocks = 0
+        emitted_blocks = 0
         rng = random.Random(self.seed)
 
         def emit(block):
@@ -84,14 +94,17 @@ class StreamingPackedPretrainDataset(IterableDataset):
                 while len(token_buffer) >= self.max_length:
                     block = torch.tensor(token_buffer[:self.max_length], dtype=torch.long)
                     token_buffer = token_buffer[self.max_length:]
-                    seen_blocks += 1
-                    if seen_blocks <= self.skip_blocks:
-                        continue
                     for item in emit(block):
+                        emitted_blocks += 1
+                        if emitted_blocks <= self.skip_blocks:
+                            continue
                         yield item
         if self.shuffle_buffer > 1:
             rng.shuffle(block_buffer)
             for block in block_buffer:
+                emitted_blocks += 1
+                if emitted_blocks <= self.skip_blocks:
+                    continue
                 yield block, block.clone()
 
 
@@ -162,7 +175,7 @@ class StreamingMixedPackedPretrainDataset(IterableDataset):
         total_weight = sum(source["weight"] for source in sources)
         token_buffer = []
         block_buffer = []
-        seen_blocks = 0
+        emitted_blocks = 0
 
         def emit(block):
             if self.shuffle_buffer <= 1:
@@ -183,10 +196,10 @@ class StreamingMixedPackedPretrainDataset(IterableDataset):
             while len(token_buffer) >= self.max_length:
                 block = torch.tensor(token_buffer[: self.max_length], dtype=torch.long)
                 token_buffer = token_buffer[self.max_length :]
-                seen_blocks += 1
-                if seen_blocks <= self.skip_blocks:
-                    continue
                 for item in emit(block):
+                    emitted_blocks += 1
+                    if emitted_blocks <= self.skip_blocks:
+                        continue
                     yield item
 
 
@@ -233,6 +246,10 @@ def scheduled_lr(
 
 
 def train(args):
+    if args.init_weight and args.resume_checkpoint:
+        raise ValueError("--init_weight and --resume_checkpoint are mutually exclusive")
+    if args.resume_checkpoint and not args.stream_packed:
+        raise ValueError("--resume_checkpoint currently requires --stream_packed for a reproducible data cursor")
     setup_seed(args.seed)
     torch.set_float32_matmul_precision("high")
     if torch.cuda.is_available():
@@ -270,6 +287,90 @@ def train(args):
             flush=True,
         )
     get_model_params(model, config)
+
+    optimizer, fused_used = make_optimizer(
+        model.parameters(),
+        args.learning_rate,
+        args.fused_adamw,
+        args.weight_decay,
+        (args.adam_beta1, args.adam_beta2),
+        args.adam_eps,
+    )
+    scaler = torch.amp.GradScaler(device_type, enabled=(args.dtype == "float16" and device_type == "cuda"))
+    run_config = {
+        key: value
+        for key, value in vars(args).items()
+        if key not in {
+            "resume_checkpoint",
+            "checkpoint_interval",
+            "stop_after_steps",
+            "log_interval",
+            "save_dir",
+            "trackio_project",
+            "trackio_space_id",
+        }
+    }
+    checkpoint_path = out_dir / f"{args.save_weight}_training_state.pt"
+    weight_path = out_dir / f"{args.save_weight}_{args.hidden_size}.pth"
+    summary_path = out_dir / f"{args.save_weight}_{args.hidden_size}_summary.json"
+    metrics_path = out_dir / f"{args.save_weight}_metrics.jsonl"
+    run_manifest_path = out_dir / f"{args.save_weight}_run_manifest.json"
+    source_revision = detect_source_revision(ROOT)
+    write_run_manifest(
+        run_manifest_path,
+        run_name=args.save_weight,
+        config=run_config,
+        source_revision=source_revision,
+        artifacts={
+            "metrics": metrics_path.name,
+            "training_checkpoint": checkpoint_path.name,
+            "weights": weight_path.name,
+            "summary": summary_path.name,
+        },
+    )
+    tracker = ExperimentTracker(
+        metrics_path,
+        run_name=args.save_weight,
+        config=run_config,
+        trackio_project=args.trackio_project,
+        trackio_space_id=args.trackio_space_id,
+    )
+    global_step = 0
+    optimizer_step = 0
+    # This is an absolute cursor into the deterministic packed stream, not just
+    # a counter for the current invocation. That distinction matters when a
+    # fresh run deliberately starts after an initial prefix.
+    consumed_blocks = int(args.skip_blocks)
+    start_epoch = 0
+    if args.resume_checkpoint:
+        resume_path = Path(args.resume_checkpoint)
+        if not resume_path.exists():
+            raise FileNotFoundError(f"--resume_checkpoint not found: {resume_path}")
+        restored = load_training_checkpoint(
+            resume_path,
+            model=model,
+            optimizer=optimizer,
+            scaler=scaler,
+            map_location=device,
+        )
+        validate_resume_config(restored["run_config"], run_config)
+        progress = restored["progress"]
+        global_step = int(progress["global_step"])
+        optimizer_step = int(progress["optimizer_step"])
+        consumed_blocks = int(progress["consumed_blocks"])
+        start_epoch = int(progress["epoch"])
+        args.skip_blocks = consumed_blocks
+        print(
+            f"resumed checkpoint={resume_path} global_step={global_step} "
+            f"optimizer_step={optimizer_step} consumed_blocks={consumed_blocks}",
+            flush=True,
+        )
+        tracker.alert(
+            "training resumed",
+            f"restored global_step={global_step} optimizer_step={optimizer_step} consumed_blocks={consumed_blocks}",
+            level="info",
+            step=global_step,
+        )
 
     if args.data_mix_json:
         if not args.stream_packed:
@@ -324,38 +425,39 @@ def train(args):
         pin_memory=(device_type == "cuda"),
         persistent_workers=(args.num_workers > 0),
     )
-    optimizer, fused_used = make_optimizer(
-        model.parameters(),
-        args.learning_rate,
-        args.fused_adamw,
-        args.weight_decay,
-        (args.adam_beta1, args.adam_beta2),
-        args.adam_eps,
-    )
-    scaler = torch.amp.GradScaler(device_type, enabled=(args.dtype == "float16" and device_type == "cuda"))
-
     if args.stream_packed:
         total_steps = args.max_steps
     else:
         total_steps = args.epochs * len(loader)
     if args.max_steps > 0 and not args.stream_packed:
         total_steps = min(total_steps, args.max_steps)
-    global_step = 0
     losses = []
     if device_type == "cuda":
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     started = time.time()
+    invocation_start_blocks = consumed_blocks
     model.train()
     optimizer.zero_grad(set_to_none=True)
 
-    for epoch in range(args.epochs):
+    execution_limit = total_steps
+    if args.stop_after_steps > 0:
+        requested_limit = min(total_steps, args.stop_after_steps)
+        # A checkpoint contains model/optimizer/RNG state but intentionally not
+        # in-flight parameter gradients. Stop only after an optimizer boundary
+        # so a resumed run is bit-for-bit equivalent to an uninterrupted run.
+        execution_limit = min(
+            total_steps,
+            math.ceil(requested_limit / args.accumulation_steps) * args.accumulation_steps,
+        )
+    for epoch in range(start_epoch, args.epochs):
         for input_ids, labels in loader:
-            if global_step >= total_steps:
+            if global_step >= execution_limit:
                 break
             global_step += 1
             input_ids = input_ids.to(device, non_blocking=True)
             labels = labels.to(device, non_blocking=True)
+            consumed_blocks += int(input_ids.shape[0])
             lr = scheduled_lr(
                 global_step,
                 total_steps,
@@ -369,7 +471,19 @@ def train(args):
                 group["lr"] = lr
             with autocast_ctx:
                 result = model(input_ids, labels=labels)
-                loss = (result.loss + result.aux_loss) / args.accumulation_steps
+                total_loss = result.loss + result.aux_loss
+                if not torch.isfinite(total_loss).all():
+                    tracker.alert(
+                        "non-finite loss",
+                        f"loss became non-finite at global_step={global_step}",
+                        level="error",
+                        step=global_step,
+                    )
+                    # Do not overwrite the last committed checkpoint with a
+                    # state whose current micro-batch was never applied.
+                    tracker.finish(status="failed", summary={"reason": "non_finite_loss", "step": global_step})
+                    raise FloatingPointError(f"non-finite loss at global_step={global_step}")
+                loss = total_loss / args.accumulation_steps
             scaler.scale(loss).backward()
 
             if global_step % args.accumulation_steps == 0 or global_step == total_steps:
@@ -378,22 +492,69 @@ def train(args):
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad(set_to_none=True)
+                optimizer_step += 1
+                if args.checkpoint_interval > 0 and optimizer_step % args.checkpoint_interval == 0:
+                    save_training_checkpoint(
+                        checkpoint_path,
+                        model=model,
+                        optimizer=optimizer,
+                        scaler=scaler,
+                        progress={
+                            "global_step": global_step,
+                            "optimizer_step": optimizer_step,
+                            "consumed_blocks": consumed_blocks,
+                            "epoch": epoch,
+                        },
+                        run_config=run_config,
+                    )
 
             current_loss = float((loss.detach().cpu() * args.accumulation_steps).item())
             losses.append(current_loss)
             if global_step % args.log_interval == 0 or global_step == total_steps:
                 elapsed = time.time() - started
-                tokens = global_step * args.batch_size * args.max_seq_len
+                tokens = (consumed_blocks - invocation_start_blocks) * args.max_seq_len
+                tokens_per_second = tokens / max(elapsed, 1e-6)
+                tracker.log(
+                    {
+                        "epoch": epoch + 1,
+                        "loss": current_loss,
+                        "learning_rate": lr,
+                        "tokens_per_second": tokens_per_second,
+                        "consumed_blocks": consumed_blocks,
+                        "optimizer_step": optimizer_step,
+                        "max_memory_reserved_gb": (
+                            torch.cuda.max_memory_reserved() / 1024 ** 3 if device_type == "cuda" else 0.0
+                        ),
+                    },
+                    step=global_step,
+                )
                 print(
                     f"epoch={epoch + 1}/{args.epochs} step={global_step}/{total_steps} "
-                    f"loss={current_loss:.4f} lr={lr:.8f} tokens/s={tokens / max(elapsed, 1e-6):.0f}",
+                    f"loss={current_loss:.4f} lr={lr:.8f} tokens/s={tokens_per_second:.0f}",
                     flush=True,
                 )
-        if global_step >= total_steps:
+        if global_step >= execution_limit:
             break
 
-    weight_path = out_dir / f"{args.save_weight}_{args.hidden_size}.pth"
+    if args.checkpoint_interval > 0 or args.resume_checkpoint:
+        save_training_checkpoint(
+            checkpoint_path,
+            model=model,
+            optimizer=optimizer,
+            scaler=scaler,
+            progress={
+                "global_step": global_step,
+                "optimizer_step": optimizer_step,
+                "consumed_blocks": consumed_blocks,
+                "epoch": min(args.epochs - 1, max(start_epoch, 0)),
+            },
+            run_config=run_config,
+        )
+
     torch.save({k: v.detach().half().cpu() for k, v in model.state_dict().items()}, weight_path)
+    run_seconds = time.time() - started
+    invocation_tokens = (consumed_blocks - invocation_start_blocks) * args.max_seq_len
+    run_status = "completed" if global_step >= total_steps else "stopped"
     summary = {
         "data_path": args.data_path,
         "data_mix_json": args.data_mix_json,
@@ -424,18 +585,27 @@ def train(args):
         "warmup_steps": args.warmup_steps,
         "epochs": args.epochs,
         "steps": global_step,
+        "optimizer_steps": optimizer_step,
+        "consumed_blocks": consumed_blocks,
         "max_steps": args.max_steps,
         "dataset_len": dataset_len,
         "first_loss": losses[0] if losses else None,
         "last_loss": losses[-1] if losses else None,
-        "seconds": round(time.time() - started, 3),
-        "slot_tokens_per_second": (global_step * args.batch_size * args.max_seq_len) / max(time.time() - started, 1e-6),
+        "seconds": round(run_seconds, 3),
+        "slot_tokens_per_second": invocation_tokens / max(run_seconds, 1e-6),
         "token_utilization": token_utilization,
         "max_memory_reserved_gb": (torch.cuda.max_memory_reserved() / 1024 ** 3) if device_type == "cuda" else None,
         "weight_path": str(weight_path),
+        "training_checkpoint_path": str(checkpoint_path) if checkpoint_path.exists() else None,
+        "resumed_from": args.resume_checkpoint,
+        "source_revision": source_revision,
+        "metrics_path": str(metrics_path),
+        "run_manifest_path": str(run_manifest_path),
+        "trackio_enabled": bool(args.trackio_project),
+        "status": run_status,
     }
-    summary_path = out_dir / f"{args.save_weight}_{args.hidden_size}_summary.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    tracker.finish(status=run_status, summary=summary)
     print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
 
 
@@ -447,6 +617,9 @@ def main():
     parser.add_argument("--save_dir", default=str(Path(__file__).resolve().parent / "out"))
     parser.add_argument("--save_weight", default="pretrain_optimized")
     parser.add_argument("--init_weight", default=None, help="Optional model state dict to load before training")
+    parser.add_argument("--resume_checkpoint", default=None, help="Resume model, optimizer, scaler, RNG, and data progress from a training checkpoint")
+    parser.add_argument("--checkpoint_interval", type=int, default=0, help="Save a resumable checkpoint every N optimizer steps; 0 disables periodic saves")
+    parser.add_argument("--stop_after_steps", type=int, default=0, help="Operational test hook: stop this invocation at an absolute dataloader step while preserving the target schedule")
     parser.add_argument("--epochs", type=int, default=1)
     parser.add_argument("--max_steps", type=int, default=0, help="Stop early after this many dataloader steps; 0 means full epochs")
     parser.add_argument("--batch_size", type=int, default=8)
@@ -472,6 +645,8 @@ def main():
     parser.add_argument("--device", default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--log_interval", type=int, default=20)
+    parser.add_argument("--trackio_project", default=None, help="Optional Trackio project; JSONL metrics are always written")
+    parser.add_argument("--trackio_space_id", default=None, help="Optional Hugging Face Space used by Trackio")
     parser.add_argument("--use_moe", type=int, default=0)
     parser.add_argument("--fused_adamw", action="store_true")
     parser.add_argument("--packed", action="store_true")

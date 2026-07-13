@@ -9,3 +9,4 @@ if ! tmux has-session -t "$SESSION" 2>/dev/null; then
 fi
 curl -fsS "http://127.0.0.1:$PORT/healthz"
 echo
+curl -fsS "http://127.0.0.1:$PORT/metrics"
