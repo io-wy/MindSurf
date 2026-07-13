@@ -15,15 +15,15 @@ from pathlib import Path
 from typing import Any
 
 import torch
-import torch.nn as nn
 from torch.optim import AdamW
 from torch.optim.lr_scheduler import LambdaLR
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from python_starter.core.model import TransformerLM
-from python_starter.core.utils import format_number, get_logger
+from python_starter.core.utils import format_number
 from python_starter.experiments.tracker import ExperimentTracker
+from python_starter.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
 
