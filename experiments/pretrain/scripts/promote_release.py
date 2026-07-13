@@ -31,6 +31,15 @@ def promote_release(spec_path: Path, root: Path, output: Path) -> dict[str, Any]
         "model_sha256": spec["assets"]["model"]["sha256"],
     }
     output.parent.mkdir(parents=True, exist_ok=True)
+    if output.is_file():
+        previous = output.with_name("previous.json")
+        previous_temporary = previous.with_suffix(previous.suffix + ".tmp")
+        previous_temporary.write_text(
+            output.read_text(encoding="utf-8"),
+            encoding="utf-8",
+            newline="\n",
+        )
+        os.replace(previous_temporary, previous)
     temporary = output.with_suffix(output.suffix + ".tmp")
     temporary.write_text(
         json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True) + "\n",

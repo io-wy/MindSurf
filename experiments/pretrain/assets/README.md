@@ -25,3 +25,11 @@ verify that the file exists at that exact path and let the manifest CLI compute
 both its byte size and SHA-256. Never hand-edit availability, size, or hash
 fields. In particular, the stage12 checkpoint remains `missing` unless its
 exact documented path exists.
+
+The promoted 64M infrastructure baseline has three separately inventoried
+assets: the inference checkpoint, the full resumable training state, and the
+derived Hugging Face safetensors file. The Hugging Face artifact should
+normally be regenerated from the verified checkpoint. After restoration, run
+the matching release specification through
+`experiments/pretrain/scripts/release_gate.py`; file presence alone is not a
+promotion signal.

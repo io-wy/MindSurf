@@ -40,6 +40,15 @@ if [[ ! -f "$MODEL_PATH/config.json" ]]; then
   exit 1
 fi
 
+FFMPEG_LIB_DIR="$("$VLLM_ENV/bin/python" - <<'PY'
+from pathlib import Path
+import sysconfig
+
+print(Path(sysconfig.get_paths()["purelib"]) / "PyNvVideoCodec")
+PY
+)"
+export LD_LIBRARY_PATH="$FFMPEG_LIB_DIR${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
+
 # For this 64M model, eager mode avoids disproportionate compile/JIT startup,
 # while a 10% memory budget still leaves capacity for 182k KV-cache tokens.
 export VLLM_USE_FLASHINFER_SAMPLER

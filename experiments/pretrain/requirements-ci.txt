@@ -1,0 +1,6 @@
+fastapi==0.137.0
+numpy==1.26.4
+pytest==9.0.2
+safetensors==0.8.0
+transformers==5.13.1
+uvicorn==0.49.0

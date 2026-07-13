@@ -8,6 +8,7 @@ from pathlib import Path
 
 from experiments.pretrain.scripts.promote_release import promote_release
 from experiments.pretrain.scripts.release_gate import evaluate_release
+from experiments.pretrain.scripts.rollback_release import rollback_release
 
 
 def _sha256(path: Path) -> str:
@@ -104,6 +105,25 @@ def test_promotion_writes_atomic_current_pointer_only_after_gate_passes(tmp_path
     assert payload["release_id"] == "tiny-release"
     assert payload["artifact_dir"] == "out/artifact"
     assert not list(pointer.parent.glob("*.tmp"))
+
+
+def test_second_promotion_keeps_rollback_pointer_and_rollback_swaps_them(tmp_path: Path) -> None:
+    first_spec = _release_fixture(tmp_path)
+    current = tmp_path / "out/releases/current.json"
+    promote_release(first_spec, tmp_path, current)
+    second_spec = tmp_path / "release-v2.json"
+    second_payload = json.loads(first_spec.read_text(encoding="utf-8"))
+    second_payload["release_id"] = "tiny-release-v2"
+    _write_json(second_spec, second_payload)
+
+    promote_release(second_spec, tmp_path, current)
+    previous = current.with_name("previous.json")
+    assert json.loads(previous.read_text(encoding="utf-8"))["release_id"] == "tiny-release"
+
+    rolled_back = rollback_release(current, previous)
+    assert rolled_back["release_id"] == "tiny-release"
+    assert json.loads(current.read_text(encoding="utf-8"))["release_id"] == "tiny-release"
+    assert json.loads(previous.read_text(encoding="utf-8"))["release_id"] == "tiny-release-v2"
 
 
 def test_promotion_cli_is_runnable_from_repo_root() -> None:
