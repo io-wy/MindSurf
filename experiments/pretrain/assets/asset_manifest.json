@@ -68,6 +68,39 @@
     },
     {
       "availability": "missing",
+      "id": "infra-baseline-gqa64m-checkpoint",
+      "kind": "checkpoint",
+      "logical_path": "experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_768.pth",
+      "producing_run": "infra_baseline_gqa64m_lr5e4_40m_20260712",
+      "restore": "Restore the promoted infra baseline checkpoint from approved external storage and verify it with the release gate.",
+      "sha256": null,
+      "size_bytes": null,
+      "storage_path": "server://project/experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_768.pth"
+    },
+    {
+      "availability": "missing",
+      "id": "infra-baseline-gqa64m-hf-model",
+      "kind": "derived-model",
+      "logical_path": "out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm/model.safetensors",
+      "producing_run": "infra_baseline_gqa64m_lr5e4_40m_20260712",
+      "restore": "Prefer regenerating this Hugging Face artifact from the verified checkpoint; otherwise restore and run the release gate.",
+      "sha256": null,
+      "size_bytes": null,
+      "storage_path": "server://project/out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm/model.safetensors"
+    },
+    {
+      "availability": "missing",
+      "id": "infra-baseline-gqa64m-training-state",
+      "kind": "training-checkpoint",
+      "logical_path": "experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_training_state.pt",
+      "producing_run": "infra_baseline_gqa64m_lr5e4_40m_20260712",
+      "restore": "Restore the full optimizer, scaler, RNG, and data-cursor state only when training must resume.",
+      "sha256": null,
+      "size_bytes": null,
+      "storage_path": "server://project/experiments/pretrain/platform_runs/infra_baseline_gqa64m_lr5e4_40m_20260712/infra_baseline_gqa64m_lr5e4_40m_training_state.pt"
+    },
+    {
+      "availability": "missing",
       "id": "stage12-ext80-replay",
       "kind": "checkpoint",
       "logical_path": "experiments/pretrain/platform_runs/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7/01_continue/pretrain_stage12_ext80_replay_from_stage11_s512_lr3e7_continue_768.pth",
