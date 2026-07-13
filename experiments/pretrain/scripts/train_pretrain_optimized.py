@@ -439,6 +439,7 @@ def train(args):
     invocation_start_blocks = consumed_blocks
     model.train()
     optimizer.zero_grad(set_to_none=True)
+    micro_steps_since_optimizer = 0
 
     execution_limit = total_steps
     if args.stop_after_steps > 0:
@@ -485,14 +486,16 @@ def train(args):
                     raise FloatingPointError(f"non-finite loss at global_step={global_step}")
                 loss = total_loss / args.accumulation_steps
             scaler.scale(loss).backward()
+            micro_steps_since_optimizer += 1
 
-            if global_step % args.accumulation_steps == 0 or global_step == total_steps:
+            if micro_steps_since_optimizer >= args.accumulation_steps or global_step == total_steps:
                 scaler.unscale_(optimizer)
                 torch.nn.utils.clip_grad_norm_(model.parameters(), args.grad_clip)
                 scaler.step(optimizer)
                 scaler.update()
                 optimizer.zero_grad(set_to_none=True)
                 optimizer_step += 1
+                micro_steps_since_optimizer = 0
                 if args.checkpoint_interval > 0 and optimizer_step % args.checkpoint_interval == 0:
                     save_training_checkpoint(
                         checkpoint_path,
@@ -536,7 +539,11 @@ def train(args):
         if global_step >= execution_limit:
             break
 
-    if args.checkpoint_interval > 0 or args.resume_checkpoint:
+    # Checkpoints intentionally exclude parameter gradients. If a finite
+    # stream exhausts mid-accumulation, keep the last optimizer-boundary
+    # checkpoint so resume replays the uncommitted micro-batches.
+    checkpoint_deferred = micro_steps_since_optimizer != 0
+    if (args.checkpoint_interval > 0 or args.resume_checkpoint) and not checkpoint_deferred:
         save_training_checkpoint(
             checkpoint_path,
             model=model,
@@ -597,6 +604,7 @@ def train(args):
         "max_memory_reserved_gb": (torch.cuda.max_memory_reserved() / 1024 ** 3) if device_type == "cuda" else None,
         "weight_path": str(weight_path),
         "training_checkpoint_path": str(checkpoint_path) if checkpoint_path.exists() else None,
+        "checkpoint_deferred": checkpoint_deferred,
         "resumed_from": args.resume_checkpoint,
         "source_revision": source_revision,
         "metrics_path": str(metrics_path),

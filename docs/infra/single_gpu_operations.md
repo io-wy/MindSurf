@@ -68,6 +68,10 @@ Add `--trackio_space_id namespace/space` only when an approved remote dashboard 
 accumulation is enabled. Checkpoints intentionally exclude in-flight gradients,
 so this rounding is required for exact continuation. `consumed_blocks` is an
 absolute packed-stream cursor and includes any initial `--skip_blocks` prefix.
+If a finite stream exhausts mid-accumulation, the run reports
+`checkpoint_deferred: true` and retains the previous optimizer-boundary
+checkpoint; after data is restored or appended, resume replays the uncommitted
+micro-batches exactly.
 
 HF artifact exports are immutable: choose a new output directory for every
 export. The exporter builds a complete sibling staging directory and renames it
