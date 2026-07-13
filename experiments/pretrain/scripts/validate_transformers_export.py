@@ -32,6 +32,14 @@ def load_native(args, device, dtype):
     return model.to(device=device, dtype=dtype).eval()
 
 
+def load_exported(export_dir: str | Path, device, dtype):
+    return AutoModelForCausalLM.from_pretrained(
+        resolve(export_dir),
+        dtype=dtype,
+        trust_remote_code=True,
+    ).to(device).eval()
+
+
 def compare_logits(native_model, exported_model, tokenizer, texts, device) -> list[dict]:
     rows = []
     for text in texts:
@@ -121,7 +129,7 @@ def main() -> None:
     if tokenizer.pad_token_id is None:
         tokenizer.pad_token = tokenizer.eos_token
     native_model = load_native(args, device, dtype)
-    exported_model = AutoModelForCausalLM.from_pretrained(resolve(args.export_dir), torch_dtype=dtype).to(device).eval()
+    exported_model = load_exported(args.export_dir, device, dtype)
 
     texts = [
         "南京邮电大学位于",
