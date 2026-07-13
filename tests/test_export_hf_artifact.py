@@ -5,9 +5,9 @@ from pathlib import Path
 
 import torch
 from safetensors.torch import load_file
-from transformers import AutoModelForCausalLM
+from transformers import AutoModel, AutoModelForCausalLM
 
-from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
+from model.model_minimind import MiniMindConfig, MiniMindForCausalLM, MiniMindModel
 
 
 def test_exported_artifact_loads_through_auto_model(tmp_path: Path) -> None:
@@ -38,18 +38,29 @@ def test_exported_artifact_loads_through_auto_model(tmp_path: Path) -> None:
         trust_remote_code=True,
         local_files_only=True,
     ).eval()
+    loaded_base = AutoModel.from_pretrained(
+        output_dir,
+        trust_remote_code=True,
+        local_files_only=True,
+    ).eval()
     input_ids = torch.tensor([[1, 2, 3]])
 
     with torch.no_grad():
         expected = source_model(input_ids).logits
         actual = loaded(input_ids).logits
+        expected_hidden = source_model.model(input_ids)[0]
+        actual_hidden = loaded_base(input_ids)[0]
 
     assert torch.equal(actual, expected)
+    assert torch.equal(actual_hidden, expected_hidden)
+    assert MiniMindModel._supports_attention_backend is True
     assert (output_dir / "model.safetensors").exists()
     assert (output_dir / "tokenizer.json").exists()
     assert manifest["source_revision"] == "test-revision"
     assert manifest["parameter_count"] == sum(parameter.numel() for parameter in source_model.parameters())
     assert manifest["source_weight"]["sha256"]
+    artifact_config = json.loads((output_dir / "config.json").read_text(encoding="utf-8"))
+    assert artifact_config["auto_map"]["AutoModel"].endswith(".MiniMindModel")
     assert json.loads((output_dir / "artifact_manifest.json").read_text(encoding="utf-8")) == manifest
 
 

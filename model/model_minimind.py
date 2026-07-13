@@ -2,6 +2,7 @@ import math, torch, torch.nn.functional as F
 from torch import nn
 from transformers.activations import ACT2FN
 from transformers import PreTrainedModel, GenerationMixin, PretrainedConfig
+from transformers.modeling_utils import ALL_ATTENTION_FUNCTIONS
 from transformers.modeling_outputs import MoeCausalLMOutputWithPast
 
 # 🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏🌎🌍🌏
@@ -89,8 +90,9 @@ def precompute_freqs_cis(dim: int, end: int = int(32 * 1024), rope_base: float =
 
 def apply_rotary_pos_emb(q, k, cos, sin, unsqueeze_dim=1):
     def rotate_half(x): return torch.cat((-x[..., x.shape[-1] // 2:], x[..., : x.shape[-1] // 2]), dim=-1)
-    q_embed = ((q * cos.unsqueeze(unsqueeze_dim)) + (rotate_half(q) * sin.unsqueeze(unsqueeze_dim))).to(q.dtype)
-    k_embed = ((k * cos.unsqueeze(unsqueeze_dim)) + (rotate_half(k) * sin.unsqueeze(unsqueeze_dim))).to(k.dtype)
+    rope_dim = 2 if cos.ndim == 3 else unsqueeze_dim
+    q_embed = ((q * cos.unsqueeze(rope_dim)) + (rotate_half(q) * sin.unsqueeze(rope_dim))).to(q.dtype)
+    k_embed = ((k * cos.unsqueeze(rope_dim)) + (rotate_half(k) * sin.unsqueeze(rope_dim))).to(k.dtype)
     return q_embed, k_embed
 
 def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
@@ -99,13 +101,17 @@ def repeat_kv(x: torch.Tensor, n_rep: int) -> torch.Tensor:
     return (x[:, :, :, None, :].expand(bs, slen, num_key_value_heads, n_rep, head_dim).reshape(bs, slen, num_key_value_heads * n_rep, head_dim))
 
 class Attention(nn.Module):
-    def __init__(self, config: MiniMindConfig):
+    def __init__(self, config: MiniMindConfig, layer_idx: int):
         super().__init__()
+        self.config = config
+        self.layer_idx = layer_idx
         self.num_key_value_heads = config.num_attention_heads if config.num_key_value_heads is None else config.num_key_value_heads
         self.n_local_heads = config.num_attention_heads
         self.n_local_kv_heads = self.num_key_value_heads
         self.n_rep = self.n_local_heads // self.n_local_kv_heads
+        self.num_key_value_groups = self.n_rep
         self.head_dim = config.head_dim
+        self.scaling = self.head_dim ** -0.5
         self.is_causal = True
         self.q_proj = nn.Linear(config.hidden_size, config.num_attention_heads * self.head_dim, bias=False)
         self.k_proj = nn.Linear(config.hidden_size, self.num_key_value_heads * self.head_dim, bias=False)
@@ -118,7 +124,7 @@ class Attention(nn.Module):
         self.dropout = config.dropout
         self.flash = hasattr(torch.nn.functional, 'scaled_dot_product_attention') and config.flash_attn
 
-    def forward(self, x, position_embeddings, past_key_value=None, use_cache=False, attention_mask=None):
+    def forward(self, x, position_embeddings, past_key_value=None, use_cache=False, attention_mask=None, **kwargs):
         bsz, seq_len, _ = x.shape
         xq, xk, xv = self.q_proj(x), self.k_proj(x), self.v_proj(x)
         xq = xq.view(bsz, seq_len, self.n_local_heads, self.head_dim)
@@ -127,6 +133,20 @@ class Attention(nn.Module):
         xq, xk = self.q_norm(xq), self.k_norm(xk)
         cos, sin = position_embeddings
         xq, xk = apply_rotary_pos_emb(xq, xk, cos, sin)
+        if getattr(self.config, "_attn_implementation", None) == "vllm":
+            attention_interface = ALL_ATTENTION_FUNCTIONS["vllm"]
+            output, _ = attention_interface(
+                self,
+                xq.transpose(1, 2),
+                xk.transpose(1, 2),
+                xv.transpose(1, 2),
+                attention_mask,
+                dropout=self.dropout if self.training else 0.0,
+                scaling=self.scaling,
+                **kwargs,
+            )
+            output = output.reshape(bsz, seq_len, -1)
+            return self.resid_dropout(self.o_proj(output)), None
         if past_key_value is not None:
             xk = torch.cat([past_key_value[0], xk], dim=1)
             xv = torch.cat([past_key_value[1], xv], dim=1)
@@ -188,24 +208,28 @@ class MOEFeedForward(nn.Module):
 class MiniMindBlock(nn.Module):
     def __init__(self, layer_id: int, config: MiniMindConfig):
         super().__init__()
-        self.self_attn = Attention(config)
+        self.self_attn = Attention(config, layer_id)
         self.input_layernorm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.post_attention_layernorm = RMSNorm(config.hidden_size, eps=config.rms_norm_eps)
         self.mlp = FeedForward(config) if not config.use_moe else MOEFeedForward(config)
 
-    def forward(self, hidden_states, position_embeddings, past_key_value=None, use_cache=False, attention_mask=None):
+    def forward(self, hidden_states, position_embeddings, past_key_value=None, use_cache=False, attention_mask=None, **kwargs):
         residual = hidden_states
         hidden_states, present_key_value = self.self_attn(
             self.input_layernorm(hidden_states), position_embeddings,
-            past_key_value, use_cache, attention_mask
+            past_key_value, use_cache, attention_mask, **kwargs
         )
         hidden_states += residual
         hidden_states = hidden_states + self.mlp(self.post_attention_layernorm(hidden_states))
         return hidden_states, present_key_value
 
-class MiniMindModel(nn.Module):
+class MiniMindModel(PreTrainedModel):
+    config_class = MiniMindConfig
+    base_model_prefix = "model"
+    _supports_attention_backend = True
+
     def __init__(self, config: MiniMindConfig):
-        super().__init__()
+        super().__init__(config)
         self.config = config
         self.vocab_size, self.num_hidden_layers = config.vocab_size, config.num_hidden_layers
         self.embed_tokens = nn.Embedding(config.vocab_size, config.hidden_size)
@@ -216,13 +240,26 @@ class MiniMindModel(nn.Module):
         self.register_buffer("freqs_cos", freqs_cos, persistent=False)
         self.register_buffer("freqs_sin", freqs_sin, persistent=False)
         self._rope_buffers_ready = not freqs_cos.is_meta
+        self.post_init()
 
-    def forward(self, input_ids, attention_mask=None, past_key_values=None, use_cache=False, **kwargs):
-        batch_size, seq_length = input_ids.shape
+    def get_input_embeddings(self):
+        return self.embed_tokens
+
+    def set_input_embeddings(self, value):
+        self.embed_tokens = value
+
+    def get_decoder(self):
+        return self
+
+    def forward(self, input_ids=None, attention_mask=None, past_key_values=None, use_cache=False,
+                inputs_embeds=None, position_ids=None, return_dict=None, **kwargs):
+        if (input_ids is None) == (inputs_embeds is None):
+            raise ValueError("Specify exactly one of input_ids or inputs_embeds")
+        batch_size, seq_length = (input_ids if input_ids is not None else inputs_embeds).shape[:2]
         if hasattr(past_key_values, 'layers'): past_key_values = None
         past_key_values = past_key_values or [None] * len(self.layers)
         start_pos = past_key_values[0][0].shape[1] if past_key_values[0] is not None else 0
-        hidden_states = self.dropout(self.embed_tokens(input_ids))
+        hidden_states = self.dropout(self.embed_tokens(input_ids) if inputs_embeds is None else inputs_embeds)
         # Non-persistent buffers created under Transformers' meta-device loader
         # are materialized as uninitialized memory. Rebuild them on first use.
         if (
@@ -233,7 +270,10 @@ class MiniMindModel(nn.Module):
             freqs_cos, freqs_sin = precompute_freqs_cis(dim=self.config.head_dim, end=self.config.max_position_embeddings, rope_base=self.config.rope_theta, rope_scaling=self.config.rope_scaling)
             self.freqs_cos, self.freqs_sin = freqs_cos.to(hidden_states.device), freqs_sin.to(hidden_states.device)
             self._rope_buffers_ready = True
-        position_embeddings = (self.freqs_cos[start_pos:start_pos + seq_length], self.freqs_sin[start_pos:start_pos + seq_length])
+        if position_ids is None:
+            position_embeddings = (self.freqs_cos[start_pos:start_pos + seq_length], self.freqs_sin[start_pos:start_pos + seq_length])
+        else:
+            position_embeddings = (self.freqs_cos[position_ids], self.freqs_sin[position_ids])
         presents = []
         for layer, past_key_value in zip(self.layers, past_key_values):
             hidden_states, present = layer(
@@ -241,7 +281,8 @@ class MiniMindModel(nn.Module):
                 position_embeddings,
                 past_key_value=past_key_value,
                 use_cache=use_cache,
-                attention_mask=attention_mask
+                attention_mask=attention_mask,
+                **kwargs,
             )
             presents.append(present)
         hidden_states = self.norm(hidden_states)
@@ -250,6 +291,8 @@ class MiniMindModel(nn.Module):
 
 class MiniMindForCausalLM(PreTrainedModel, GenerationMixin):
     config_class = MiniMindConfig
+    base_model_prefix = "model"
+    _supports_attention_backend = True
     _tied_weights_keys = {"lm_head.weight": "model.embed_tokens.weight"}
     def __init__(self, config: MiniMindConfig = None):
         self.config = config or MiniMindConfig()

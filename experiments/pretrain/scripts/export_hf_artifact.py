@@ -14,7 +14,7 @@ from transformers import AutoTokenizer
 ROOT = Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT))
 
-from model.model_minimind import MiniMindConfig, MiniMindForCausalLM
+from model.model_minimind import MiniMindConfig, MiniMindForCausalLM, MiniMindModel
 
 
 def sha256_file(path: Path, chunk_size: int = 1024 * 1024) -> str:
@@ -50,7 +50,13 @@ def export_checkpoint(
     model.load_state_dict(state, strict=True)
 
     MiniMindConfig.register_for_auto_class()
+    MiniMindModel.register_for_auto_class("AutoModel")
     MiniMindForCausalLM.register_for_auto_class("AutoModelForCausalLM")
+    model.config.auto_map = {
+        "AutoConfig": "model_minimind.MiniMindConfig",
+        "AutoModel": "model_minimind.MiniMindModel",
+        "AutoModelForCausalLM": "model_minimind.MiniMindForCausalLM",
+    }
     model.save_pretrained(destination, safe_serialization=True)
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     tokenizer.save_pretrained(destination)
