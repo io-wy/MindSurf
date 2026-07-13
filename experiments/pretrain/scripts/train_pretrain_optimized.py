@@ -24,6 +24,11 @@ from experiments.pretrain.training_checkpoint import (
     save_training_checkpoint,
     validate_resume_config,
 )
+from experiments.pretrain.experiment_tracking import (
+    ExperimentTracker,
+    detect_source_revision,
+    write_run_manifest,
+)
 from trainer.trainer_utils import get_model_params, setup_seed
 
 
@@ -295,8 +300,41 @@ def train(args):
     run_config = {
         key: value
         for key, value in vars(args).items()
-        if key not in {"resume_checkpoint", "checkpoint_interval", "stop_after_steps", "log_interval", "save_dir"}
+        if key not in {
+            "resume_checkpoint",
+            "checkpoint_interval",
+            "stop_after_steps",
+            "log_interval",
+            "save_dir",
+            "trackio_project",
+            "trackio_space_id",
+        }
     }
+    checkpoint_path = out_dir / f"{args.save_weight}_training_state.pt"
+    weight_path = out_dir / f"{args.save_weight}_{args.hidden_size}.pth"
+    summary_path = out_dir / f"{args.save_weight}_{args.hidden_size}_summary.json"
+    metrics_path = out_dir / f"{args.save_weight}_metrics.jsonl"
+    run_manifest_path = out_dir / f"{args.save_weight}_run_manifest.json"
+    source_revision = detect_source_revision(ROOT)
+    write_run_manifest(
+        run_manifest_path,
+        run_name=args.save_weight,
+        config=run_config,
+        source_revision=source_revision,
+        artifacts={
+            "metrics": metrics_path.name,
+            "training_checkpoint": checkpoint_path.name,
+            "weights": weight_path.name,
+            "summary": summary_path.name,
+        },
+    )
+    tracker = ExperimentTracker(
+        metrics_path,
+        run_name=args.save_weight,
+        config=run_config,
+        trackio_project=args.trackio_project,
+        trackio_space_id=args.trackio_space_id,
+    )
     global_step = 0
     optimizer_step = 0
     consumed_blocks = 0
@@ -323,6 +361,12 @@ def train(args):
             f"resumed checkpoint={resume_path} global_step={global_step} "
             f"optimizer_step={optimizer_step} consumed_blocks={consumed_blocks}",
             flush=True,
+        )
+        tracker.alert(
+            "training resumed",
+            f"restored global_step={global_step} optimizer_step={optimizer_step} consumed_blocks={consumed_blocks}",
+            level="info",
+            step=global_step,
         )
 
     if args.data_mix_json:
@@ -389,12 +433,11 @@ def train(args):
         torch.cuda.empty_cache()
         torch.cuda.reset_peak_memory_stats()
     started = time.time()
+    invocation_start_blocks = consumed_blocks
     model.train()
     optimizer.zero_grad(set_to_none=True)
 
     execution_limit = min(total_steps, args.stop_after_steps) if args.stop_after_steps > 0 else total_steps
-    checkpoint_path = out_dir / f"{args.save_weight}_training_state.pt"
-
     for epoch in range(start_epoch, args.epochs):
         for input_ids, labels in loader:
             if global_step >= execution_limit:
@@ -416,7 +459,30 @@ def train(args):
                 group["lr"] = lr
             with autocast_ctx:
                 result = model(input_ids, labels=labels)
-                loss = (result.loss + result.aux_loss) / args.accumulation_steps
+                total_loss = result.loss + result.aux_loss
+                if not torch.isfinite(total_loss).all():
+                    tracker.alert(
+                        "non-finite loss",
+                        f"loss became non-finite at global_step={global_step}",
+                        level="error",
+                        step=global_step,
+                    )
+                    save_training_checkpoint(
+                        checkpoint_path,
+                        model=model,
+                        optimizer=optimizer,
+                        scaler=scaler,
+                        progress={
+                            "global_step": global_step,
+                            "optimizer_step": optimizer_step,
+                            "consumed_blocks": consumed_blocks,
+                            "epoch": epoch,
+                        },
+                        run_config=run_config,
+                    )
+                    tracker.finish(status="failed", summary={"reason": "non_finite_loss", "step": global_step})
+                    raise FloatingPointError(f"non-finite loss at global_step={global_step}")
+                loss = total_loss / args.accumulation_steps
             scaler.scale(loss).backward()
 
             if global_step % args.accumulation_steps == 0 or global_step == total_steps:
@@ -445,10 +511,25 @@ def train(args):
             losses.append(current_loss)
             if global_step % args.log_interval == 0 or global_step == total_steps:
                 elapsed = time.time() - started
-                tokens = global_step * args.batch_size * args.max_seq_len
+                tokens = (consumed_blocks - invocation_start_blocks) * args.max_seq_len
+                tokens_per_second = tokens / max(elapsed, 1e-6)
+                tracker.log(
+                    {
+                        "epoch": epoch + 1,
+                        "loss": current_loss,
+                        "learning_rate": lr,
+                        "tokens_per_second": tokens_per_second,
+                        "consumed_blocks": consumed_blocks,
+                        "optimizer_step": optimizer_step,
+                        "max_memory_reserved_gb": (
+                            torch.cuda.max_memory_reserved() / 1024 ** 3 if device_type == "cuda" else 0.0
+                        ),
+                    },
+                    step=global_step,
+                )
                 print(
                     f"epoch={epoch + 1}/{args.epochs} step={global_step}/{total_steps} "
-                    f"loss={current_loss:.4f} lr={lr:.8f} tokens/s={tokens / max(elapsed, 1e-6):.0f}",
+                    f"loss={current_loss:.4f} lr={lr:.8f} tokens/s={tokens_per_second:.0f}",
                     flush=True,
                 )
         if global_step >= execution_limit:
@@ -469,8 +550,10 @@ def train(args):
             run_config=run_config,
         )
 
-    weight_path = out_dir / f"{args.save_weight}_{args.hidden_size}.pth"
     torch.save({k: v.detach().half().cpu() for k, v in model.state_dict().items()}, weight_path)
+    run_seconds = time.time() - started
+    invocation_tokens = (consumed_blocks - invocation_start_blocks) * args.max_seq_len
+    run_status = "completed" if global_step >= total_steps else "stopped"
     summary = {
         "data_path": args.data_path,
         "data_mix_json": args.data_mix_json,
@@ -507,16 +590,21 @@ def train(args):
         "dataset_len": dataset_len,
         "first_loss": losses[0] if losses else None,
         "last_loss": losses[-1] if losses else None,
-        "seconds": round(time.time() - started, 3),
-        "slot_tokens_per_second": (global_step * args.batch_size * args.max_seq_len) / max(time.time() - started, 1e-6),
+        "seconds": round(run_seconds, 3),
+        "slot_tokens_per_second": invocation_tokens / max(run_seconds, 1e-6),
         "token_utilization": token_utilization,
         "max_memory_reserved_gb": (torch.cuda.max_memory_reserved() / 1024 ** 3) if device_type == "cuda" else None,
         "weight_path": str(weight_path),
         "training_checkpoint_path": str(checkpoint_path) if checkpoint_path.exists() else None,
         "resumed_from": args.resume_checkpoint,
+        "source_revision": source_revision,
+        "metrics_path": str(metrics_path),
+        "run_manifest_path": str(run_manifest_path),
+        "trackio_enabled": bool(args.trackio_project),
+        "status": run_status,
     }
-    summary_path = out_dir / f"{args.save_weight}_{args.hidden_size}_summary.json"
     summary_path.write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
+    tracker.finish(status=run_status, summary=summary)
     print(json.dumps(summary, ensure_ascii=False, indent=2), flush=True)
 
 
@@ -556,6 +644,8 @@ def main():
     parser.add_argument("--device", default=None)
     parser.add_argument("--seed", type=int, default=42)
     parser.add_argument("--log_interval", type=int, default=20)
+    parser.add_argument("--trackio_project", default=None, help="Optional Trackio project; JSONL metrics are always written")
+    parser.add_argument("--trackio_space_id", default=None, help="Optional Hugging Face Space used by Trackio")
     parser.add_argument("--use_moe", type=int, default=0)
     parser.add_argument("--fused_adamw", action="store_true")
     parser.add_argument("--packed", action="store_true")

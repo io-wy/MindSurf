@@ -20,6 +20,8 @@ def test_pretrain_runner_exposes_periodic_resume_checkpoint_flags() -> None:
 
     assert "--resume_checkpoint" in result.stdout
     assert "--checkpoint_interval" in result.stdout
+    assert "--trackio_project" in result.stdout
+    assert "--trackio_space_id" in result.stdout
 
 
 def test_pretrain_runner_resumes_tiny_cpu_run(tmp_path: Path) -> None:
@@ -82,3 +84,14 @@ def test_pretrain_runner_resumes_tiny_cpu_run(tmp_path: Path) -> None:
     assert summary["optimizer_steps"] == 2
     assert summary["consumed_blocks"] == 4
     assert summary["resumed_from"] == str(checkpoint_path)
+    assert summary["status"] == "completed"
+    assert Path(summary["metrics_path"]).exists()
+    assert Path(summary["run_manifest_path"]).exists()
+
+    metrics_rows = [
+        json.loads(line)
+        for line in Path(summary["metrics_path"]).read_text(encoding="utf-8").splitlines()
+    ]
+    assert [row["event"] for row in metrics_rows].count("start") == 2
+    assert any(row["event"] == "alert" and row["title"] == "training resumed" for row in metrics_rows)
+    assert [row["status"] for row in metrics_rows if row["event"] == "finish"] == ["stopped", "completed"]
