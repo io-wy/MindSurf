@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+import sys
 from pathlib import Path
 
 from experiments.pretrain.scripts.promote_release import promote_release
@@ -102,3 +104,13 @@ def test_promotion_writes_atomic_current_pointer_only_after_gate_passes(tmp_path
     assert payload["release_id"] == "tiny-release"
     assert payload["artifact_dir"] == "out/artifact"
     assert not list(pointer.parent.glob("*.tmp"))
+
+
+def test_promotion_cli_is_runnable_from_repo_root() -> None:
+    result = subprocess.run(
+        [sys.executable, "experiments/pretrain/scripts/promote_release.py", "--help"],
+        check=True,
+        capture_output=True,
+        text=True,
+    )
+    assert "--spec" in result.stdout

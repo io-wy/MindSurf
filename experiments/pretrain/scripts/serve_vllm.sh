@@ -3,7 +3,26 @@ set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
 VLLM_ENV="${VLLM_ENV:-$ROOT/.venv-vllm}"
-MODEL_PATH="${MODEL_PATH:-$ROOT/out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm}"
+CURRENT_RELEASE="${CURRENT_RELEASE:-$ROOT/out/releases/current.json}"
+if [[ -z "${MODEL_PATH:-}" ]]; then
+  if [[ -f "$CURRENT_RELEASE" ]]; then
+    MODEL_PATH="$("$VLLM_ENV/bin/python" - "$ROOT" "$CURRENT_RELEASE" <<'PY'
+import json
+import sys
+from pathlib import Path
+
+root = Path(sys.argv[1]).resolve()
+payload = json.loads(Path(sys.argv[2]).read_text(encoding="utf-8"))
+artifact = (root / payload["artifact_dir"]).resolve()
+if not artifact.is_relative_to(root):
+    raise SystemExit("release artifact escapes project root")
+print(artifact)
+PY
+)"
+  else
+    MODEL_PATH="$ROOT/out/infra_baseline_gqa64m_lr5e4_40m_hf_fp16_vllm"
+  fi
+fi
 HOST="${HOST:-127.0.0.1}"
 PORT="${PORT:-19099}"
 MAX_MODEL_LEN="${MAX_MODEL_LEN:-512}"
