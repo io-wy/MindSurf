@@ -1,117 +1,91 @@
-"""Celery tasks for asynchronous training jobs.
-
-Long-running training tasks are offloaded to Celery workers
-to avoid blocking the FastAPI request handler.
-"""
+"""Celery entry point for the same audited Hydra training CLI used locally."""
 
 from __future__ import annotations
 
+import json
+import subprocess
+import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
-import torch
-from celery import shared_task
-
-from python_starter.core.dataset import TextDataset, collate_fn
-from python_starter.core.model import ModelConfig, TransformerLM
-from python_starter.core.tokenizer import load_tokenizer
-from python_starter.core.trainer import Trainer, TrainerConfig
-from python_starter.experiments.tracker import ExperimentTracker
-from python_starter.infrastructure.config import get_settings
 from python_starter.infrastructure.logging import get_logger
 from python_starter.tasks.celery_app import celery_app
 
 logger = get_logger(__name__)
+ROOT = Path(__file__).resolve().parents[3]
 
 
-@celery_app.task(bind=True, max_retries=3)
+def _hydra_value(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    if value is None:
+        return "null"
+    if isinstance(value, (int, float)):
+        return str(value)
+    return json.dumps(str(value), ensure_ascii=False)
+
+
+def _flatten_overrides(
+    values: Mapping[str, Any],
+    prefix: str = "",
+) -> list[str]:
+    overrides: list[str] = []
+    for key, value in sorted(values.items()):
+        if not key.replace("_", "").isalnum():
+            raise ValueError(f"invalid Hydra override key: {key}")
+        qualified = f"{prefix}.{key}" if prefix else key
+        if isinstance(value, Mapping):
+            overrides.extend(_flatten_overrides(value, qualified))
+        elif isinstance(value, (str, int, float, bool)) or value is None:
+            overrides.append(f"{qualified}={_hydra_value(value)}")
+        else:
+            raise ValueError(f"unsupported override value for {qualified}")
+    return overrides
+
+
+@celery_app.task(bind=True)  # type: ignore[untyped-decorator]
 def run_training_task(
-    self,
+    self: Any,
     experiment_name: str,
-    model_config: dict[str, Any],
-    training_config: dict[str, Any],
-    data_config: dict[str, Any],
+    config_overrides: dict[str, Any] | None = None,
+    dataset_path: str | None = None,
 ) -> dict[str, Any]:
-    """Run a training job asynchronously.
+    """Execute one validated training run in a worker subprocess."""
+    task_id = str(self.request.id)
+    log_dir = ROOT / "artifacts" / "jobs"
+    log_dir.mkdir(parents=True, exist_ok=True)
+    log_path = log_dir / f"{task_id}.log"
 
-    Args:
-        experiment_name: Name for the experiment.
-        model_config: Model hyperparameters.
-        training_config: Training hyperparameters.
-        data_config: Data paths and preprocessing config.
+    command = [
+        sys.executable,
+        str(ROOT / "scripts" / "train.py"),
+        f"run_name={_hydra_value(experiment_name)}",
+    ]
+    command.extend(_flatten_overrides(config_overrides or {}))
+    if dataset_path:
+        resolved_dataset = Path(dataset_path).expanduser().resolve(strict=True)
+        command.append(f"data.train_path={_hydra_value(resolved_dataset.as_posix())}")
 
-    Returns:
-        Dict with training results and artifact paths.
-    """
-    settings = get_settings()
-    self.update_state(state="STARTED", meta={"experiment": experiment_name})
-
-    tracker = ExperimentTracker(settings, experiment_name=experiment_name)
-    tracker.start(run_name=experiment_name, config={**model_config, **training_config})
-
-    try:
-        # Load tokenizer
-        tokenizer = load_tokenizer(data_config.get("tokenizer_name", "gpt2"))
-
-        # Build model
-        model_cfg = ModelConfig(**model_config)
-        model = TransformerLM(model_cfg)
-
-        # Build datasets
-        train_dataset = TextDataset(
-            data_config["train_path"],
-            tokenizer,
-            max_length=data_config.get("max_length", 512),
-            stride=data_config.get("stride", 512),
+    self.update_state(
+        state="STARTED",
+        meta={"experiment": experiment_name, "log_path": str(log_path)},
+    )
+    logger.info("training_task_started", task_id=task_id, experiment=experiment_name)
+    with log_path.open("w", encoding="utf-8", newline="\n") as log:
+        completed = subprocess.run(
+            command,
+            cwd=ROOT,
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            check=False,
         )
-        val_dataset = None
-        if data_config.get("val_path") and Path(data_config["val_path"]).exists():
-            val_dataset = TextDataset(
-                data_config["val_path"],
-                tokenizer,
-                max_length=data_config.get("max_length", 512),
-                stride=data_config.get("stride", 512),
-            )
-
-        train_loader = torch.utils.data.DataLoader(
-            train_dataset,
-            batch_size=training_config["batch_size"],
-            shuffle=True,
-            collate_fn=collate_fn,
-            num_workers=0,
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"training command failed with exit code {completed.returncode}; see {log_path}"
         )
-        val_loader = None
-        if val_dataset:
-            val_loader = torch.utils.data.DataLoader(
-                val_dataset,
-                batch_size=training_config["batch_size"],
-                shuffle=False,
-                collate_fn=collate_fn,
-                num_workers=0,
-            )
-
-        # Train
-        trainer_cfg = TrainerConfig(**training_config)
-        trainer = Trainer(model, trainer_cfg, tracker=tracker)
-        trainer.train(train_loader, val_loader)
-
-        # Log final artifacts
-        final_ckpt = trainer.config.output_dir / "final_model.pt"
-        if final_ckpt.exists():
-            tracker.log_artifact(str(final_ckpt), artifact_path="checkpoints")
-
-        tracker.finish()
-
-        return {
-            "status": "completed",
-            "experiment": experiment_name,
-            "checkpoint_path": str(final_ckpt),
-            "best_eval_loss": trainer.best_eval_loss,
-            "total_steps": trainer.global_step,
-        }
-
-    except Exception as exc:
-        logger.error("training_task_failed", error=str(exc))
-        tracker.finish()
-        self.retry(countdown=60, exc=exc)
-        raise
+    return {
+        "status": "completed",
+        "experiment": experiment_name,
+        "log_path": str(log_path),
+    }

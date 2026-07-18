@@ -4,15 +4,14 @@ from __future__ import annotations
 
 import asyncio
 from collections.abc import AsyncGenerator, Generator
-from typing import Any
 
 import fakeredis.aioredis
 import pytest
 import pytest_asyncio
 from httpx import ASGITransport, AsyncClient
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
+from python_starter.api.dependencies import get_db, get_redis
 from python_starter.api.main import create_app
 from python_starter.infrastructure.config import Settings, get_settings
 from python_starter.infrastructure.database import Base
@@ -45,7 +44,7 @@ async def db_session(test_settings: Settings) -> AsyncGenerator[AsyncSession, No
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-    session_factory = sessionmaker(
+    session_factory = async_sessionmaker(
         engine, class_=AsyncSession, expire_on_commit=False, autoflush=False
     )
     async with session_factory() as session:
@@ -62,7 +61,7 @@ async def fake_redis() -> AsyncGenerator[fakeredis.aioredis.FakeRedis, None]:
     redis = fakeredis.aioredis.FakeRedis(decode_responses=True)
     yield redis
     await redis.flushall()
-    await redis.close()
+    await redis.aclose()  # type: ignore[attr-defined]
 
 
 @pytest_asyncio.fixture
@@ -78,7 +77,15 @@ async def api_client(
     async def override_get_settings() -> Settings:
         return test_settings
 
+    async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
+        yield db_session
+
+    async def override_get_redis() -> fakeredis.aioredis.FakeRedis:
+        return fake_redis
+
     app.dependency_overrides[get_settings] = override_get_settings
+    app.dependency_overrides[get_db] = override_get_db
+    app.dependency_overrides[get_redis] = override_get_redis
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as client:

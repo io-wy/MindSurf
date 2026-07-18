@@ -1,4 +1,3 @@
-# @package _group_
 output_dir: models/checkpoints/sft
 num_epochs: 3
 batch_size: 4

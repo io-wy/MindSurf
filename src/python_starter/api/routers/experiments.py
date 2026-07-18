@@ -5,11 +5,12 @@ CRUD operations for experiments and model registry.
 
 from __future__ import annotations
 
+from typing import Annotated, Any, cast
+
 from fastapi import APIRouter, HTTPException, Query, status
 from sqlalchemy import desc, func, select
-from sqlalchemy.ext.asyncio import AsyncSession
 
-from python_starter.api.dependencies import DBManagerDep, DBSession, SettingsDep
+from python_starter.api.dependencies import DBSession, SettingsDep
 from python_starter.api.models import Experiment, RegisteredModel
 from python_starter.api.schemas.models import (
     ExperimentCreate,
@@ -51,9 +52,9 @@ async def create_experiment(
 @router.get("", response_model=ExperimentListResponse)
 async def list_experiments(
     db: DBSession,
-    page: int = Query(1, ge=1),
-    page_size: int = Query(20, ge=1, le=100),
-    status_filter: ExperimentStatus | None = Query(None, alias="status"),
+    page: Annotated[int, Query(ge=1)] = 1,
+    page_size: Annotated[int, Query(ge=1, le=100)] = 20,
+    status_filter: Annotated[ExperimentStatus | None, Query(alias="status")] = None,
 ) -> ExperimentListResponse:
     """List experiments with pagination and optional status filter."""
     query = select(Experiment)
@@ -73,7 +74,7 @@ async def list_experiments(
     total = count_result.scalar_one()
 
     return ExperimentListResponse(
-        items=list(items),
+        items=[ExperimentResponse.model_validate(item) for item in items],
         total=total,
         page=page,
         page_size=page_size,
@@ -86,9 +87,7 @@ async def get_experiment(
     db: DBSession,
 ) -> Experiment:
     """Get a single experiment by ID."""
-    result = await db.execute(
-        select(Experiment).where(Experiment.id == experiment_id)
-    )
+    result = await db.execute(select(Experiment).where(Experiment.id == experiment_id))
     experiment = result.scalar_one_or_none()
 
     if experiment is None:
@@ -99,16 +98,14 @@ async def get_experiment(
     return experiment
 
 
-@router.patch("/{experiment_id}/status")
+@router.patch("/{experiment_id}/status", response_model=ExperimentResponse)
 async def update_experiment_status(
     experiment_id: int,
-    status: ExperimentStatus,
+    experiment_status: ExperimentStatus,
     db: DBSession,
 ) -> ExperimentResponse:
     """Update experiment status (e.g., running -> completed)."""
-    result = await db.execute(
-        select(Experiment).where(Experiment.id == experiment_id)
-    )
+    result = await db.execute(select(Experiment).where(Experiment.id == experiment_id))
     experiment = result.scalar_one_or_none()
 
     if experiment is None:
@@ -117,25 +114,23 @@ async def update_experiment_status(
             detail=f"Experiment {experiment_id} not found",
         )
 
-    experiment.status = status.value
+    experiment.status = experiment_status.value
     logger.info(
         "experiment_status_updated",
         experiment_id=experiment_id,
-        new_status=status.value,
+        new_status=experiment_status.value,
     )
-    return experiment
+    return cast(ExperimentResponse, experiment)
 
 
-@router.post("/{experiment_id}/metrics")
+@router.post("/{experiment_id}/metrics", response_model=ExperimentResponse)
 async def update_experiment_metrics(
     experiment_id: int,
-    metrics: dict,
+    metrics: dict[str, Any],
     db: DBSession,
 ) -> ExperimentResponse:
     """Update experiment metrics (e.g., from training loop)."""
-    result = await db.execute(
-        select(Experiment).where(Experiment.id == experiment_id)
-    )
+    result = await db.execute(select(Experiment).where(Experiment.id == experiment_id))
     experiment = result.scalar_one_or_none()
 
     if experiment is None:
@@ -153,14 +148,17 @@ async def update_experiment_metrics(
         experiment_id=experiment_id,
         metrics=metrics,
     )
-    return experiment
+    return cast(ExperimentResponse, experiment)
 
 
 # =============================================================================
 # Model Registry
 # =============================================================================
 
-@router.post("/{experiment_id}/models", response_model=ModelResponse, status_code=status.HTTP_201_CREATED)
+
+@router.post(
+    "/{experiment_id}/models", response_model=ModelResponse, status_code=status.HTTP_201_CREATED
+)
 async def register_model(
     experiment_id: int,
     data: ModelRegisterRequest,
@@ -168,9 +166,7 @@ async def register_model(
 ) -> RegisteredModel:
     """Register a trained model associated with an experiment."""
     # Verify experiment exists
-    exp_result = await db.execute(
-        select(Experiment).where(Experiment.id == experiment_id)
-    )
+    exp_result = await db.execute(select(Experiment).where(Experiment.id == experiment_id))
     if exp_result.scalar_one_or_none() is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -215,6 +211,7 @@ async def list_experiment_models(
 # Training Jobs
 # =============================================================================
 
+
 @router.post("/jobs", response_model=TrainingJobResponse, status_code=status.HTTP_202_ACCEPTED)
 async def submit_training_job(
     data: TrainingJobRequest,
@@ -224,18 +221,24 @@ async def submit_training_job(
 
     Returns immediately with a job ID. Poll GET /jobs/{job_id} for status.
     """
-    # TODO: Integrate with Celery task submission
-    # from python_starter.tasks.training import run_training_task
-    # task = run_training_task.delay(...)
+    from python_starter.tasks.training import run_training_task
 
-    logger.info(
-        "training_job_submitted",
-        experiment_name=data.experiment_name,
-        config_overrides=data.config_overrides,
-    )
+    try:
+        task = run_training_task.delay(
+            data.experiment_name,
+            data.config_overrides,
+            data.dataset_path,
+        )
+    except Exception as exc:
+        logger.error("training_job_submission_failed", error=str(exc))
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Training queue is unavailable",
+        ) from exc
 
+    logger.info("training_job_submitted", job_id=task.id, experiment_name=data.experiment_name)
     return TrainingJobResponse(
-        job_id="placeholder-job-id",
+        job_id=task.id,
         status="queued",
         message=f"Training job '{data.experiment_name}' has been queued",
     )
@@ -244,11 +247,16 @@ async def submit_training_job(
 @router.get("/jobs/{job_id}")
 async def get_training_job_status(
     job_id: str,
-) -> dict:
+) -> dict[str, Any]:
     """Get the status of a submitted training job."""
-    # TODO: Query Celery task result backend
+    from python_starter.tasks.celery_app import celery_app
+
+    result = celery_app.AsyncResult(job_id)
+    payload = result.result if result.ready() else result.info
+    if isinstance(payload, Exception):
+        payload = {"error": str(payload)}
     return {
         "job_id": job_id,
-        "status": "pending",
-        "result": None,
+        "status": result.state.lower(),
+        "result": payload,
     }

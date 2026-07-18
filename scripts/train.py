@@ -7,18 +7,22 @@ Usage:
 
 from __future__ import annotations
 
-import os
+import json
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 import hydra
 import torch
+from hydra.utils import to_absolute_path
 from omegaconf import DictConfig, OmegaConf
+from torch.utils.data import Dataset, IterableDataset
 
 # Allow importing src/python_starter as top-level package
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from python_starter.core.dataset import SFTDataset, TextDataset, collate_fn
+from python_starter.core.data_contract import verify_training_view_manifest
+from python_starter.core.dataset import JsonlPackedDataset, SFTDataset, collate_fn
 from python_starter.core.model import ModelConfig, TransformerLM
 from python_starter.core.tokenizer import load_tokenizer
 from python_starter.core.trainer import Trainer, TrainerConfig
@@ -30,67 +34,129 @@ from python_starter.infrastructure.logging import get_logger
 logger = get_logger(__name__)
 
 
+def _plain_mapping(config: DictConfig) -> dict[str, Any]:
+    value = OmegaConf.to_container(config, resolve=True)
+    if not isinstance(value, dict):
+        raise TypeError("expected a mapping configuration")
+    return cast(dict[str, Any], value)
+
+
+def _load_audit(path: Path, dataset_id: str, revision: str) -> dict[str, Any]:
+    if not path.is_file():
+        raise FileNotFoundError(
+            f"dataset audit is required before training: {path}. "
+            "Run scripts/audit_pretrain_dataset.py first."
+        )
+    audit = json.loads(path.read_text(encoding="utf-8"))
+    required_gates = (
+        "schema_valid",
+        "metadata_contract_valid",
+        "file_identity_valid",
+        "validation_test_disjoint",
+        "train_holdout_disjoint",
+    )
+    if audit.get("status") != "passed" or not all(
+        audit.get("gates", {}).get(name) is True for name in required_gates
+    ):
+        raise ValueError("dataset audit has not passed all internal-training gates")
+    if audit.get("dataset_id") != dataset_id or audit.get("dataset_revision") != revision:
+        raise ValueError("dataset audit identity does not match the training configuration")
+    return cast(dict[str, Any], audit)
+
+
 @hydra.main(version_base=None, config_path="../configs", config_name="default")
 def main(cfg: DictConfig) -> None:
     """Run training with Hydra configuration."""
     settings = get_settings()
+    resolved_config = _plain_mapping(cfg)
 
-    # Print resolved config
-    logger.info("training_config", config=OmegaConf.to_container(cfg, resolve=True))
+    logger.info("training_config", config=resolved_config)
 
-    # Set seed
     seed = cfg.get("seed", 42)
     set_seed(seed)
 
-    # Load tokenizer
-    tokenizer = load_tokenizer(cfg.data.tokenizer_name)
+    tokenizer_path = Path(to_absolute_path(str(cfg.data.tokenizer_name)))
+    tokenizer = load_tokenizer(str(tokenizer_path))
 
-    # Build model
-    model_cfg = ModelConfig(**cfg.model)
+    model_cfg = ModelConfig(**_plain_mapping(cfg.model))
     model = TransformerLM(model_cfg)
+    parameter_count = count_parameters(model)
+    expected_parameters = cfg.get("expected_parameters")
+    if expected_parameters is not None and parameter_count != int(expected_parameters):
+        raise ValueError(
+            f"model parameter count mismatch: expected {expected_parameters}, got {parameter_count}"
+        )
     logger.info(
         "model_built",
-        params=format_number(count_parameters(model)),
-        config=cfg.model,
+        params=format_number(parameter_count),
+        config=model_cfg.to_dict(),
     )
 
-    # Build datasets
     dataset_type = cfg.get("dataset_type", "pretrain")
+    train_dataset: Dataset[dict[str, torch.Tensor]] | IterableDataset[dict[str, torch.Tensor]]
+    val_dataset: Dataset[dict[str, torch.Tensor]] | IterableDataset[dict[str, torch.Tensor]] | None
     if dataset_type == "sft":
         train_dataset = SFTDataset(
-            cfg.data.train_path,
+            to_absolute_path(str(cfg.data.train_path)),
             tokenizer,
             max_length=cfg.data.max_length,
         )
         val_dataset = None
-        if cfg.data.get("val_path") and Path(cfg.data.val_path).exists():
+        if cfg.data.get("val_path") and Path(to_absolute_path(str(cfg.data.val_path))).exists():
             val_dataset = SFTDataset(
-                cfg.data.val_path,
+                to_absolute_path(str(cfg.data.val_path)),
                 tokenizer,
                 max_length=cfg.data.max_length,
             )
     else:
-        train_dataset = TextDataset(
-            cfg.data.train_path,
+        audit_path = Path(
+            to_absolute_path(
+                str(cfg.data.get("audit_path", "artifacts/data/mindsurf_team_v1/audit.json"))
+            )
+        )
+        audit = _load_audit(
+            audit_path,
+            dataset_id=str(cfg.data.dataset_id),
+            revision=str(cfg.data.dataset_revision),
+        )
+        resolved_config["dataset_audit"] = audit
+        train_path = Path(to_absolute_path(str(cfg.data.train_path)))
+        manifest_path = Path(to_absolute_path(str(cfg.data.training_view_manifest)))
+        training_view = verify_training_view_manifest(
+            manifest_path,
+            train_path=train_path,
+            dataset_id=str(cfg.data.dataset_id),
+            revision=str(cfg.data.dataset_revision),
+            source_sha256=str(audit["splits"]["train"]["sha256"]),
+        )
+        resolved_config["training_view"] = training_view
+        train_dataset = JsonlPackedDataset(
+            train_path,
             tokenizer,
             max_length=cfg.data.max_length,
-            stride=cfg.data.get("stride", cfg.data.max_length),
+            text_key=str(cfg.data.get("text_field", "text")),
+            shuffle_buffer=int(cfg.data.get("shuffle_buffer", 0)),
+            seed=int(seed),
         )
-        val_dataset = None
-        if cfg.data.get("val_path") and Path(cfg.data.val_path).exists():
-            val_dataset = TextDataset(
-                cfg.data.val_path,
+        val_path = Path(to_absolute_path(str(cfg.data.val_path)))
+        val_dataset = (
+            JsonlPackedDataset(
+                val_path,
                 tokenizer,
                 max_length=cfg.data.max_length,
-                stride=cfg.data.get("stride", cfg.data.max_length),
+                text_key=str(cfg.data.get("text_field", "text")),
             )
+            if val_path.is_file()
+            else None
+        )
 
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=cfg.training.batch_size,
-        shuffle=True,
+        shuffle=False,
         collate_fn=collate_fn,
         num_workers=0,
+        pin_memory=torch.cuda.is_available(),
     )
     val_loader = None
     if val_dataset:
@@ -100,22 +166,33 @@ def main(cfg: DictConfig) -> None:
             shuffle=False,
             collate_fn=collate_fn,
             num_workers=0,
+            pin_memory=torch.cuda.is_available(),
         )
 
-    # Initialize experiment tracker
-    tracker = ExperimentTracker(settings, experiment_name=cfg.get("experiment_name", "default"))
+    trainer_cfg = TrainerConfig(**_plain_mapping(cfg.training))
+    tracker = ExperimentTracker(
+        settings,
+        experiment_name=cfg.get("experiment_name", "default"),
+        local_dir=trainer_cfg.output_dir / "tracking",
+    )
     tracker.start(
         run_name=cfg.get("run_name", None),
-        config=OmegaConf.to_container(cfg, resolve=True),
+        config=resolved_config,
     )
 
-    # Train
-    trainer_cfg = TrainerConfig(**cfg.training)
-    trainer = Trainer(model, trainer_cfg, tracker=tracker)
-    trainer.train(train_loader, val_loader)
-
-    # Cleanup
-    tracker.finish()
+    try:
+        trainer = Trainer(
+            model,
+            trainer_cfg,
+            tracker=tracker,
+            run_config=resolved_config,
+        )
+        resume_from = cfg.get("resume_from")
+        if resume_from:
+            trainer.load_checkpoint(to_absolute_path(str(resume_from)))
+        trainer.train(train_loader, val_loader)
+    finally:
+        tracker.finish()
     logger.info("training_finished")
 
 

@@ -1,105 +1,79 @@
 # MindSurf Pretrain
 
-`pretrain` 分支用于 MiniMind 小参数量语言模型的预训练研究，重点关注数据质量、
-训练效率和可复现评测。目前已完成一轮约 80M 参数规模的受控实验，覆盖学习率、
-Attention 结构、FFN 宽度和两阶段续训配方。
+该分支提供 MiniMind 官方数据与 MindSurf 团队数据的可复现 80M 语言模型预训练
+链路。数据、tokenizer、训练步数、评测阈值和 checkpoint 进度均有不可变身份；
+训练入口采用单进程单卡，不引入该规模不需要的分布式系统。
 
-## 当前进度
+## 数据与边界
 
-| 项目 | 进展 |
-| --- | --- |
-| 数据划分 | 完成训练、验证、测试集隔离并记录 SHA-256 |
-| 基础训练 | 完成 7 组等预算对照 |
-| 架构选择 | 选定 MHA / FFN3584 作为当前候选 |
-| 续训实验 | 完成两种数据配比及 seed 42、seed 7 复验 |
-| 评测 | 完成严格损失、六类域损失、MCQ、固定提示词和重复度评测 |
-| 模型发布 | 暂未发布；最终候选未通过完整能力门 |
+仓库保留两套并列数据源，默认仍是此前实验使用的 MiniMind 官方
+`pretrain_t2t_mini.jsonl`；团队数据是新增实验臂，不冒充官方数据：
 
-## 阶段结果
+| 数据臂 | 身份 | Strict train | Validation / test | 许可状态 |
+| --- | --- | ---: | ---: | --- |
+| Official | `gongjy/minimind_dataset@74aad49` | 1,265,983 | 2,000 / 2,000 | `CC-BY-NC-4.0` |
+| Team | `wyywnab/mindsurf_pretrain_dataset@ab97cc8` | 2,177,856 | 2,000 / 2,000 | `other`，来源许可待澄清 |
 
-当前表现最均衡的模型配置为：
+两臂固定同一 MiniMind tokenizer、seed、模型、优化器、seen tokens 和评测套件。
+每个候选都在 official 与 team 两套 strict holdout 上交叉评测，避免把“更贴合本域”
+误判为通用提升。详细身份和发布措辞见
+[数据集对照说明](docs/data/pretraining-dataset-comparison.md)与
+[团队数据集说明](docs/data/mindsurf-team-dataset-v1.md)。
+
+## 冻结候选
 
 | 配置项 | 数值 |
-| --- | --- |
-| Hidden size | 768 |
-| Transformer layers | 8 |
-| Attention heads / KV heads | 8 / 8 |
-| FFN size | 3584 |
-| 参数量 | 89,864,448 |
-| 训练步数 | 10,000 |
-| Seen tokens | 122,880,000 |
-| 学习率 | `5e-4` |
-| Batch size / sequence length | 32 / 384 |
-
-该配置在 seed 42 的基础训练中取得：
-
-- strict validation loss：`2.399181`
-- strict test loss：`2.415155`
-- 训练吞吐：约 `98,841 tokens/s`
-- 峰值显存：约 `8.81 GiB`
-
-FFN4096 的 strict mean loss 仅改善 `0.002650`，低于实验预先设定的 `0.01`
-有效差异阈值，同时参数量增加约 943 万、吞吐下降约 5.1%，因此没有继续扩大
-FFN。
-
-## 续训结论
-
-两阶段续训最终比较了 quality70/English15/math15 和
-quality80/English10/math10 两种配方。两组实验使用相同父模型、训练预算和
-评测口径，并分别以 seed 42 和 seed 7 复验。
-
-| Seed | 配方 | Strict val | Strict test | MCQ | Fixed score | 高重复样本 |
-| ---: | --- | ---: | ---: | ---: | ---: | ---: |
-| 42 | quality70 control | `2.391499` | `2.409126` | `15/48` | `0.44` | 2 |
-| 42 | quality80 replay | `2.390968` | `2.408508` | `15/48` | `0.44` | 2 |
-| 7 | quality70 control | `2.396327` | `2.412125` | `17/48` | `0.475` | 1 |
-| 7 | quality80 replay | `2.395817` | `2.411612` | `17/48` | `0.3785` | 3 |
-
-quality80 replay 在两个 seed 上的 strict mean loss 平均只改善
-`0.000543`，MCQ 没有提升；seed 7 的 fixed score 反而明显下降。因此当前
-保留 quality70 control 配方。
-
-## 为什么暂不发布模型
-
-候选模型已经通过 strict validation/test loss 和重复度要求，但仍未达到：
-
-- 六类诊断域的损失阈值；
-- MCQ 最低要求 `23/48`。
-
-当前结果用于确定下一轮实验起点，不代表模型已经具备稳定的通用能力。完整实验
-记录见：
-
-- [80M 预训练复验证报告](docs/experiments/2026-07-18-minimind-80m-revalidation.md)
-- [机器可读结果](docs/experiments/2026-07-18-minimind-80m-revalidation.json)
-
-## 数据与复现
-
-本轮数据规模为：
-
-| Split | Rows |
 | --- | ---: |
-| Train | 1,265,983 |
-| Validation | 2,000 |
-| Test | 2,000 |
+| Hidden size / layers | 768 / 8 |
+| Attention heads / KV heads | 8 / 8 |
+| FFN size | 3,584 |
+| Vocabulary | 6,400 |
+| 参数量 | 89,864,448 |
+| Sequence length / batch size | 384 / 32 |
+| Optimizer steps | 10,000 |
+| Seen tokens | 122,880,000 |
+| Learning rate | `5e-4` |
+| Schedule | warmup 200 + stable 80% + cosine decay |
 
-数据 manifest、各 split、tokenizer 和评测阈值的 SHA-256 均记录在实验报告与
-JSON 结果中。训练集已排除与 validation/test 规范化文本哈希重复的样本。
+模型使用 QK RMSNorm、RoPE、MHA 和 SwiGLU。两套源训练 split 都经同一 NFKC
+规范化去重。团队臂移除 11 条等价重复记录，形成 2,177,845 行、SHA-256 为
+`37800ee01d5294e3d40765ec686fce7d0c917d7cea79343e57526a3229e8a999`
+的训练视图。数据按 JSONL 流式读取并跨文档打包；checkpoint 原子保存模型、
+optimizer、scheduler、AMP scaler、随机数状态和绝对 packed-block 游标，可在
+optimizer 边界精确恢复，并只保留最近两个恢复点控制磁盘占用。
 
-仓库提供 Hydra 配置、PyTorch 训练组件、DVC 目录、评测 CLI、实验追踪和
-FastAPI 服务骨架。安装开发环境：
+## 复现
 
 ```bash
-git clone --branch pretrain https://github.com/io-wy/MindSurf.git
-cd MindSurf
-uv sync --extra dev
+uv sync --extra dev --frozen
+uv run dvc repro build_official_training_view
+uv run dvc repro build_team_training_view
+uv run python scripts/preflight_training.py --require-cuda
+uv run python scripts/run_dataset_ablation.py
 ```
 
-## 下一阶段
+DVC 描述相同的 fetch → audit → train → evaluate 依赖图：
 
-下一轮工作将围绕新的训练数据展开：
+```bash
+uv run dvc dag
+```
 
-1. 统计来源、文本长度、语言和重复分布；
-2. 固化 train/validation/test manifest 并检查交叉污染；
-3. 将当前 FFN3584 配方接入统一训练入口；
-4. 使用独立 run identity 完成等预算复验；
-5. 仅在完整能力门通过后发布模型与推理基准。
+完整评测同时检查两套 strict validation/test loss、六类诊断域、48 道本地 MCQ、
+固定提示词启发式分数和生成重复度。只有内部能力门全部通过时才登记 candidate；
+只有能力门和对应数据许可门同时通过时才允许公开发布。任何发布必须明确写出使用
+的是 Official、Team 还是混合数据；本对照实验本身不训练混合臂。
+
+## 推理与服务
+
+本地 CLI 从 checkpoint 内嵌配置重建模型：
+
+```bash
+uv run python scripts/inference.py \
+  --checkpoint models/checkpoints/minimind_official_v1_80m/final_model.pt \
+  --tokenizer data/raw/minimind_official_v1/tokenizer \
+  --prompt "你好，请介绍一下机器学习。"
+```
+
+API 通过 `INFERENCE_CHECKPOINT` 和 `INFERENCE_TOKENIZER` 加载同一模型。未配置或
+加载失败时 `/inference` 明确返回 `503`，不会返回模拟结果。长训练任务由 Celery
+排队，worker 并发固定为 1，避免同机出现多个训练进程。

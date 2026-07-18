@@ -1,14 +1,14 @@
 [project]
-name = "python-starter"
+name = "mindsurf"
 version = "0.1.0"
-description = "Python ML/NN development starter with FastAPI, PyTorch, and full engineering practices"
+description = "Reproducible small-language-model pretraining, evaluation, and serving"
 readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [
-    { name = "Your Name", email = "you@example.com" },
+    { name = "MindSurf contributors" },
 ]
-keywords = ["machine-learning", "pytorch", "fastapi", "starter"]
+keywords = ["language-model", "pretraining", "pytorch", "fastapi"]
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -29,6 +29,7 @@ dependencies = [
     "pydantic>=2.10.0",
     "pydantic-settings>=2.7.0",
     "python-dotenv>=1.0.0",
+    "hydra-core>=1.3.2",
     "omegaconf>=2.3.0",
 
     # Database
@@ -44,7 +45,7 @@ dependencies = [
     "structlog>=24.4.0",
 
     # ML Core
-    "torch>=2.5.0",
+    "torch==2.6.0",
     "transformers>=4.47.0",
     "datasets>=3.2.0",
     "tokenizers>=0.21.0",
@@ -75,6 +76,7 @@ dev = [
     "mypy>=1.14.0",
     "pre-commit>=4.0.0",
     "types-redis>=4.6.0",
+    "dvc>=3.60.0",
 
     # Test DB
     "aiosqlite>=0.20.0",
@@ -105,9 +107,16 @@ name = "pytorch-cu124"
 url = "https://download.pytorch.org/whl/cu124"
 explicit = true
 
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+
 [tool.uv.sources]
-torch = { index = "pytorch-cu124" }
-torchvision = { index = "pytorch-cu124" }
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform != 'linux'" },
+    { index = "pytorch-cu124", marker = "sys_platform == 'linux'" },
+]
 
 # ============================================================================
 # Ruff Configuration
@@ -159,10 +168,6 @@ check_untyped_defs = true
 ignore_missing_imports = true
 show_error_codes = true
 plugins = ["pydantic.mypy"]
-
-[[tool.mypy.overrides]]
-module = "scripts.*"
-disallow_untyped_defs = false
 
 # ============================================================================
 # Pytest Configuration

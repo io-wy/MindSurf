@@ -1,0 +1,44 @@
+schema: '2.0'
+stages:
+  build_team_training_view:
+    cmd: uv run python scripts/build_training_view.py
+    deps:
+    - path: artifacts/data/mindsurf_team_v1/audit.json
+      hash: md5
+      md5: 74f2721eb6f367e355f53498e9257ac3
+      size: 10456
+    - path: configs/datasets/mindsurf_team_v1.json
+      hash: md5
+      md5: 2fe8727445803a3c26fc9be05cbd08f9
+      size: 1913
+    - path:
+        data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      hash: md5
+      md5: bf0055488abd15e00bd7af9d34e66e56
+      size: 5725713
+    - path:
+        data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_train_shuffled.jsonl
+      hash: md5
+      md5: d2dc92c949bc3522267d38fedf5213e8
+      size: 6306035792
+    - path: data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      hash: md5
+      md5: 0501a7b99b8dc2bca09f84aee622ba32
+      size: 5562114
+    - path: scripts/build_training_view.py
+      hash: md5
+      md5: dfdc12eecf986fba3d0d6d18894f7ae8
+      size: 5472
+    - path: src/python_starter/core/data_contract.py
+      hash: md5
+      md5: b332eb9ab4e904659d7d0bb34ec6e30f
+      size: 13725
+    outs:
+    - path: artifacts/data/mindsurf_team_v1/training_view.json
+      hash: md5
+      md5: 8856dfac58cb2cd5161551fd1a3874cb
+      size: 810
+    - path: data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl
+      hash: md5
+      md5: a734438683a71ab0a1abed17906cf885
+      size: 6305991620

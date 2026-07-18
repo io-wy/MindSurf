@@ -2,14 +2,16 @@
 
 from __future__ import annotations
 
-from transformers import AutoTokenizer, PreTrainedTokenizer
+from typing import cast
+
+from transformers import AutoTokenizer, PreTrainedTokenizerBase
 
 from python_starter.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
 
 
-def load_tokenizer(name_or_path: str = "gpt2") -> PreTrainedTokenizer:
+def load_tokenizer(name_or_path: str = "gpt2") -> PreTrainedTokenizerBase:
     """Load a pretrained tokenizer.
 
     Args:
@@ -26,28 +28,34 @@ def load_tokenizer(name_or_path: str = "gpt2") -> PreTrainedTokenizer:
         tokenizer.pad_token = tokenizer.eos_token
         tokenizer.pad_token_id = tokenizer.eos_token_id
 
-    return tokenizer
+    return cast(PreTrainedTokenizerBase, tokenizer)
 
 
 def encode_text(
-    tokenizer: PreTrainedTokenizer,
+    tokenizer: PreTrainedTokenizerBase,
     text: str,
     max_length: int | None = None,
     add_special_tokens: bool = True,
 ) -> list[int]:
     """Encode text to token IDs."""
-    return tokenizer.encode(
-        text,
-        max_length=max_length,
-        truncation=max_length is not None,
-        add_special_tokens=add_special_tokens,
+    return cast(
+        list[int],
+        tokenizer.encode(
+            text,
+            max_length=max_length,
+            truncation=max_length is not None,
+            add_special_tokens=add_special_tokens,
+        ),
     )
 
 
 def decode_tokens(
-    tokenizer: PreTrainedTokenizer,
+    tokenizer: PreTrainedTokenizerBase,
     token_ids: list[int],
     skip_special_tokens: bool = True,
 ) -> str:
     """Decode token IDs to text."""
-    return tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+    value = tokenizer.decode(token_ids, skip_special_tokens=skip_special_tokens)
+    if not isinstance(value, str):
+        raise TypeError("tokenizer returned a batched decode result")
+    return value

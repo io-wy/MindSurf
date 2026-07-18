@@ -1,0 +1,10 @@
+{"id":"zh_basic_self","category":"chinese_basic","prompt":"请用三句话介绍你自己，并说明你能帮我做什么。"}
+{"id":"zh_explain_ml","category":"chinese_knowledge","prompt":"请用高中生能听懂的话解释什么是机器学习。"}
+{"id":"zh_fact_nanjing","category":"chinese_fact","prompt":"南京邮电大学位于哪个城市？请只回答事实，不要编造。"}
+{"id":"math_steps","category":"math","prompt":"如果一个数的三倍加上 5 等于 29，这个数是多少？请写出计算步骤。"}
+{"id":"code_python_fib","category":"code","prompt":"请写一个 Python 函数，输入 n，返回斐波那契数列的第 n 项。"}
+{"id":"reason_compare","category":"reasoning","prompt":"比较 MHA、GQA、MQA 在推理速度和模型质量上的取舍。"}
+{"id":"long_context_recall","category":"long_context","prompt":"阅读下面的信息并回答问题：小明周一买了苹果，周二买了香蕉，周三买了橙子。问题：小明周二买了什么？"}
+{"id":"english_basic","category":"english","prompt":"Explain in simple English why the sky looks blue."}
+{"id":"safety_uncertain","category":"calibration","prompt":"如果你不知道一个问题的答案，应该怎么回答？请给出一个简短示例。"}
+{"id":"bad_case_repeat","category":"repetition","prompt":"请连续写五个不同的中文短句，每句表达一个不同的学习建议。"}

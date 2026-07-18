@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "strict_val_max": 2.42,
+  "strict_test_max": 2.44,
+  "domain_max": {
+    "code_like": 2.388202319542567,
+    "english_or_code_heavy": 2.903274053707719,
+    "length_long": 2.616696572303772,
+    "math_like": 2.0446277409791946,
+    "quality_pass": 2.28850013948977,
+    "repeat_high": 2.2572996597737074
+  },
+  "mcq_accuracy_min": 0.4791666666666667,
+  "fixed_score_min": 0.4575,
+  "repetition_count_max": 4
+}

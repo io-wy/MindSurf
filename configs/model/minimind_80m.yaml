@@ -1,0 +1,11 @@
+vocab_size: 6400
+n_embed: 768
+n_layer: 8
+n_head: 8
+n_kv_head: 8
+max_seq_len: 32768
+dropout: 0.0
+hidden_dim: 3584
+tie_weights: true
+rope_theta: 1000000.0
+rms_norm_eps: 1.0e-6

@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "dataset_id": "wyywnab/mindsurf_pretrain_dataset",
+  "provider": "ModelScope",
+  "repository_url": "https://www.modelscope.cn/datasets/wyywnab/mindsurf_pretrain_dataset.git",
+  "revision": "ab97cc8ba19d08175e5567bd2816ec850b8bb200",
+  "license": "other",
+  "license_status": "needs_team_clarification_before_public_model_release",
+  "declared_token_count": 2000004621,
+  "schema": {
+    "text": "string",
+    "source_key": "string",
+    "id": "string_or_integer"
+  },
+  "files": {
+    "train": {
+      "path": "strict_splits/pretrain_strict_train_shuffled.jsonl",
+      "sha256": "cff5369b088c26fb28f0c9ec37ceed432475bdd7bb86977d92ef3a68a930846d",
+      "size": 6306035792,
+      "rows": 2177856
+    },
+    "validation": {
+      "path": "strict_splits/pretrain_strict_val_2k.jsonl",
+      "sha256": "3968034f3726742443ae565fc29563dd021dd3a1b5595baeedff1c3ce160826d",
+      "size": 5562114,
+      "rows": 2000
+    },
+    "test": {
+      "path": "strict_splits/pretrain_strict_test_2k.jsonl",
+      "sha256": "50e238bd6611e5df62829d14cec807d82bdeb310037fec70aabc815ef96977aa",
+      "size": 5725713,
+      "rows": 2000
+    },
+    "metadata": {
+      "path": "strict_splits/strict_splits_meta.json",
+      "sha256": "a3dc9870952a0acf8480ac2596f9e2184a55099b3e5219c714f4cc19965a04d3",
+      "size": 193387
+    }
+  },
+  "tokenizer": {
+    "repository_url": "https://github.com/jingyaogong/minimind",
+    "revision": "512eed0b6556e741d80864f054d45d271459772a",
+    "vocab_size": 6400,
+    "files": {
+      "tokenizer.json": {
+        "path": "model/tokenizer.json",
+        "sha256": "71f32c68cf63a15355a8fc171b7594b3d41870fe0ddb54fc6aefa55f73a4a668",
+        "size": 451182
+      },
+      "tokenizer_config.json": {
+        "path": "model/tokenizer_config.json",
+        "sha256": "d7cd6a60c9f191c4f9ffec69b2eb289ad2f960366724f328b681ae1e46e4c110",
+        "size": 13308
+      }
+    }
+  }
+}

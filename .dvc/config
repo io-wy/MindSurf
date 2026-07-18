@@ -1,0 +1,4 @@
+[core]
+    autostage = false
+['cache']
+    type = hardlink,reflink,copy
