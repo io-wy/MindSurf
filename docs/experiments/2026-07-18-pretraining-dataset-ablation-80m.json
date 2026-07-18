@@ -1,0 +1,131 @@
+{
+  "schema_version": 1,
+  "report_id": "pretraining-dataset-ablation-80m-2026-07-18",
+  "status": "complete_not_promoted",
+  "causal_variable": "pretraining_dataset",
+  "controlled": {
+    "model_config_sha256": "141deb3ef37e2da54d57bfd2071c4f729ebe76f0ca27e6d982a47ddf66f29d94",
+    "training_config_sha256": "7d2c58c9d41d277adbd8dfa1f62a99c94a332ac91e0e0d68877976302a064d84",
+    "tokenizer_shared": true,
+    "seed": 20260511,
+    "optimizer_steps_per_arm": 10000,
+    "sequence_length": 384,
+    "batch_size": 32,
+    "seen_tokens_per_arm": 122880000,
+    "parameter_count": 89864448
+  },
+  "datasets": {
+    "official": {
+      "identity": "gongjy/minimind_dataset",
+      "revision": "74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5",
+      "training_view_sha256": "757d1b3585073ec4609a178e14fa3b17d485dac36fa3a3ac580c59529d887699",
+      "training_rows": 1265981,
+      "source_license": "CC-BY-NC-4.0",
+      "public_release_license_ready": false
+    },
+    "team": {
+      "identity": "wyywnab/mindsurf_pretrain_dataset",
+      "revision": "ab97cc8ba19d08175e5567bd2816ec850b8bb200",
+      "training_view_sha256": "37800ee01d5294e3d40765ec686fce7d0c917d7cea79343e57526a3229e8a999",
+      "training_rows": 2177845,
+      "deduplicated_rows": 11,
+      "holdout_overlap_rows": 0,
+      "source_license": "other",
+      "public_release_license_ready": false
+    }
+  },
+  "training": {
+    "official": {
+      "final_train_loss": 2.110809087753296,
+      "best_validation_loss_during_training": 2.3836841989647257,
+      "tokens_per_second": 91238.37383953611,
+      "training_elapsed_seconds": 1346.8017329650465,
+      "peak_cuda_allocated_bytes": 9250971136,
+      "peak_cuda_reserved_bytes": 9686745088,
+      "checkpoint_sha256": "4c57fa3ff39f35521ffdbe33dc6ddbcc1f881308251c2bf3ffe6781952cebf7f",
+      "checkpoint_availability": "private_not_published"
+    },
+    "team": {
+      "final_train_loss": 2.5790412425994873,
+      "best_validation_loss_during_training": 2.9380505635820584,
+      "tokens_per_second": 89194.54131121829,
+      "training_elapsed_seconds": 1377.6627828741912,
+      "peak_cuda_allocated_bytes": 9250971136,
+      "peak_cuda_reserved_bytes": 9686745088,
+      "checkpoint_sha256": "f231df6dbb7c1f3fdd128f6c8d4f10f6e22353d14fe19850f098b8879173d9e9",
+      "checkpoint_availability": "private_not_published"
+    }
+  },
+  "evaluation_matrix": {
+    "official_trained": {
+      "official_holdout": {
+        "validation_loss": 2.38368419083682,
+        "test_loss": 2.3612489088346598
+      },
+      "team_holdout": {
+        "validation_loss": 3.738058583451751,
+        "test_loss": 3.7645498282358525
+      },
+      "mcq_correct": 20,
+      "mcq_total": 48,
+      "fixed_prompt_score": 0.24,
+      "high_repetition_count": 6
+    },
+    "team_trained": {
+      "official_holdout": {
+        "validation_loss": 3.0726018277081577,
+        "test_loss": 3.097887684492285
+      },
+      "team_holdout": {
+        "validation_loss": 2.940759764961095,
+        "test_loss": 2.9742575066990793
+      },
+      "mcq_correct": 15,
+      "mcq_total": 48,
+      "fixed_prompt_score": 0.16099999999999998,
+      "high_repetition_count": 10
+    }
+  },
+  "gates": {
+    "official": {
+      "internal_candidate_passed": false,
+      "failures": [
+        "domain.english_or_code_heavy",
+        "domain.math_like",
+        "domain.quality_pass",
+        "mcq",
+        "fixed_prompts",
+        "repetition"
+      ],
+      "registered_internal_candidate": false
+    },
+    "team": {
+      "internal_candidate_passed": false,
+      "failures": [
+        "strict_val",
+        "strict_test",
+        "domain.length_long",
+        "domain.math_like",
+        "domain.quality_pass",
+        "mcq",
+        "fixed_prompts",
+        "repetition"
+      ],
+      "registered_internal_candidate": false
+    },
+    "public_release_passed": false,
+    "public_release_performed": false
+  },
+  "decision": {
+    "minimum_same_holdout_loss": "dataset_matched_candidate",
+    "practical_result": "strong_domain_specialization",
+    "capability_gate_result": "neither_candidate_passed",
+    "publication_result": "no_weights_published",
+    "limitations": [
+      "single_seed",
+      "different_source_corpora_and_total_row_counts",
+      "fixed_seen_tokens_cover_different_fractions_of_each_corpus"
+    ]
+  },
+  "source_result_sha256": "bebf635c425f3eab13def28cc69c31e75106067016fa6c5efe74138a8dcef3a0"
+}

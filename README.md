@@ -42,6 +42,23 @@
 optimizer、scheduler、AMP scaler、随机数状态和绝对 packed-block 游标，可在
 optimizer 边界精确恢复，并只保留最近两个恢复点控制磁盘占用。
 
+## 正式对照结果
+
+两臂均已完成 10,000 optimizer steps 和 122,880,000 seen tokens。下表每列使用
+同一套 holdout，因此可以比较两个训练候选；不同列之间的 loss 不直接比较。
+
+| 训练候选 | Official val / test | Team val / test | MCQ | 固定提示词 | 高重复 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Official-only | **2.384 / 2.361** | 3.738 / 3.765 | **20 / 48** | **0.240** | **6** |
+| Team-only | 3.073 / 3.098 | **2.941 / 2.974** | 15 / 48 | 0.161 | 10 |
+
+结果显示明显的同域优势：Official-only 在 Official holdout 上更低，Team-only 在
+Team holdout 上更低。在固定能力套件上 Official-only 也更强，但两者都未通过完整
+能力门；Team 数据的逐来源许可尚未澄清，两者的公开许可门也均未通过。因此没有登记
+内部 candidate，也没有公开发布权重。完整指标、失败门项和数据身份见
+[实验报告](docs/experiments/2026-07-18-pretraining-dataset-ablation-80m.md)与
+[机器可读结果](docs/experiments/2026-07-18-pretraining-dataset-ablation-80m.json)。
+
 ## 复现
 
 ```bash
