@@ -7,8 +7,10 @@ the same optimizer boundary.
 
 from __future__ import annotations
 
+import json
 import os
 import random
+import time
 import uuid
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -123,7 +125,13 @@ class Trainer:
         self.global_step = 0
         self.micro_step = 0
         self.consumed_blocks = 0
+        self.consumed_tokens = 0
         self.best_eval_loss = float("inf")
+        self.last_train_loss: float | None = None
+        self.training_elapsed_seconds = 0.0
+        self.peak_cuda_allocated_bytes = 0
+        self.peak_cuda_reserved_bytes = 0
+        self._session_started_at: float | None = None
         self._resume_checkpoint: dict[str, Any] | None = None
         self._optimizer: AdamW | None = None
         self._scheduler: LambdaLR | None = None
@@ -216,7 +224,12 @@ class Trainer:
                 "global_step": self.global_step,
                 "micro_step": self.micro_step,
                 "consumed_blocks": self.consumed_blocks,
+                "consumed_tokens": self.consumed_tokens,
                 "best_eval_loss": self.best_eval_loss,
+                "last_train_loss": self.last_train_loss,
+                "training_elapsed_seconds": self._current_elapsed_seconds(),
+                "peak_cuda_allocated_bytes": self._peak_cuda_allocated_bytes(),
+                "peak_cuda_reserved_bytes": self._peak_cuda_reserved_bytes(),
             },
             "rng_state": self._rng_state(),
         }
@@ -275,9 +288,14 @@ class Trainer:
             "micro_step", self.global_step * self.config.accumulation_steps
         )
         self.consumed_blocks = progress.get("consumed_blocks", 0)
+        self.consumed_tokens = progress.get("consumed_tokens", 0)
         self.best_eval_loss = progress.get(
             "best_eval_loss", checkpoint.get("best_eval_loss", float("inf"))
         )
+        self.last_train_loss = progress.get("last_train_loss")
+        self.training_elapsed_seconds = progress.get("training_elapsed_seconds", 0.0)
+        self.peak_cuda_allocated_bytes = progress.get("peak_cuda_allocated_bytes", 0)
+        self.peak_cuda_reserved_bytes = progress.get("peak_cuda_reserved_bytes", 0)
         self._resume_checkpoint = checkpoint
         logger.info(
             "checkpoint_loaded",
@@ -328,6 +346,9 @@ class Trainer:
         if self.dtype == torch.float16 and self.device.type == "cuda":
             self._scaler = torch.cuda.amp.GradScaler()
         self._restore_mutable_training_state()
+        self._session_started_at = time.perf_counter()
+        if self.device.type == "cuda":
+            torch.cuda.reset_peak_memory_stats(self.device)
 
         if self.tracker:
             self.tracker.log_params(
@@ -357,8 +378,10 @@ class Trainer:
                 raise RuntimeError("training data exhausted before reaching max_steps") from exc
 
             loss = self._backward_micro_batch(batch)
+            self.last_train_loss = loss
             self.micro_step += 1
             self.consumed_blocks += int(batch["input_ids"].shape[0])
+            self.consumed_tokens += int(batch["input_ids"].numel())
             if self.micro_step % self.config.accumulation_steps:
                 continue
 
@@ -374,6 +397,9 @@ class Trainer:
                         "train/loss": loss,
                         "train/lr": learning_rate,
                         "train/consumed_blocks": float(self.consumed_blocks),
+                        "train/consumed_tokens": float(self.consumed_tokens),
+                        "train/tokens_per_second": self._tokens_per_second(),
+                        "train/peak_cuda_reserved_bytes": float(self._peak_cuda_reserved_bytes()),
                     },
                     step=self.global_step,
                 )
@@ -394,6 +420,83 @@ class Trainer:
 
         progress.close()
         self.save_checkpoint("final_model.pt")
+        self.training_elapsed_seconds = self._current_elapsed_seconds()
+        self.peak_cuda_allocated_bytes = self._peak_cuda_allocated_bytes()
+        self.peak_cuda_reserved_bytes = self._peak_cuda_reserved_bytes()
+        self._session_started_at = None
+        summary = self._write_training_summary()
+        if self.tracker:
+            self.tracker.log_metrics(
+                {
+                    "train/final_loss": float(self.last_train_loss or 0.0),
+                    "train/tokens_per_second": float(summary["tokens_per_second"]),
+                    "train/peak_cuda_allocated_bytes": float(self.peak_cuda_allocated_bytes),
+                    "train/peak_cuda_reserved_bytes": float(self.peak_cuda_reserved_bytes),
+                },
+                step=self.global_step,
+            )
+
+    def _current_elapsed_seconds(self) -> float:
+        elapsed = self.training_elapsed_seconds
+        if self._session_started_at is not None:
+            elapsed += time.perf_counter() - self._session_started_at
+        return elapsed
+
+    def _peak_cuda_allocated_bytes(self) -> int:
+        current = 0
+        if self.device.type == "cuda":
+            current = torch.cuda.max_memory_allocated(self.device)
+        return max(self.peak_cuda_allocated_bytes, current)
+
+    def _peak_cuda_reserved_bytes(self) -> int:
+        current = 0
+        if self.device.type == "cuda":
+            current = torch.cuda.max_memory_reserved(self.device)
+        return max(self.peak_cuda_reserved_bytes, current)
+
+    def _tokens_per_second(self) -> float:
+        elapsed = self._current_elapsed_seconds()
+        return self.consumed_tokens / elapsed if elapsed > 0 else 0.0
+
+    def _write_training_summary(self) -> dict[str, Any]:
+        identity = {
+            "dataset_id": self.run_config.get("data", {}).get("dataset_id"),
+            "dataset_revision": self.run_config.get("data", {}).get("dataset_revision"),
+            "training_view_sha256": self.run_config.get("training_view", {})
+            .get("derived", {})
+            .get("sha256"),
+            "seed": self.run_config.get("seed"),
+        }
+        summary: dict[str, Any] = {
+            "schema_version": 1,
+            "global_step": self.global_step,
+            "micro_step": self.micro_step,
+            "consumed_blocks": self.consumed_blocks,
+            "consumed_tokens": self.consumed_tokens,
+            "training_elapsed_seconds": self.training_elapsed_seconds,
+            "tokens_per_second": self._tokens_per_second(),
+            "parameter_count": sum(
+                parameter.numel() for parameter in self._model_for_state().parameters()
+            ),
+            "final_train_loss": self.last_train_loss,
+            "best_eval_loss": self.best_eval_loss,
+            "peak_cuda_allocated_bytes": self.peak_cuda_allocated_bytes,
+            "peak_cuda_reserved_bytes": self.peak_cuda_reserved_bytes,
+            "identity": identity,
+        }
+        path = self.config.output_dir / "training_summary.json"
+        temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
+        try:
+            with temporary.open("w", encoding="utf-8", newline="\n") as handle:
+                json.dump(summary, handle, ensure_ascii=False, indent=2, sort_keys=True)
+                handle.write("\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+            os.replace(temporary, path)
+        finally:
+            temporary.unlink(missing_ok=True)
+        logger.info("training_summary_written", path=str(path), **summary)
+        return summary
 
     def _backward_micro_batch(self, batch: dict[str, torch.Tensor]) -> float:
         input_ids = batch["input_ids"].to(self.device, non_blocking=True)

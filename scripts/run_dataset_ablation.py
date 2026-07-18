@@ -52,9 +52,16 @@ def main() -> None:
             _run(command)
 
     matrix: dict[str, dict[str, dict[str, Any]]] = {}
+    training_summaries: dict[str, dict[str, Any]] = {}
     for trained_arm, trained_identity in ARMS.items():
         matrix[trained_arm] = {}
         checkpoint = ROOT / f"models/checkpoints/{trained_identity}{suffix}/final_model.pt"
+        training_summary_path = (
+            ROOT / "models/checkpoints" / f"{trained_identity}{suffix}" / "training_summary.json"
+        )
+        training_summaries[trained_arm] = json.loads(
+            training_summary_path.read_text(encoding="utf-8")
+        )
         for evaluated_arm, evaluated_identity in ARMS.items():
             output = (
                 ROOT
@@ -121,6 +128,7 @@ def main() -> None:
             "evaluation_matrix": "both candidates evaluated on both strict holdouts",
         },
         "dataset_arms": ARMS,
+        "training_summaries": training_summaries,
         "matrix": matrix,
         "public_release_performed": False,
     }

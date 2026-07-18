@@ -78,6 +78,7 @@ def test_atomic_checkpoint_contains_full_resume_state(tmp_path: Path) -> None:
     assert checkpoint["schema_version"] == 2
     assert checkpoint["model_config"] == model.config.to_dict()
     assert checkpoint["progress"]["consumed_blocks"] == 0
+    assert checkpoint["progress"]["consumed_tokens"] == 0
     assert not list(tmp_path.glob("*.tmp"))
 
 
@@ -151,6 +152,11 @@ def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
     assert trainer.best_eval_loss < float("inf")
     assert (tmp_path / "best_model.pt").is_file()
     assert (tmp_path / "final_model.pt").is_file()
+    summary = (tmp_path / "training_summary.json").read_text(encoding="utf-8")
+    assert '"consumed_tokens": 16' in summary
+    assert '"global_step": 1' in summary
+    assert '"parameter_count":' in summary
+    assert '"tokens_per_second":' in summary
 
 
 def test_trainer_and_schedule_validation() -> None:

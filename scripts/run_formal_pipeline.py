@@ -48,6 +48,7 @@ def main() -> None:
     identity = selected["identity"]
     checkpoint_dir = ROOT / f"models/checkpoints/{identity}_80m"
     checkpoint = checkpoint_dir / "final_model.pt"
+    training_summary = checkpoint_dir / "training_summary.json"
     evaluation = ROOT / f"artifacts/evaluation/{identity}_80m.json"
     outcome_path = ROOT / f"artifacts/evaluation/{identity}_formal_pipeline_outcome.json"
 
@@ -93,6 +94,7 @@ def main() -> None:
     _run(train_command)
     if args.smoke:
         checkpoint = ROOT / f"models/checkpoints/{identity}_80m_smoke/final_model.pt"
+        training_summary = ROOT / f"models/checkpoints/{identity}_80m_smoke/training_summary.json"
         evaluation = ROOT / f"artifacts/evaluation/{identity}_80m_smoke.json"
 
     _run(
@@ -154,6 +156,7 @@ def main() -> None:
             "dataset_arm": args.dataset,
             "dataset_identity": identity,
             "checkpoint": str(checkpoint),
+            "training_summary": str(training_summary),
             "evaluation": str(evaluation),
             "gate": gate,
             "registered_internal_candidate": registered,
