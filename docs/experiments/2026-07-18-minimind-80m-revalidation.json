@@ -1,11 +1,8 @@
 {
   "schema_version": 1,
-  "status": "completed_with_concerns",
+  "report_id": "minimind-80m-revalidation-2026-07-18",
+  "status": "complete_not_promoted",
   "promotion_approved": false,
-  "source": {
-    "project": "legacy_minimind_pretrain",
-    "commit": "cb887abd3e8927425a9346eaec4bf4f60c17ea5d"
-  },
   "data_identity": {
     "manifest_sha256": "64e18821cc7c18d96fd149a0480d774fcfd6d30564b96d072a7d8b1d5726270f",
     "train_sha256": "a121ae89a213e8223bc8bf7620a031344d1a348627a727f87f56135957d5edaf",

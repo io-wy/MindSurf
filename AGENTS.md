@@ -1,5 +1,15 @@
 # Repository Guidelines
 
+## Mandatory Project Contract
+
+Before taking action in a new task, read `PROJECT_RULES.md` in full. Before
+staging, committing, pushing, opening or merging a pull request, publishing an
+artifact, or changing a server, read the relevant sections again and complete
+the final checklist. `PROJECT_RULES.md` defines the branch boundary, public
+documentation standard, artifact cleanup gate, and live-verification
+requirements for this repository. This contract is repository-local and must
+not be copied into machine-global agent configuration.
+
 ## Project Structure & Module Organization
 
 - `src/python_starter/core/` — ML core: model architectures, training loops, datasets, tokenizers.

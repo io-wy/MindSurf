@@ -1,132 +1,105 @@
-# MindSurf
+# MindSurf Pretrain
 
-MindSurf 是团队维护的小模型预训练、评测与服务工程。当前仓库以
-decoder-only Transformer 为核心，提供可复现配置、训练与评测 CLI、
-实验追踪、异步任务和 FastAPI 服务骨架。
+`pretrain` 分支用于 MiniMind 小参数量语言模型的预训练研究，重点关注数据质量、
+训练效率和可复现评测。目前已完成一轮约 80M 参数规模的受控实验，覆盖学习率、
+Attention 结构、FFN 宽度和两阶段续训配方。
 
-项目仍处于工程化与实验验证阶段。任何模型只有在数据身份、严格评测、
-能力门和发布门全部通过后，才能进入部署链路。
+## 当前进度
 
-## 当前能力
+| 项目 | 进展 |
+| --- | --- |
+| 数据划分 | 完成训练、验证、测试集隔离并记录 SHA-256 |
+| 基础训练 | 完成 7 组等预算对照 |
+| 架构选择 | 选定 MHA / FFN3584 作为当前候选 |
+| 续训实验 | 完成两种数据配比及 seed 42、seed 7 复验 |
+| 评测 | 完成严格损失、六类域损失、MCQ、固定提示词和重复度评测 |
+| 模型发布 | 暂未发布；最终候选未通过完整能力门 |
 
-- PyTorch decoder-only Transformer：RoPE、RMSNorm、SwiGLU、GQA/MHA；
-- Hydra 配置驱动的预训练、SFT 与 DPO 入口；
-- DVC 数据与模型产物布局；
-- W&B 与 MLflow 实验记录，外部服务不可用时降级运行；
-- 本地推理与困惑度评测 CLI；
-- FastAPI 健康检查、推理和实验管理接口；
-- Celery 异步训练任务；
-- PostgreSQL、Redis、MLflow 的 Docker Compose 开发环境；
-- pytest、ruff、mypy、coverage 与 GitHub Actions 质量门。
+## 阶段结果
 
-## 分支纪律
+当前表现最均衡的模型配置为：
 
-- `main`：稳定分支；
-- `pretrain`：预训练方向的集成基线；
-- `feature/*`、`fix/*`：短期工作分支。
+| 配置项 | 数值 |
+| --- | --- |
+| Hidden size | 768 |
+| Transformer layers | 8 |
+| Attention heads / KV heads | 8 / 8 |
+| FFN size | 3584 |
+| 参数量 | 89,864,448 |
+| 训练步数 | 10,000 |
+| Seen tokens | 122,880,000 |
+| 学习率 | `5e-4` |
+| Batch size / sequence length | 32 / 384 |
 
-禁止直接向 `main` 或 `pretrain` 提交。所有改动从最新集成基线创建短期
-分支，经测试、审查和 Pull Request 合并；禁止用另一套仓库树整体替换
-集成分支。
+该配置在 seed 42 的基础训练中取得：
 
-## 快速开始
+- strict validation loss：`2.399181`
+- strict test loss：`2.415155`
+- 训练吞吐：约 `98,841 tokens/s`
+- 峰值显存：约 `8.81 GiB`
 
-要求 Python 3.11+、[uv](https://docs.astral.sh/uv/)；数据库、Redis 和
-MLflow 可按需通过 Docker 启动。
+FFN4096 的 strict mean loss 仅改善 `0.002650`，低于实验预先设定的 `0.01`
+有效差异阈值，同时参数量增加约 943 万、吞吐下降约 5.1%，因此没有继续扩大
+FFN。
+
+## 续训结论
+
+两阶段续训最终比较了 quality70/English15/math15 和
+quality80/English10/math10 两种配方。两组实验使用相同父模型、训练预算和
+评测口径，并分别以 seed 42 和 seed 7 复验。
+
+| Seed | 配方 | Strict val | Strict test | MCQ | Fixed score | 高重复样本 |
+| ---: | --- | ---: | ---: | ---: | ---: | ---: |
+| 42 | quality70 control | `2.391499` | `2.409126` | `15/48` | `0.44` | 2 |
+| 42 | quality80 replay | `2.390968` | `2.408508` | `15/48` | `0.44` | 2 |
+| 7 | quality70 control | `2.396327` | `2.412125` | `17/48` | `0.475` | 1 |
+| 7 | quality80 replay | `2.395817` | `2.411612` | `17/48` | `0.3785` | 3 |
+
+quality80 replay 在两个 seed 上的 strict mean loss 平均只改善
+`0.000543`，MCQ 没有提升；seed 7 的 fixed score 反而明显下降。因此当前
+保留 quality70 control 配方。
+
+## 为什么暂不发布模型
+
+候选模型已经通过 strict validation/test loss 和重复度要求，但仍未达到：
+
+- 六类诊断域的损失阈值；
+- MCQ 最低要求 `23/48`。
+
+当前结果用于确定下一轮实验起点，不代表模型已经具备稳定的通用能力。完整实验
+记录见：
+
+- [80M 预训练复验证报告](docs/experiments/2026-07-18-minimind-80m-revalidation.md)
+- [机器可读结果](docs/experiments/2026-07-18-minimind-80m-revalidation.json)
+
+## 数据与复现
+
+本轮数据规模为：
+
+| Split | Rows |
+| --- | ---: |
+| Train | 1,265,983 |
+| Validation | 2,000 |
+| Test | 2,000 |
+
+数据 manifest、各 split、tokenizer 和评测阈值的 SHA-256 均记录在实验报告与
+JSON 结果中。训练集已排除与 validation/test 规范化文本哈希重复的样本。
+
+仓库提供 Hydra 配置、PyTorch 训练组件、DVC 目录、评测 CLI、实验追踪和
+FastAPI 服务骨架。安装开发环境：
 
 ```bash
-git clone https://github.com/io-wy/MindSurf.git
+git clone --branch pretrain https://github.com/io-wy/MindSurf.git
 cd MindSurf
-git switch pretrain
-
 uv sync --extra dev
-cp .env.example .env
 ```
 
-启动本地依赖与 API：
+## 下一阶段
 
-```bash
-docker compose up -d postgres redis mlflow
-uv run alembic upgrade head
-uv run uvicorn python_starter.api.main:app --reload
-```
+下一轮工作将围绕新的训练数据展开：
 
-API 文档默认位于 `http://localhost:8000/docs`。
-
-## 训练与评测
-
-配置按模型、训练阶段和数据拆分，入口由 Hydra 组合：
-
-```bash
-# 预训练
-uv run python scripts/train.py training=pretrain model=minimind
-
-# 监督微调
-uv run python scripts/train.py training=sft model=minimind
-
-# 本地评测
-uv run python scripts/evaluate.py \
-  --checkpoint models/checkpoints/latest.pt \
-  --data data/processed/val.jsonl
-
-# 本地推理
-uv run python scripts/inference.py \
-  --checkpoint models/checkpoints/latest.pt \
-  --prompt "Hello"
-```
-
-训练前应冻结 tokenizer、训练/验证/测试数据身份、随机种子和评测口径。
-checkpoint 通过 `Trainer.save_checkpoint()` 写入，禁止原地修改已有权重。
-
-## 项目结构
-
-```text
-MindSurf/
-├── configs/                     # Hydra 模型、训练和数据配置
-├── data/                        # DVC 管理的数据目录
-├── models/                      # DVC 管理的模型产物
-├── scripts/                     # 训练、推理、评测和预处理入口
-├── src/python_starter/
-│   ├── core/                    # 模型、数据集、tokenizer、trainer
-│   ├── experiments/             # W&B、MLflow 与模型注册
-│   ├── api/                     # FastAPI 路由、schema 与 ORM
-│   ├── tasks/                   # Celery 异步任务
-│   └── infrastructure/          # 配置、数据库、Redis 与日志
-├── tests/                       # pytest 测试
-├── docs/experiments/            # 已冻结的实验结论
-├── dvc.yaml
-├── docker-compose.yml
-└── pyproject.toml
-```
-
-## 已冻结实验
-
-- [MiniMind 80M controlled revalidation](docs/experiments/2026-07-18-minimind-80m-revalidation.md)
-  发布了原始严格数据集上的受控对照结果及机器可读摘要。
-- 该实验的所有最终候选都未通过完整能力门，因此没有模型获准进入基础设施
-  晋级或发布。
-- 替换数据集必须建立新的 manifest、哈希、泄漏审计和独立 run identity，
-  不得把不同数据身份的指标混入同一比较表。
-
-## 工程质量门
-
-提交前运行：
-
-```bash
-uv run ruff check src tests scripts
-uv run mypy src tests scripts
-uv run pytest
-```
-
-Pull Request 应说明变更范围、验证命令、数据与配置身份以及已知限制。
-外部服务必须在测试中 mock；需要真实服务或 GPU 的测试分别标记为
-`integration`、`slow` 或 `gpu`。
-
-## 配置与安全
-
-- 密钥只放在本地 `.env`，不得提交 `.env`、私钥或 `secrets/`；
-- 生产环境必须更换至少 32 字符的 `SECRET_KEY`；
-- 数据与 checkpoint 通过 DVC 或受控制品仓库管理，不直接提交大文件；
-- 生产容器使用非 root 用户；
-- 数据库、Redis 或追踪服务不可用时，应明确记录降级状态，不能把降级运行
-  误报为完整验证通过。
+1. 统计来源、文本长度、语言和重复分布；
+2. 固化 train/validation/test manifest 并检查交叉污染；
+3. 将当前 FFN3584 配方接入统一训练入口；
+4. 使用独立 run identity 完成等预算复验；
+5. 仅在完整能力门通过后发布模型与推理基准。
