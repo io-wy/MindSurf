@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 from collections.abc import Iterator
 from pathlib import Path
 
@@ -142,7 +143,15 @@ def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
         logging_every=1,
         device="cpu",
     )
-    trainer = Trainer(model, config)
+    trainer = Trainer(
+        model,
+        config,
+        run_config={
+            "data": {"dataset_id": "fixture", "dataset_revision": "frozen"},
+            "training_view": {"output": {"sha256": "a" * 64}},
+            "seed": 4,
+        },
+    )
     samples = torch.randint(0, 32, (4, 8))
     train_loader = DataLoader(_CursorDataset(samples[:2]), batch_size=2, num_workers=0)
     eval_loader = DataLoader(_CursorDataset(samples[2:]), batch_size=2, num_workers=0)
@@ -152,11 +161,12 @@ def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
     assert trainer.best_eval_loss < float("inf")
     assert (tmp_path / "best_model.pt").is_file()
     assert (tmp_path / "final_model.pt").is_file()
-    summary = (tmp_path / "training_summary.json").read_text(encoding="utf-8")
-    assert '"consumed_tokens": 16' in summary
-    assert '"global_step": 1' in summary
-    assert '"parameter_count":' in summary
-    assert '"tokens_per_second":' in summary
+    summary = json.loads((tmp_path / "training_summary.json").read_text(encoding="utf-8"))
+    assert summary["consumed_tokens"] == 16
+    assert summary["global_step"] == 1
+    assert summary["parameter_count"] > 0
+    assert summary["tokens_per_second"] > 0
+    assert summary["identity"]["training_view_sha256"] == "a" * 64
 
 
 def test_trainer_and_schedule_validation() -> None:

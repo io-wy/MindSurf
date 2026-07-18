@@ -459,12 +459,11 @@ class Trainer:
         return self.consumed_tokens / elapsed if elapsed > 0 else 0.0
 
     def _write_training_summary(self) -> dict[str, Any]:
+        training_view = self.run_config.get("training_view", {})
         identity = {
             "dataset_id": self.run_config.get("data", {}).get("dataset_id"),
             "dataset_revision": self.run_config.get("data", {}).get("dataset_revision"),
-            "training_view_sha256": self.run_config.get("training_view", {})
-            .get("derived", {})
-            .get("sha256"),
+            "training_view_sha256": training_view.get("output", {}).get("sha256"),
             "seed": self.run_config.get("seed"),
         }
         summary: dict[str, Any] = {
