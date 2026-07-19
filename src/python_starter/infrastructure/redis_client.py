@@ -18,7 +18,7 @@ class RedisManager:
 
     def __init__(self, settings: Settings) -> None:
         self.settings = settings
-        self.client: aioredis.Redis | None = None
+        self.client: aioredis.Redis[str] | None = None
 
     async def connect(self) -> bool:
         """Initialize Redis client.
@@ -45,6 +45,6 @@ class RedisManager:
             await self.client.close()
             logger.info("redis_disconnected")
 
-    def get_client(self) -> aioredis.Redis | None:
+    def get_client(self) -> aioredis.Redis[str] | None:
         """Return the Redis client instance, or None if unavailable."""
         return self.client

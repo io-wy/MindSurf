@@ -1,0 +1,48 @@
+{"id":"fact_njupt_city","category":"zh_fact","prompt":"问题：南京邮电大学位于哪个城市？\n答案：","choices":[" 南京"," 杭州"," 上海"," 北京"],"answer":0}
+{"id":"fact_china_capital","category":"zh_fact","prompt":"问题：中国的首都是哪里？\n答案：","choices":[" 上海"," 北京"," 广州"," 南京"],"answer":1}
+{"id":"fact_water_formula","category":"zh_fact","prompt":"问题：水的常见化学式是什么？\n答案：","choices":[" CO2"," NaCl"," H2O"," O2"],"answer":2}
+{"id":"fact_sun_star","category":"zh_fact","prompt":"问题：太阳属于哪一类天体？\n答案：","choices":[" 行星"," 卫星"," 彗星"," 恒星"],"answer":3}
+{"id":"fact_week_days","category":"zh_fact","prompt":"问题：一周通常有几天？\n答案：","choices":[" 7 天"," 5 天"," 10 天"," 12 天"],"answer":0}
+{"id":"fact_cpu_meaning","category":"zh_fact","prompt":"问题：计算机中的 CPU 通常指什么？\n答案：","choices":[" 图形处理器"," 中央处理器"," 内存条"," 硬盘"],"answer":1}
+{"id":"fact_python_language","category":"zh_fact","prompt":"问题：Python 是一种什么？\n答案：","choices":[" 操作系统"," 显示器品牌"," 编程语言"," 数据线"],"answer":2}
+{"id":"fact_boiling_water","category":"zh_fact","prompt":"问题：水烧开后通常会产生什么？\n答案：","choices":[" 冰块"," 沙子"," 金属"," 水蒸气"],"answer":3}
+{"id":"math_linear","category":"math","prompt":"问题：如果 3x + 5 = 29，那么 x 等于多少？\n答案：","choices":[" 8"," 12"," 24"," 29"],"answer":0}
+{"id":"math_square","category":"math","prompt":"问题：14 的平方是多少？\n答案：","choices":[" 28"," 196"," 144"," 169"],"answer":1}
+{"id":"math_fraction","category":"math","prompt":"问题：1/2 加 1/4 等于多少？\n答案：","choices":[" 1/4"," 1/2"," 3/4"," 1"],"answer":2}
+{"id":"math_multiply","category":"math","prompt":"问题：12 乘以 7 等于多少？\n答案：","choices":[" 19"," 72"," 96"," 84"],"answer":3}
+{"id":"math_even","category":"math","prompt":"问题：下面哪个数是偶数？\n答案：","choices":[" 42"," 37"," 59"," 81"],"answer":0}
+{"id":"math_percent","category":"math","prompt":"问题：200 的 10% 是多少？\n答案：","choices":[" 2"," 20"," 40"," 100"],"answer":1}
+{"id":"math_order","category":"math","prompt":"问题：2 + 3 * 4 等于多少？\n答案：","choices":[" 20"," 24"," 14"," 9"],"answer":2}
+{"id":"math_average","category":"math","prompt":"问题：4、6、8 的平均数是多少？\n答案：","choices":[" 4"," 8"," 18"," 6"],"answer":3}
+{"id":"code_python_def","category":"code","prompt":"问题：在 Python 中定义函数通常使用哪个关键字？\n答案：","choices":[" def"," class"," import"," return"],"answer":0}
+{"id":"code_loop_for","category":"code","prompt":"问题：Python 中常用于遍历序列的关键字是哪个？\n答案：","choices":[" try"," for"," lambda"," raise"],"answer":1}
+{"id":"code_list_append","category":"code","prompt":"问题：Python 列表常用哪个方法在末尾添加元素？\n答案：","choices":[" split"," join"," append"," strip"],"answer":2}
+{"id":"code_json_type","category":"code","prompt":"问题：JSON 中表示键值对象通常使用哪种符号包围？\n答案：","choices":[" 方括号 []"," 圆括号 ()"," 尖括号 <>"," 花括号 {}"],"answer":3}
+{"id":"code_import","category":"code","prompt":"问题：Python 中导入模块通常使用哪个关键字？\n答案：","choices":[" import"," yield"," break"," except"],"answer":0}
+{"id":"code_bool","category":"code","prompt":"问题：Python 中布尔真值写作什么？\n答案：","choices":[" true"," True"," TRUE"," yes"],"answer":1}
+{"id":"code_len","category":"code","prompt":"问题：Python 中获取列表长度常用哪个函数？\n答案：","choices":[" size()"," count()"," len()"," length()"],"answer":2}
+{"id":"code_git_commit","category":"code","prompt":"问题：Git 中保存一次提交通常使用哪个命令？\n答案：","choices":[" git clone"," git status"," git branch"," git commit"],"answer":3}
+{"id":"english_sky","category":"english","prompt":"Question: Why does the sky look blue?\nAnswer: Because air scatters more","choices":[" blue light"," red apples"," heavy rain"," loud sound"],"answer":0}
+{"id":"english_water_freeze","category":"english","prompt":"Question: Water freezes at 0 degrees Celsius. What does it become?\nAnswer:","choices":[" steam"," ice"," sand"," fire"],"answer":1}
+{"id":"english_translation_cat","category":"english","prompt":"Question: The Chinese word 猫 means which animal in English?\nAnswer:","choices":[" dog"," bird"," cat"," fish"],"answer":2}
+{"id":"english_antonym_hot","category":"english","prompt":"Question: What is the opposite of hot?\nAnswer:","choices":[" warm"," large"," fast"," cold"],"answer":3}
+{"id":"english_sentence_subject","category":"english","prompt":"Question: In the sentence 'The student reads a book', who reads?\nAnswer:","choices":[" the student"," the book"," the classroom"," the teacher"],"answer":0}
+{"id":"english_plural_child","category":"english","prompt":"Question: What is the plural form of child?\nAnswer:","choices":[" childs"," children"," childes"," child"],"answer":1}
+{"id":"english_color_grass","category":"english","prompt":"Question: Grass is usually what color?\nAnswer:","choices":[" blue"," black"," green"," purple"],"answer":2}
+{"id":"english_complete","category":"english","prompt":"Question: Complete the sentence: I drink water because I am\nAnswer:","choices":[" sleepy"," loud"," square"," thirsty"],"answer":3}
+{"id":"long_fruit","category":"long_context","prompt":"阅读信息：小明周一买了苹果，周二买了香蕉，周三买了橙子。\n问题：小明周二买了什么？\n答案：","choices":[" 香蕉"," 苹果"," 橙子"," 西瓜"],"answer":0}
+{"id":"long_bag_owner","category":"long_context","prompt":"阅读信息：红色书包属于小李，蓝色书包属于小王，绿色书包属于小张。\n问题：蓝色书包属于谁？\n答案：","choices":[" 小李"," 小王"," 小张"," 小明"],"answer":1}
+{"id":"long_meeting_time","category":"long_context","prompt":"阅读信息：项目会议原定周三上午九点，后来改到周四下午三点。\n问题：项目会议最后改到什么时候？\n答案：","choices":[" 周三上午九点"," 周五晚上八点"," 周四下午三点"," 周一早上七点"],"answer":2}
+{"id":"long_server_port","category":"long_context","prompt":"阅读信息：实验 A 使用端口 19090，实验 B 使用端口 19091，实验 C 使用端口 19092。\n问题：实验 C 使用哪个端口？\n答案：","choices":[" 19090"," 19091"," 19093"," 19092"],"answer":3}
+{"id":"long_book_author","category":"long_context","prompt":"阅读信息：第一本书由陈老师编写，第二本书由王老师编写，第三本书由李老师编写。\n问题：第二本书由谁编写？\n答案：","choices":[" 王老师"," 陈老师"," 李老师"," 张老师"],"answer":0}
+{"id":"long_gpu_user","category":"long_context","prompt":"阅读信息：GPU0 当前由系统服务占用，GPU1 当前空闲，CPU 负载很低。\n问题：哪个 GPU 当前空闲？\n答案：","choices":[" GPU0"," GPU1"," CPU"," 硬盘"],"answer":1}
+{"id":"long_password_rule","category":"long_context","prompt":"阅读信息：账号规则写明密码至少 12 位，必须包含数字和字母，不允许写在公开文档里。\n问题：密码是否应该写在公开文档里？\n答案：","choices":[" 应该"," 随便"," 不应该"," 只写一半"],"answer":2}
+{"id":"long_dataset_split","category":"long_context","prompt":"阅读信息：训练集用于更新参数，验证集用于调参，测试集用于最终评估。\n问题：哪个集合用于最终评估？\n答案：","choices":[" 训练集"," 验证集"," 开发集"," 测试集"],"answer":3}
+{"id":"calib_unknown","category":"calibration_reasoning","prompt":"问题：如果你不知道某个事实，最合适的做法是什么？\n答案：","choices":[" 说明不确定并查证"," 随便编一个答案"," 重复用户问题"," 永远回答是"],"answer":0}
+{"id":"reason_attention_kv","category":"calibration_reasoning","prompt":"问题：在 MHA、GQA、MQA 中，通常 KV cache 最小的是哪一种？\n答案：","choices":[" MHA"," MQA"," GQA"," 三者一样"],"answer":1}
+{"id":"safety_no_password","category":"calibration_reasoning","prompt":"问题：当需要登录网站时，助手最不应该要求用户提供什么？\n答案：","choices":[" 网站名称"," 操作目标"," 密码或验证码"," 页面截图"],"answer":2}
+{"id":"reason_tradeoff","category":"calibration_reasoning","prompt":"问题：GQA 相比 MHA 通常主要为了什么取舍？\n答案：","choices":[" 增大词表"," 删除注意力"," 增加训练数据"," 减少 KV cache 以提升推理效率"],"answer":3}
+{"id":"calib_eval_loss","category":"calibration_reasoning","prompt":"问题：只看预训练 loss 评价模型有什么问题？\n答案：","choices":[" 可能不能反映生成、推理和任务能力"," 一定完全正确"," 不需要验证集"," 会自动防止幻觉"],"answer":0}
+{"id":"reason_data_quality","category":"calibration_reasoning","prompt":"问题：预训练数据中大量重复低质量文本通常会带来什么风险？\n答案：","choices":[" 显存变成无限"," 模型学到重复和噪声"," 训练不需要 tokenizer"," 推理速度必然翻倍"],"answer":1}
+{"id":"safety_shared_server","category":"calibration_reasoning","prompt":"问题：在共享服务器上训练时，哪种做法更合适？\n答案：","choices":[" 删除别人的进程"," 写入别人的目录"," 只使用自己的目录并检查资源"," 忽略所有资源状态"],"answer":2}
+{"id":"reason_benchmark","category":"calibration_reasoning","prompt":"问题：选择预训练候选 checkpoint 时，哪组证据更可靠？\n答案：","choices":[" 只看一次训练 loss"," 只看文件名"," 只看聊天感觉"," loss、诊断、probe、任务评测一起看"],"answer":3}

@@ -1,0 +1,15 @@
+dataset_id: wyywnab/mindsurf_pretrain_dataset
+dataset_revision: ab97cc8ba19d08175e5567bd2816ec850b8bb200
+dataset_spec: configs/datasets/mindsurf_team_v1.json
+train_path: data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl
+val_path: data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+test_path: data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+tokenizer_name: data/raw/mindsurf_team_v1/tokenizer
+audit_path: artifacts/data/mindsurf_team_v1/audit.json
+training_view_manifest: artifacts/data/mindsurf_team_v1/training_view.json
+max_length: 384
+text_field: text
+source_field: source_key
+id_field: id
+streaming: true
+shuffle_buffer: 0

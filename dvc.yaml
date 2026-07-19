@@ -1,41 +1,163 @@
-# DVC pipeline definition
-# Run: dvc repro
-
 stages:
-  preprocess:
-    cmd: uv run scripts/preprocess.py --input data/raw --output data/processed/train.txt
+  fetch_official_dataset:
+    cmd: >-
+      uv run python scripts/fetch_modelscope_dataset.py
+      --spec configs/datasets/minimind_official_v1.json
+      --output data/raw/minimind_official_v1
+      --repo-cache data/raw/.modelscope/minimind_official_v1
+      --include source
     deps:
-      - data/raw
-      - scripts/preprocess.py
+      - configs/datasets/minimind_official_v1.json
+      - scripts/fetch_modelscope_dataset.py
+      - src/python_starter/core/data_contract.py
     outs:
-      - data/processed/train.txt
+      - data/raw/minimind_official_v1/pretrain_t2t_mini.jsonl
+      - data/raw/minimind_official_v1/tokenizer
 
-  train:
-    cmd: uv run scripts/train.py training=pretrain model=minimind data=default
+  prepare_official_splits:
+    cmd: uv run python scripts/prepare_official_splits.py
     deps:
-      - data/processed/train.txt
+      - configs/datasets/minimind_official_v1.json
+      - scripts/prepare_official_splits.py
+      - src/python_starter/core/data_contract.py
+      - data/raw/minimind_official_v1/pretrain_t2t_mini.jsonl
+    outs:
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_train.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      - artifacts/data/minimind_official_v1/split_metadata.json
+
+  audit_official_dataset:
+    cmd: >-
+      uv run python scripts/audit_pretrain_dataset.py
+      --spec configs/datasets/minimind_official_v1.json
+      --root data/raw/minimind_official_v1
+      --metadata artifacts/data/minimind_official_v1/split_metadata.json
+      --output artifacts/data/minimind_official_v1/audit.json
+    deps:
+      - configs/datasets/minimind_official_v1.json
+      - scripts/audit_pretrain_dataset.py
+      - src/python_starter/core/data_contract.py
+      - artifacts/data/minimind_official_v1/split_metadata.json
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_train.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      - data/raw/minimind_official_v1/tokenizer
+    outs:
+      - artifacts/data/minimind_official_v1/audit.json
+
+  build_official_training_view:
+    cmd: >-
+      uv run python scripts/build_training_view.py
+      --spec configs/datasets/minimind_official_v1.json
+      --root data/raw/minimind_official_v1
+      --audit artifacts/data/minimind_official_v1/audit.json
+      --output data/processed/minimind_official_v1/pretrain_train_nfkc_dedup.jsonl
+      --manifest artifacts/data/minimind_official_v1/training_view.json
+    deps:
+      - configs/datasets/minimind_official_v1.json
+      - scripts/build_training_view.py
+      - src/python_starter/core/data_contract.py
+      - artifacts/data/minimind_official_v1/audit.json
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_train.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+    outs:
+      - data/processed/minimind_official_v1/pretrain_train_nfkc_dedup.jsonl
+      - artifacts/data/minimind_official_v1/training_view.json
+
+  fetch_team_dataset:
+    cmd: uv run python scripts/fetch_modelscope_dataset.py
+    deps:
+      - configs/datasets/mindsurf_team_v1.json
+      - scripts/fetch_modelscope_dataset.py
+      - src/python_starter/core/data_contract.py
+    outs:
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_train_shuffled.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/strict_splits_meta.json
+      - data/raw/mindsurf_team_v1/tokenizer
+
+  audit_team_dataset:
+    cmd: uv run python scripts/audit_pretrain_dataset.py
+    deps:
+      - configs/datasets/mindsurf_team_v1.json
+      - scripts/audit_pretrain_dataset.py
+      - src/python_starter/core/data_contract.py
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_train_shuffled.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      - data/raw/mindsurf_team_v1/tokenizer
+    outs:
+      - artifacts/data/mindsurf_team_v1/audit.json
+
+  build_team_training_view:
+    cmd: uv run python scripts/build_training_view.py
+    deps:
+      - configs/datasets/mindsurf_team_v1.json
+      - scripts/build_training_view.py
+      - src/python_starter/core/data_contract.py
+      - artifacts/data/mindsurf_team_v1/audit.json
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_train_shuffled.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+    outs:
+      - data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl
+      - artifacts/data/mindsurf_team_v1/training_view.json
+
+  train_official_80m:
+    cmd: uv run python scripts/train.py data=minimind_official_v1
+    deps:
+      - configs/default.yaml
+      - configs/model/minimind_80m.yaml
+      - configs/training/pretrain.yaml
+      - configs/data/minimind_official_v1.yaml
       - scripts/train.py
       - src/python_starter/core
-      - configs
-    params:
-      - configs/model/minimind.yaml:
-          - vocab_size
-          - n_embed
-          - n_layer
-          - n_head
-      - configs/training/pretrain.yaml:
-          - num_epochs
-          - batch_size
-          - learning_rate
+      - artifacts/data/minimind_official_v1/audit.json
+      - artifacts/data/minimind_official_v1/training_view.json
+      - data/processed/minimind_official_v1/pretrain_train_nfkc_dedup.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
     outs:
-      - models/checkpoints/pretrain
-
-  evaluate:
-    cmd: uv run scripts/evaluate.py --checkpoint models/checkpoints/pretrain/final_model.pt --data data/raw/test.txt
-    deps:
-      - models/checkpoints/pretrain/final_model.pt
-      - data/raw/test.txt
-      - scripts/evaluate.py
-    metrics:
-      - metrics.json:
+      - models/checkpoints/minimind_official_v1_80m/final_model.pt:
           cache: false
+
+  train_team_80m:
+    cmd: >-
+      uv run python scripts/train.py
+      data=mindsurf_team_v1
+      run_name=mindsurf-team-v1-80m-wsd
+      training.output_dir=models/checkpoints/mindsurf_team_v1_80m
+    deps:
+      - configs/default.yaml
+      - configs/model/minimind_80m.yaml
+      - configs/training/pretrain.yaml
+      - configs/data/mindsurf_team_v1.yaml
+      - scripts/train.py
+      - src/python_starter/core
+      - artifacts/data/mindsurf_team_v1/audit.json
+      - artifacts/data/mindsurf_team_v1/training_view.json
+      - data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+    outs:
+      - models/checkpoints/mindsurf_team_v1_80m/final_model.pt:
+          cache: false
+
+  evaluate_ablation:
+    cmd: uv run python scripts/run_dataset_ablation.py --evaluation-only
+    deps:
+      - configs/evaluation
+      - scripts/evaluate_candidate.py
+      - scripts/run_dataset_ablation.py
+      - src/python_starter/core/evaluation.py
+      - models/checkpoints/minimind_official_v1_80m/final_model.pt
+      - models/checkpoints/mindsurf_team_v1_80m/final_model.pt
+      - artifacts/data/minimind_official_v1/audit.json
+      - artifacts/data/mindsurf_team_v1/audit.json
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl
+      - data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl
+    outs:
+      - artifacts/evaluation/dataset_ablation_80m.json

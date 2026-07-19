@@ -2,15 +2,18 @@
 
 from __future__ import annotations
 
+import json
+import random
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
 import torch
-from torch.utils.data import Dataset
-from transformers import PreTrainedTokenizer
+from torch.utils.data import Dataset, IterableDataset, get_worker_info
+from transformers import PreTrainedTokenizerBase
 
 
-class TextDataset(Dataset):
+class TextDataset(Dataset[dict[str, torch.Tensor]]):
     """Dataset for pretraining/supervised fine-tuning from text files.
 
     Loads raw text, tokenizes, and creates fixed-length sequences.
@@ -19,7 +22,7 @@ class TextDataset(Dataset):
     def __init__(
         self,
         data_path: str | Path,
-        tokenizer: PreTrainedTokenizer,
+        tokenizer: PreTrainedTokenizerBase,
         max_length: int = 512,
         stride: int | None = None,
     ) -> None:
@@ -32,10 +35,7 @@ class TextDataset(Dataset):
         if path.is_file():
             texts = [path.read_text(encoding="utf-8")]
         else:
-            texts = [
-                f.read_text(encoding="utf-8")
-                for f in sorted(path.glob("*.txt"))
-            ]
+            texts = [f.read_text(encoding="utf-8") for f in sorted(path.glob("*.txt"))]
 
         self.tokens = []
         for text in texts:
@@ -59,7 +59,139 @@ class TextDataset(Dataset):
         return {"input_ids": input_ids, "labels": labels}
 
 
-class SFTDataset(Dataset):
+class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
+    """Stream JSONL records and deterministically pack them into token blocks.
+
+    The absolute packed-block cursor is the resume boundary. Training uses a
+    single data-loader worker so the cursor has one unambiguous ordering.
+    """
+
+    def __init__(
+        self,
+        data_path: str | Path,
+        tokenizer: PreTrainedTokenizerBase,
+        max_length: int = 512,
+        *,
+        text_key: str = "text",
+        skip_blocks: int = 0,
+        max_blocks: int | None = None,
+        shuffle_buffer: int = 0,
+        seed: int = 20260511,
+    ) -> None:
+        super().__init__()
+        self.data_path = Path(data_path)
+        self.tokenizer = tokenizer
+        self.max_length = max_length
+        self.text_key = text_key
+        self.skip_blocks = skip_blocks
+        self.max_blocks = max_blocks
+        self.shuffle_buffer = shuffle_buffer
+        self.seed = seed
+
+        if not self.data_path.is_file():
+            raise FileNotFoundError(self.data_path)
+        if self.max_length <= 0:
+            raise ValueError("max_length must be positive")
+        if self.skip_blocks < 0:
+            raise ValueError("skip_blocks must be non-negative")
+        if self.shuffle_buffer < 0:
+            raise ValueError("shuffle_buffer must be non-negative")
+        if tokenizer.eos_token_id is None:
+            raise ValueError("tokenizer must define eos_token_id")
+
+    def set_skip_blocks(self, skip_blocks: int) -> None:
+        """Move the absolute resume cursor before constructing an iterator."""
+        if skip_blocks < 0:
+            raise ValueError("skip_blocks must be non-negative")
+        self.skip_blocks = skip_blocks
+
+    def _records(self) -> Iterator[str]:
+        with self.data_path.open("r", encoding="utf-8") as handle:
+            if self.shuffle_buffer <= 1:
+                for line_number, line in enumerate(handle, start=1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        row = json.loads(line)
+                        text = row[self.text_key]
+                    except (json.JSONDecodeError, KeyError, TypeError) as exc:
+                        raise ValueError(
+                            f"invalid JSONL record at {self.data_path}:{line_number}"
+                        ) from exc
+                    if not isinstance(text, str):
+                        raise ValueError(
+                            f"{self.text_key!r} must be a string at {self.data_path}:{line_number}"
+                        )
+                    yield text
+                return
+
+            rng = random.Random(self.seed)
+            buffer: list[str] = []
+            for line_number, line in enumerate(handle, start=1):
+                line = line.strip()
+                if not line:
+                    continue
+                try:
+                    row = json.loads(line)
+                    text = row[self.text_key]
+                except (json.JSONDecodeError, KeyError, TypeError) as exc:
+                    raise ValueError(
+                        f"invalid JSONL record at {self.data_path}:{line_number}"
+                    ) from exc
+                if not isinstance(text, str):
+                    raise ValueError(
+                        f"{self.text_key!r} must be a string at {self.data_path}:{line_number}"
+                    )
+                if len(buffer) < self.shuffle_buffer:
+                    buffer.append(text)
+                    continue
+                index = rng.randrange(len(buffer))
+                yield buffer[index]
+                buffer[index] = text
+
+            while buffer:
+                yield buffer.pop(rng.randrange(len(buffer)))
+
+    def __iter__(self) -> Iterator[dict[str, torch.Tensor]]:
+        worker = get_worker_info()
+        if worker is not None:
+            raise RuntimeError(
+                "JsonlPackedDataset requires DataLoader(num_workers=0) "
+                "to preserve an exact resume cursor"
+            )
+
+        eos_token_id = self.tokenizer.eos_token_id
+        assert eos_token_id is not None
+        block_size = self.max_length + 1
+        token_buffer: list[int] = []
+        absolute_block = 0
+        emitted = 0
+
+        for text in self._records():
+            token_buffer.extend(self.tokenizer.encode(text, add_special_tokens=False))
+            token_buffer.append(eos_token_id)
+
+            while len(token_buffer) >= block_size:
+                sample = token_buffer[:block_size]
+                del token_buffer[:block_size]
+
+                if absolute_block < self.skip_blocks:
+                    absolute_block += 1
+                    continue
+                if self.max_blocks is not None and emitted >= self.max_blocks:
+                    return
+
+                absolute_block += 1
+                emitted += 1
+                values = torch.tensor(sample, dtype=torch.long)
+                yield {
+                    "input_ids": values[:-1],
+                    "labels": values[1:],
+                }
+
+
+class SFTDataset(Dataset[dict[str, torch.Tensor]]):
     """Dataset for supervised fine-tuning with prompt-response pairs.
 
     Expects a JSONL file where each line is:
@@ -69,7 +201,7 @@ class SFTDataset(Dataset):
     def __init__(
         self,
         data_path: str | Path,
-        tokenizer: PreTrainedTokenizer,
+        tokenizer: PreTrainedTokenizerBase,
         max_length: int = 512,
         prompt_template: str = "### Instruction:\n{prompt}\n\n### Response:\n",
     ) -> None:

@@ -14,13 +14,16 @@ from sqlalchemy.ext.asyncio import (
     async_sessionmaker,
     create_async_engine,
 )
-from sqlalchemy.orm import declarative_base
+from sqlalchemy.orm import DeclarativeBase
 
 from python_starter.infrastructure.config import Settings
 from python_starter.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
-Base = declarative_base()
+
+
+class Base(DeclarativeBase):
+    """Typed declarative base for application tables."""
 
 
 class DatabaseManager:

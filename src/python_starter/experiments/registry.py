@@ -5,11 +5,15 @@ Convenience wrappers for registering, versioning, and promoting models.
 
 from __future__ import annotations
 
-from typing import Any
+import json
+from datetime import UTC, datetime
+from pathlib import Path
+from typing import Any, cast
 
 import mlflow
 from mlflow.tracking import MlflowClient
 
+from python_starter.core.data_contract import sha256_file, write_json_atomic
 from python_starter.infrastructure.config import Settings
 from python_starter.infrastructure.logging import get_logger
 
@@ -47,7 +51,7 @@ class ModelRegistry:
             name=name,
             version=result.version,
         )
-        return result.version
+        return str(result.version)
 
     def transition_stage(
         self,
@@ -62,9 +66,7 @@ class ModelRegistry:
             version: Model version.
             stage: Target stage (Staging, Production, Archived).
         """
-        self.client.transition_model_version_stage(
-            name=name, version=version, stage=stage
-        )
+        self.client.transition_model_version_stage(name=name, version=version, stage=stage)
         logger.info("model_stage_transitioned", name=name, version=version, stage=stage)
 
     def get_latest_version(self, name: str, stage: str | None = None) -> str | None:
@@ -111,3 +113,67 @@ class ModelRegistry:
 
         logger.info("loading_registered_model", uri=model_uri)
         return mlflow.pyfunc.load_model(model_uri)
+
+
+class LocalCandidateRegistry:
+    """Durable local registry whose stages are controlled by evaluation gates."""
+
+    def __init__(self, path: str | Path = "artifacts/model_registry.json") -> None:
+        self.path = Path(path)
+
+    def _read(self) -> dict[str, Any]:
+        if not self.path.exists():
+            return {"schema_version": 1, "models": []}
+        value = json.loads(self.path.read_text(encoding="utf-8"))
+        if value.get("schema_version") != 1 or not isinstance(value.get("models"), list):
+            raise ValueError(f"invalid local model registry: {self.path}")
+        return cast(dict[str, Any], value)
+
+    def register(
+        self,
+        *,
+        name: str,
+        checkpoint_path: str | Path,
+        evaluation_path: str | Path,
+    ) -> dict[str, Any]:
+        """Register an internally passing candidate with immutable identities."""
+        checkpoint = Path(checkpoint_path).resolve(strict=True)
+        evaluation = Path(evaluation_path).resolve(strict=True)
+        evaluation_data = json.loads(evaluation.read_text(encoding="utf-8"))
+        gate = evaluation_data.get("gate", {})
+        if gate.get("internal_candidate_passed") is not True:
+            raise ValueError("only an internally passing candidate can be registered")
+
+        registry = self._read()
+        record = {
+            "name": name,
+            "stage": "candidate",
+            "checkpoint_path": str(checkpoint),
+            "checkpoint_sha256": sha256_file(checkpoint),
+            "evaluation_path": str(evaluation),
+            "evaluation_sha256": sha256_file(evaluation),
+            "public_release_eligible": gate.get("public_release_passed") is True,
+            "registered_at": datetime.now(UTC).isoformat(),
+        }
+        if any(
+            item.get("checkpoint_sha256") == record["checkpoint_sha256"]
+            for item in registry["models"]
+        ):
+            raise ValueError("checkpoint is already registered")
+        registry["models"].append(record)
+        write_json_atomic(self.path, registry)
+        return record
+
+    def promote_public(self, checkpoint_sha256: str) -> dict[str, Any]:
+        """Promote only a candidate whose evaluation includes the license gate."""
+        registry = self._read()
+        for record in registry["models"]:
+            if record.get("checkpoint_sha256") != checkpoint_sha256:
+                continue
+            if record.get("public_release_eligible") is not True:
+                raise ValueError("candidate is not eligible for public release")
+            record["stage"] = "public"
+            record["promoted_at"] = datetime.now(UTC).isoformat()
+            write_json_atomic(self.path, registry)
+            return cast(dict[str, Any], record)
+        raise KeyError(checkpoint_sha256)

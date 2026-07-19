@@ -11,10 +11,12 @@ Features:
 from __future__ import annotations
 
 import math
+from dataclasses import asdict, dataclass
+from typing import Any, cast
 
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
+import torch.nn.functional as functional
 
 
 class RMSNorm(nn.Module):
@@ -42,14 +44,15 @@ class RotaryEmbedding(nn.Module):
         inv_freq = 1.0 / (self.base ** (torch.arange(0, dim, 2).float() / dim))
         self.register_buffer("inv_freq", inv_freq, persistent=False)
 
-        t = torch.arange(max_seq_len, dtype=torch.float32)
-        freqs = torch.einsum("i,j->ij", t, inv_freq)
-        emb = torch.cat([freqs, freqs], dim=-1)
-        self.register_buffer("cos", emb.cos()[None, None, :, :], persistent=False)
-        self.register_buffer("sin", emb.sin()[None, None, :, :], persistent=False)
-
     def forward(self, x: torch.Tensor, seq_len: int) -> tuple[torch.Tensor, torch.Tensor]:
-        return self.cos[:, :, :seq_len, :], self.sin[:, :, :seq_len, :]
+        inv_freq = self.get_buffer("inv_freq")
+        positions = torch.arange(seq_len, dtype=torch.float32, device=x.device)
+        freqs = torch.outer(positions, inv_freq.to(x.device))
+        emb = torch.cat([freqs, freqs], dim=-1)
+        return (
+            emb.cos().to(dtype=x.dtype)[None, None, :, :],
+            emb.sin().to(dtype=x.dtype)[None, None, :, :],
+        )
 
 
 def apply_rotary_pos_emb(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) -> torch.Tensor:
@@ -60,56 +63,76 @@ def apply_rotary_pos_emb(x: torch.Tensor, cos: torch.Tensor, sin: torch.Tensor) 
 
 
 class CausalSelfAttention(nn.Module):
-    """Multi-head causal self-attention with RoPE."""
+    """Grouped-query causal self-attention with QK normalization and RoPE."""
 
     def __init__(self, config: ModelConfig) -> None:
         super().__init__()
-        assert config.n_embed % config.n_head == 0
+        if config.n_embed % config.n_head != 0:
+            raise ValueError("n_embed must be divisible by n_head")
+        n_kv_head = config.n_kv_head or config.n_head
+        if config.n_head % n_kv_head != 0:
+            raise ValueError("n_head must be divisible by n_kv_head")
 
         self.n_head = config.n_head
+        self.n_kv_head = n_kv_head
         self.n_embed = config.n_embed
         self.head_dim = config.n_embed // config.n_head
         self.dropout = config.dropout
 
         self.q_proj = nn.Linear(config.n_embed, config.n_embed, bias=False)
-        self.k_proj = nn.Linear(config.n_embed, config.n_embed, bias=False)
-        self.v_proj = nn.Linear(config.n_embed, config.n_embed, bias=False)
+        kv_dim = self.n_kv_head * self.head_dim
+        self.k_proj = nn.Linear(config.n_embed, kv_dim, bias=False)
+        self.v_proj = nn.Linear(config.n_embed, kv_dim, bias=False)
         self.o_proj = nn.Linear(config.n_embed, config.n_embed, bias=False)
+        self.q_norm = RMSNorm(self.head_dim, eps=config.rms_norm_eps)
+        self.k_norm = RMSNorm(self.head_dim, eps=config.rms_norm_eps)
 
-        self.rotary = RotaryEmbedding(self.head_dim, max_seq_len=config.max_seq_len)
-
-        self.register_buffer(
-            "mask",
-            torch.triu(torch.ones(config.max_seq_len, config.max_seq_len), diagonal=1).bool(),
-            persistent=False,
+        self.rotary = RotaryEmbedding(
+            self.head_dim,
+            max_seq_len=config.max_seq_len,
+            base=config.rope_theta,
         )
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         bsz, seq_len, _ = x.shape
 
         q = self.q_proj(x).view(bsz, seq_len, self.n_head, self.head_dim).transpose(1, 2)
-        k = self.k_proj(x).view(bsz, seq_len, self.n_head, self.head_dim).transpose(1, 2)
-        v = self.v_proj(x).view(bsz, seq_len, self.n_head, self.head_dim).transpose(1, 2)
+        k = self.k_proj(x).view(bsz, seq_len, self.n_kv_head, self.head_dim).transpose(1, 2)
+        v = self.v_proj(x).view(bsz, seq_len, self.n_kv_head, self.head_dim).transpose(1, 2)
+        q = self.q_norm(q)
+        k = self.k_norm(k)
 
-        cos, sin = self.rotary(x, seq_len)
+        cos, sin = self.rotary(q, seq_len)
         q = apply_rotary_pos_emb(q, cos, sin)
         k = apply_rotary_pos_emb(k, cos, sin)
 
-        # Flash attention if available, else standard scaled dot-product
-        if hasattr(F, "scaled_dot_product_attention"):
-            attn_mask = self.mask[:seq_len, :seq_len].unsqueeze(0).unsqueeze(0)
-            out = F.scaled_dot_product_attention(
-                q, k, v, attn_mask=attn_mask, dropout_p=self.dropout if self.training else 0.0
+        if self.n_kv_head != self.n_head:
+            repeats = self.n_head // self.n_kv_head
+            k = k.repeat_interleave(repeats, dim=1)
+            v = v.repeat_interleave(repeats, dim=1)
+
+        if hasattr(functional, "scaled_dot_product_attention"):
+            out = functional.scaled_dot_product_attention(
+                q,
+                k,
+                v,
+                attn_mask=None,
+                dropout_p=self.dropout if self.training else 0.0,
+                is_causal=True,
             )
         else:
             scores = torch.matmul(q, k.transpose(-2, -1)) / math.sqrt(self.head_dim)
-            scores = scores.masked_fill(self.mask[:seq_len, :seq_len], float("-inf"))
-            attn = F.softmax(scores, dim=-1)
-            attn = F.dropout(attn, p=self.dropout, training=self.training)
+            mask = torch.triu(
+                torch.ones(seq_len, seq_len, dtype=torch.bool, device=x.device),
+                diagonal=1,
+            )
+            scores = scores.masked_fill(mask, float("-inf"))
+            attn = functional.softmax(scores, dim=-1)
+            attn = functional.dropout(attn, p=self.dropout, training=self.training)
             out = torch.matmul(attn, v)
 
         out = out.transpose(1, 2).contiguous().view(bsz, seq_len, self.n_embed)
-        return self.o_proj(out)
+        return cast(torch.Tensor, self.o_proj(out))
 
 
 class SwiGLU(nn.Module):
@@ -125,7 +148,10 @@ class SwiGLU(nn.Module):
         self.dropout = nn.Dropout(dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.w3(F.silu(self.w1(x)) * self.w2(x))
+        return cast(
+            torch.Tensor,
+            self.dropout(self.w3(functional.silu(self.w1(x)) * self.w2(x))),
+        )
 
 
 class TransformerBlock(nn.Module):
@@ -133,9 +159,9 @@ class TransformerBlock(nn.Module):
 
     def __init__(self, config: ModelConfig) -> None:
         super().__init__()
-        self.attn_norm = RMSNorm(config.n_embed)
+        self.attn_norm = RMSNorm(config.n_embed, eps=config.rms_norm_eps)
         self.attn = CausalSelfAttention(config)
-        self.ffn_norm = RMSNorm(config.n_embed)
+        self.ffn_norm = RMSNorm(config.n_embed, eps=config.rms_norm_eps)
         self.ffn = SwiGLU(config.n_embed, config.hidden_dim, config.dropout)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -144,28 +170,46 @@ class TransformerBlock(nn.Module):
         return x
 
 
+@dataclass(slots=True)
 class ModelConfig:
     """Model hyperparameter configuration."""
 
-    def __init__(
-        self,
-        vocab_size: int = 6400,
-        n_embed: int = 512,
-        n_layer: int = 8,
-        n_head: int = 8,
-        max_seq_len: int = 512,
-        dropout: float = 0.0,
-        hidden_dim: int | None = None,
-        tie_weights: bool = True,
-    ) -> None:
-        self.vocab_size = vocab_size
-        self.n_embed = n_embed
-        self.n_layer = n_layer
-        self.n_head = n_head
-        self.max_seq_len = max_seq_len
-        self.dropout = dropout
-        self.hidden_dim = hidden_dim or 4 * n_embed
-        self.tie_weights = tie_weights
+    vocab_size: int = 6400
+    n_embed: int = 512
+    n_layer: int = 8
+    n_head: int = 8
+    n_kv_head: int | None = None
+    max_seq_len: int = 512
+    dropout: float = 0.0
+    hidden_dim: int | None = None
+    tie_weights: bool = True
+    rope_theta: float = 1_000_000.0
+    rms_norm_eps: float = 1e-6
+
+    def __post_init__(self) -> None:
+        if self.vocab_size <= 0 or self.n_embed <= 0 or self.n_layer <= 0:
+            raise ValueError("vocab_size, n_embed, and n_layer must be positive")
+        if self.n_head <= 0:
+            raise ValueError("n_head must be positive")
+        if self.n_kv_head is None:
+            self.n_kv_head = self.n_head
+        elif self.n_kv_head <= 0:
+            raise ValueError("n_kv_head must be positive")
+        if self.hidden_dim is None:
+            self.hidden_dim = 4 * self.n_embed
+        elif self.hidden_dim <= 0:
+            raise ValueError("hidden_dim must be positive")
+        if self.max_seq_len <= 0:
+            raise ValueError("max_seq_len must be positive")
+
+    def to_dict(self) -> dict[str, Any]:
+        """Return a checkpoint-safe plain mapping."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, values: dict[str, Any]) -> ModelConfig:
+        """Reconstruct a configuration stored in a checkpoint."""
+        return cls(**values)
 
 
 class TransformerLM(nn.Module):
@@ -177,7 +221,7 @@ class TransformerLM(nn.Module):
 
         self.token_embed = nn.Embedding(config.vocab_size, config.n_embed)
         self.blocks = nn.ModuleList([TransformerBlock(config) for _ in range(config.n_layer)])
-        self.norm = RMSNorm(config.n_embed)
+        self.norm = RMSNorm(config.n_embed, eps=config.rms_norm_eps)
         self.lm_head = nn.Linear(config.n_embed, config.vocab_size, bias=False)
 
         if config.tie_weights:
@@ -193,8 +237,14 @@ class TransformerLM(nn.Module):
         elif isinstance(module, nn.Embedding):
             torch.nn.init.normal_(module.weight, mean=0.0, std=0.02)
 
-    def forward(self, input_ids: torch.Tensor, targets: torch.Tensor | None = None) -> tuple[torch.Tensor, torch.Tensor | None]:
-        bsz, seq_len = input_ids.shape
+    def forward(
+        self, input_ids: torch.Tensor, targets: torch.Tensor | None = None
+    ) -> tuple[torch.Tensor, torch.Tensor | None]:
+        _, seq_len = input_ids.shape
+        if seq_len > self.config.max_seq_len:
+            raise ValueError(
+                f"sequence length {seq_len} exceeds configured maximum {self.config.max_seq_len}"
+            )
         x = self.token_embed(input_ids)
 
         for block in self.blocks:
@@ -205,7 +255,7 @@ class TransformerLM(nn.Module):
 
         loss = None
         if targets is not None:
-            loss = F.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
+            loss = functional.cross_entropy(logits.view(-1, logits.size(-1)), targets.view(-1))
 
         return logits, loss
 
@@ -219,17 +269,31 @@ class TransformerLM(nn.Module):
         eos_token_id: int | None = None,
     ) -> torch.Tensor:
         """Generate tokens autoregressively."""
+        if temperature < 0:
+            raise ValueError("temperature must be non-negative")
+        if not 0 < top_p <= 1:
+            raise ValueError("top_p must be in (0, 1]")
+
         for _ in range(max_new_tokens):
             if input_ids.size(1) >= self.config.max_seq_len:
                 input_ids = input_ids[:, -self.config.max_seq_len :]
 
             logits, _ = self(input_ids)
-            logits = logits[:, -1, :] / temperature
+            logits = logits[:, -1, :]
+
+            if temperature == 0:
+                next_token = logits.argmax(dim=-1, keepdim=True)
+                input_ids = torch.cat([input_ids, next_token], dim=1)
+                if eos_token_id is not None and torch.all(next_token == eos_token_id):
+                    break
+                continue
+
+            logits = logits / temperature
 
             # Top-p (nucleus) sampling
             if top_p < 1.0:
                 sorted_logits, sorted_indices = torch.sort(logits, descending=True)
-                cum_probs = torch.cumsum(F.softmax(sorted_logits, dim=-1), dim=-1)
+                cum_probs = torch.cumsum(functional.softmax(sorted_logits, dim=-1), dim=-1)
                 sorted_indices_to_remove = cum_probs > top_p
                 sorted_indices_to_remove[..., 0] = False
                 indices_to_remove = sorted_indices_to_remove.scatter(
@@ -237,11 +301,11 @@ class TransformerLM(nn.Module):
                 )
                 logits[indices_to_remove] = float("-inf")
 
-            probs = F.softmax(logits, dim=-1)
+            probs = functional.softmax(logits, dim=-1)
             next_token = torch.multinomial(probs, num_samples=1)
             input_ids = torch.cat([input_ids, next_token], dim=1)
 
-            if eos_token_id is not None and next_token.item() == eos_token_id:
+            if eos_token_id is not None and torch.all(next_token == eos_token_id):
                 break
 
         return input_ids

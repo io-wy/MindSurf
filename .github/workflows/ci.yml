@@ -18,12 +18,13 @@ name: CI/CD Pipeline
 on:
   push:
     branches:
-      - master
-      - develop
+      - main
+      - pretrain
   pull_request:
     branches:
-      - master
-      - develop
+      - main
+      - pretrain
+  workflow_dispatch:
 
 permissions:
   contents: read

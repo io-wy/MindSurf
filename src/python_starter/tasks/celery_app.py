@@ -5,8 +5,6 @@ Sets up the Celery app with Redis broker and result backend.
 
 from __future__ import annotations
 
-import os
-
 from celery import Celery
 
 from python_starter.infrastructure.config import get_settings
@@ -29,4 +27,5 @@ celery_app.conf.update(
     task_track_started=True,
     task_time_limit=3600 * 24,  # 24 hours max per task
     worker_prefetch_multiplier=1,
+    worker_concurrency=1,
 )

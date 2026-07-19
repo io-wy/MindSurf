@@ -6,6 +6,7 @@ Reference: src-go/internal/config/config.go
 from __future__ import annotations
 
 from functools import lru_cache
+from pathlib import Path
 
 from pydantic import Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -18,12 +19,13 @@ class Settings(BaseSettings):
         env_file=".env",
         env_file_encoding="utf-8",
         extra="ignore",
+        populate_by_name=True,
     )
 
     # Application
     env: str = Field(default="development", alias="ENV")
     debug: bool = Field(default=False, alias="DEBUG")
-    app_name: str = Field(default="python-starter", alias="APP_NAME")
+    app_name: str = Field(default="MindSurf", alias="APP_NAME")
     app_version: str = Field(default="0.1.0", alias="APP_VERSION")
 
     # API Server
@@ -44,31 +46,25 @@ class Settings(BaseSettings):
     redis_url: str = Field(default="redis://localhost:6379/0", alias="REDIS_URL")
 
     # Celery
-    celery_broker_url: str = Field(
-        default="redis://localhost:6379/1", alias="CELERY_BROKER_URL"
-    )
+    celery_broker_url: str = Field(default="redis://localhost:6379/1", alias="CELERY_BROKER_URL")
     celery_result_backend: str = Field(
         default="redis://localhost:6379/2", alias="CELERY_RESULT_BACKEND"
     )
 
     # Experiment Tracking
-    wandb_project: str = Field(default="python-starter", alias="WANDB_PROJECT")
+    wandb_project: str = Field(default="mindsurf", alias="WANDB_PROJECT")
     wandb_api_key: str | None = Field(default=None, alias="WANDB_API_KEY")
-    mlflow_tracking_uri: str = Field(
-        default="http://localhost:5000", alias="MLFLOW_TRACKING_URI"
-    )
-    mlflow_experiment_name: str = Field(
-        default="default", alias="MLFLOW_EXPERIMENT_NAME"
-    )
+    mlflow_tracking_uri: str | None = Field(default=None, alias="MLFLOW_TRACKING_URI")
+    mlflow_experiment_name: str = Field(default="default", alias="MLFLOW_EXPERIMENT_NAME")
 
     # Training
     cuda_visible_devices: str = Field(default="0", alias="CUDA_VISIBLE_DEVICES")
     default_device: str = Field(default="auto", alias="DEFAULT_DEVICE")
+    inference_checkpoint: Path | None = Field(default=None, alias="INFERENCE_CHECKPOINT")
+    inference_tokenizer: Path | None = Field(default=None, alias="INFERENCE_TOKENIZER")
 
     # Security
-    secret_key: str = Field(
-        default="dev-secret-change-me-in-production-32ch", alias="SECRET_KEY"
-    )
+    secret_key: str = Field(default="dev-secret-change-me-in-production-32ch", alias="SECRET_KEY")
 
     @property
     def database_url(self) -> str:

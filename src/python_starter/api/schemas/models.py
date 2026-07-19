@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 from datetime import datetime
-from enum import Enum
+from enum import StrEnum
+from typing import Any
 
 from pydantic import BaseModel, ConfigDict, Field
 
 
-class HealthStatus(str, Enum):
+class HealthStatus(StrEnum):
     """Health check status values."""
 
     OK = "ok"
@@ -19,13 +20,15 @@ class HealthStatus(str, Enum):
 class HealthResponse(BaseModel):
     """Health check response."""
 
-    model_config = ConfigDict(json_schema_extra={
-        "example": {
-            "status": "ok",
-            "version": "0.1.0",
-            "timestamp": "2026-04-30T12:00:00Z",
+    model_config = ConfigDict(
+        json_schema_extra={
+            "example": {
+                "status": "ok",
+                "version": "0.1.0",
+                "timestamp": "2026-04-30T12:00:00Z",
+            }
         }
-    })
+    )
 
     status: HealthStatus = Field(..., description="Overall service health status")
     version: str = Field(..., description="Application version")
@@ -42,7 +45,7 @@ class InferenceRequest(BaseModel):
     text: str = Field(..., min_length=1, description="Input text for inference")
     max_length: int = Field(default=128, ge=1, le=2048, description="Maximum output length")
     temperature: float = Field(default=0.7, ge=0.0, le=2.0, description="Sampling temperature")
-    top_p: float = Field(default=0.9, ge=0.0, le=1.0, description="Nucleus sampling parameter")
+    top_p: float = Field(default=0.9, gt=0.0, le=1.0, description="Nucleus sampling parameter")
 
 
 class InferenceResponse(BaseModel):
@@ -54,7 +57,7 @@ class InferenceResponse(BaseModel):
     generation_time_ms: float = Field(..., description="Generation time in milliseconds")
 
 
-class ExperimentStatus(str, Enum):
+class ExperimentStatus(StrEnum):
     """Experiment lifecycle status."""
 
     CREATED = "created"
@@ -69,10 +72,10 @@ class ExperimentCreate(BaseModel):
 
     name: str = Field(..., min_length=1, max_length=255, description="Experiment name")
     description: str | None = Field(default=None, description="Experiment description")
-    model_config_snapshot: dict = Field(
+    model_config_snapshot: dict[str, Any] = Field(
         default_factory=dict, description="Model configuration snapshot"
     )
-    training_config_snapshot: dict = Field(
+    training_config_snapshot: dict[str, Any] = Field(
         default_factory=dict, description="Training configuration snapshot"
     )
 
@@ -86,9 +89,9 @@ class ExperimentResponse(BaseModel):
     name: str = Field(..., description="Experiment name")
     description: str | None = Field(default=None, description="Experiment description")
     status: ExperimentStatus = Field(..., description="Current status")
-    model_config_snapshot: dict = Field(default_factory=dict)
-    training_config_snapshot: dict = Field(default_factory=dict)
-    metrics: dict = Field(default_factory=dict, description="Aggregated metrics")
+    model_config_snapshot: dict[str, Any] = Field(default_factory=dict)
+    training_config_snapshot: dict[str, Any] = Field(default_factory=dict)
+    metrics: dict[str, Any] = Field(default_factory=dict, description="Aggregated metrics")
     created_at: datetime = Field(...)
     updated_at: datetime = Field(...)
 
@@ -108,8 +111,8 @@ class ModelRegisterRequest(BaseModel):
     experiment_id: int = Field(..., description="Associated experiment ID")
     name: str = Field(..., description="Model name/version")
     artifact_path: str = Field(..., description="Path to model artifacts")
-    metrics: dict = Field(default_factory=dict, description="Model evaluation metrics")
-    parameters: dict = Field(default_factory=dict, description="Model hyperparameters")
+    metrics: dict[str, Any] = Field(default_factory=dict, description="Model evaluation metrics")
+    parameters: dict[str, Any] = Field(default_factory=dict, description="Model hyperparameters")
 
 
 class ModelResponse(BaseModel):
@@ -121,8 +124,8 @@ class ModelResponse(BaseModel):
     experiment_id: int = Field(...)
     name: str = Field(...)
     artifact_path: str = Field(...)
-    metrics: dict = Field(default_factory=dict)
-    parameters: dict = Field(default_factory=dict)
+    metrics: dict[str, Any] = Field(default_factory=dict)
+    parameters: dict[str, Any] = Field(default_factory=dict)
     registered_at: datetime = Field(...)
 
 
@@ -130,7 +133,7 @@ class TrainingJobRequest(BaseModel):
     """Submit a training job request."""
 
     experiment_name: str = Field(..., description="Name for the new experiment")
-    config_overrides: dict = Field(
+    config_overrides: dict[str, Any] = Field(
         default_factory=dict, description="Hydra config overrides"
     )
     dataset_path: str | None = Field(default=None, description="Path to dataset")

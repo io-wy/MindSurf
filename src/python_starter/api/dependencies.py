@@ -31,9 +31,7 @@ async def get_db(request: Request) -> AsyncGenerator[AsyncSession, None]:
 
 async def get_redis(request: Request) -> RedisManager:
     """Provide the Redis manager from app state."""
-    redis_manager: RedisManager | None = getattr(
-        request.app.state, "redis_manager", None
-    )
+    redis_manager: RedisManager | None = getattr(request.app.state, "redis_manager", None)
     if redis_manager is None:
         raise RuntimeError("Redis not available")
     return redis_manager

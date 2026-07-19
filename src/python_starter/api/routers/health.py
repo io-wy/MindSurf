@@ -5,9 +5,9 @@ Reference: src-go/internal/handler/health.go
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
-from fastapi import APIRouter, Request, status
+from fastapi import APIRouter, Request
 
 from python_starter.api.schemas.models import HealthResponse, HealthStatus
 from python_starter.infrastructure.logging import get_logger
@@ -25,7 +25,7 @@ async def health_check(request: Request) -> HealthResponse:
     return HealthResponse(
         status=HealthStatus.OK,
         version=version,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
     )
 
 
@@ -52,6 +52,6 @@ async def readiness_check(request: Request) -> HealthResponse:
     return HealthResponse(
         status=status,
         version=version,
-        timestamp=datetime.now(timezone.utc),
+        timestamp=datetime.now(UTC),
         services=services,
     )

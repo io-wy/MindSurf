@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import logging
 import sys
+from typing import cast
 
 import structlog
 
@@ -35,7 +36,7 @@ def configure_logging(settings: Settings) -> None:
 
     if settings.is_production:
         # Production: JSON, no colors
-        processors = [
+        processors: list[structlog.types.Processor] = [
             *shared_processors,
             structlog.processors.dict_tracebacks,
             structlog.processors.JSONRenderer(),
@@ -58,4 +59,4 @@ def configure_logging(settings: Settings) -> None:
 
 def get_logger(name: str | None = None) -> structlog.stdlib.BoundLogger:
     """Get a structured logger instance."""
-    return structlog.get_logger(name)
+    return cast(structlog.stdlib.BoundLogger, structlog.get_logger(name))
