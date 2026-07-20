@@ -209,3 +209,21 @@ def test_trainer_and_schedule_validation() -> None:
         TrainerConfig(batch_size=0)
     with pytest.raises(ValueError, match="save_every"):
         TrainerConfig(save_every=0)
+
+
+def test_model_flops_per_token_counts_dense_and_attention_terms() -> None:
+    from python_starter.core.utils import model_flops_per_token, model_flops_utilization
+
+    flops = model_flops_per_token(
+        parameter_count=89_864_448,
+        n_layer=8,
+        n_embed=768,
+        sequence_length=384,
+    )
+
+    assert flops == pytest.approx(6 * 89_864_448 + 12 * 8 * 768 * 384)
+    assert model_flops_utilization(
+        flops_per_token=flops,
+        tokens_per_second=91_238.37,
+        device_peak_flops=165.2e12,
+    ) == pytest.approx(0.3134, abs=1e-3)
