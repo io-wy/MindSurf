@@ -5,6 +5,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import random
 import re
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
@@ -265,6 +266,8 @@ def evaluate_mcq(
                 )
             scores.append(float(score.item()))
         prediction = min(range(len(scores)), key=scores.__getitem__)
+        logits = torch.tensor([-value for value in scores], dtype=torch.float64)
+        probabilities = torch.softmax(logits, dim=0).tolist()
         is_correct = prediction == answer
         correct += int(is_correct)
         rows.append(
@@ -275,13 +278,108 @@ def evaluate_mcq(
                 "prediction": prediction,
                 "correct": is_correct,
                 "choice_nll": scores,
+                "choice_log_probability": [-value for value in scores],
+                "choice_probability": probabilities,
             }
         )
+    by_category: dict[str, dict[str, int | float]] = {}
+    for row in rows:
+        category = str(row["category"])
+        summary = by_category.setdefault(category, {"correct": 0, "total": 0, "accuracy": 0.0})
+        summary["correct"] = int(summary["correct"]) + int(bool(row["correct"]))
+        summary["total"] = int(summary["total"]) + 1
+    for summary in by_category.values():
+        summary["accuracy"] = int(summary["correct"]) / max(int(summary["total"]), 1)
+    interval = wilson_interval(correct, len(rows))
     return {
         "correct": correct,
         "total": len(rows),
         "accuracy": correct / max(len(rows), 1),
+        "wilson_interval_95": list(interval),
+        "by_category": by_category,
         "items": rows,
+    }
+
+
+def wilson_interval(
+    correct: int, total: int, *, z: float = 1.959963984540054
+) -> tuple[float, float]:
+    """Return a two-sided Wilson score interval for a binomial proportion."""
+    if total <= 0 or not 0 <= correct <= total:
+        raise ValueError("correct and total must describe a non-empty binomial sample")
+    proportion = correct / total
+    denominator = 1 + z**2 / total
+    centre = (proportion + z**2 / (2 * total)) / denominator
+    radius = (
+        z * math.sqrt(proportion * (1 - proportion) / total + z**2 / (4 * total**2)) / denominator
+    )
+    return max(0.0, centre - radius), min(1.0, centre + radius)
+
+
+def compare_mcq_items(
+    baseline_items: Iterable[Mapping[str, Any]],
+    candidate_items: Iterable[Mapping[str, Any]],
+    *,
+    bootstrap_samples: int = 10_000,
+    seed: int = 20260720,
+) -> dict[str, Any]:
+    """Compare paired MCQ predictions with bootstrap and exact McNemar evidence."""
+    baseline = {str(item.get("id")): bool(item.get("correct")) for item in baseline_items}
+    candidate = {str(item.get("id")): bool(item.get("correct")) for item in candidate_items}
+    if not baseline or baseline.keys() != candidate.keys():
+        raise ValueError("paired MCQ comparison requires the same non-empty item IDs")
+    ids = sorted(baseline)
+    baseline_values = [int(baseline[item_id]) for item_id in ids]
+    candidate_values = [int(candidate[item_id]) for item_id in ids]
+    baseline_only = sum(
+        base == 1 and contender == 0
+        for base, contender in zip(baseline_values, candidate_values, strict=True)
+    )
+    candidate_only = sum(
+        base == 0 and contender == 1
+        for base, contender in zip(baseline_values, candidate_values, strict=True)
+    )
+    discordant = baseline_only + candidate_only
+    if discordant:
+        tail = (
+            sum(
+                math.comb(discordant, value)
+                for value in range(0, min(baseline_only, candidate_only) + 1)
+            )
+            / 2**discordant
+        )
+        mcnemar_p = min(1.0, 2 * tail)
+    else:
+        mcnemar_p = 1.0
+
+    rng = random.Random(seed)
+    deltas = []
+    for _ in range(bootstrap_samples):
+        sample = [rng.randrange(len(ids)) for _ in ids]
+        delta = sum(candidate_values[index] - baseline_values[index] for index in sample) / len(ids)
+        deltas.append(delta)
+    deltas.sort()
+    lower_index = int(0.025 * (bootstrap_samples - 1))
+    upper_index = int(0.975 * (bootstrap_samples - 1))
+    baseline_accuracy = sum(baseline_values) / len(ids)
+    candidate_accuracy = sum(candidate_values) / len(ids)
+    return {
+        "schema_version": 1,
+        "items": len(ids),
+        "baseline_accuracy": baseline_accuracy,
+        "candidate_accuracy": candidate_accuracy,
+        "accuracy_delta": candidate_accuracy - baseline_accuracy,
+        "paired_bootstrap": {
+            "samples": bootstrap_samples,
+            "seed": seed,
+            "confidence_interval_95": [deltas[lower_index], deltas[upper_index]],
+        },
+        "mcnemar_exact": {
+            "baseline_only_correct": baseline_only,
+            "candidate_only_correct": candidate_only,
+            "discordant": discordant,
+            "p_value_two_sided": mcnemar_p,
+        },
     }
 
 
@@ -385,7 +483,19 @@ def evaluate_gate(
     *,
     license_ready: bool,
 ) -> dict[str, Any]:
-    """Apply every frozen threshold and keep public release fail-closed."""
+    """Apply a frozen stage-specific threshold configuration."""
+    gate_kind = thresholds.get("gate_kind", "legacy")
+    if gate_kind == "pretrain":
+        return _evaluate_pretrain_gate(metrics, thresholds, license_ready=license_ready)
+    if gate_kind == "posttrain":
+        return _evaluate_posttrain_gate(metrics, thresholds)
+    return _evaluate_legacy_gate(metrics, thresholds, license_ready=license_ready)
+
+
+def _base_pretrain_failures(
+    metrics: Mapping[str, Any],
+    thresholds: Mapping[str, Any],
+) -> list[str]:
     failures: list[str] = []
 
     for split in ("strict_val", "strict_test"):
@@ -412,6 +522,85 @@ def evaluate_gate(
         ):
             failures.append(f"domain.{name}")
 
+    return failures
+
+
+def _evaluate_pretrain_gate(
+    metrics: Mapping[str, Any],
+    thresholds: Mapping[str, Any],
+    *,
+    license_ready: bool,
+) -> dict[str, Any]:
+    failures = _base_pretrain_failures(metrics, thresholds)
+    mcq = metrics.get("mcq", {})
+    mcq_accuracy = mcq.get("accuracy")
+    minimum_accuracy = thresholds.get("mcq_accuracy_min")
+    if (
+        not isinstance(mcq_accuracy, (int, float))
+        or not isinstance(minimum_accuracy, (int, float))
+        or mcq_accuracy < minimum_accuracy
+    ):
+        failures.append("mcq.accuracy")
+    minimum_lower_bound = thresholds.get("mcq_wilson_lower_bound_min")
+    if minimum_lower_bound is not None:
+        interval = mcq.get("wilson_interval_95")
+        if (
+            not isinstance(minimum_lower_bound, (int, float))
+            or not isinstance(interval, list)
+            or len(interval) != 2
+            or not isinstance(interval[0], (int, float))
+            or interval[0] <= minimum_lower_bound
+        ):
+            failures.append("mcq.wilson_lower_bound")
+
+    generation = metrics.get("generation", metrics.get("fixed_prompts", {}))
+    repetition_count = generation.get("repetition_count")
+    if not isinstance(repetition_count, int) or repetition_count > thresholds.get(
+        "repetition_count_max", -1
+    ):
+        failures.append("generation.repetition")
+
+    internal_candidate_passed = not failures
+    return {
+        "schema_version": 2,
+        "gate_kind": "pretrain",
+        "internal_candidate_passed": internal_candidate_passed,
+        "public_release_passed": internal_candidate_passed and license_ready,
+        "public_release_license_ready": license_ready,
+        "failures": failures,
+    }
+
+
+def _evaluate_posttrain_gate(
+    metrics: Mapping[str, Any],
+    thresholds: Mapping[str, Any],
+) -> dict[str, Any]:
+    failures: list[str] = []
+    fixed_score = metrics.get("fixed_prompts", {}).get("mean_score")
+    if not isinstance(fixed_score, (int, float)) or fixed_score < thresholds.get(
+        "fixed_score_min", math.inf
+    ):
+        failures.append("fixed_prompts")
+    repetition_count = metrics.get("fixed_prompts", {}).get("repetition_count")
+    if not isinstance(repetition_count, int) or repetition_count > thresholds.get(
+        "repetition_count_max", -1
+    ):
+        failures.append("repetition")
+    return {
+        "schema_version": 1,
+        "gate_kind": "posttrain",
+        "posttrain_passed": not failures,
+        "failures": failures,
+    }
+
+
+def _evaluate_legacy_gate(
+    metrics: Mapping[str, Any],
+    thresholds: Mapping[str, Any],
+    *,
+    license_ready: bool,
+) -> dict[str, Any]:
+    failures = _base_pretrain_failures(metrics, thresholds)
     mcq_accuracy = metrics.get("mcq", {}).get("accuracy")
     if not isinstance(mcq_accuracy, (int, float)) or mcq_accuracy < thresholds.get(
         "mcq_accuracy_min", math.inf
@@ -458,6 +647,8 @@ def run_candidate_evaluation(
     strict_batches: int = 250,
     domain_blocks: int = 250,
     fixed_new_tokens: int = 128,
+    generation_prompts_path: Path | None = None,
+    posttrain_thresholds_path: Path | None = None,
 ) -> dict[str, Any]:
     """Produce a complete evidence bundle and release decision."""
     audit = json.loads(audit_path.read_text(encoding="utf-8"))
@@ -508,6 +699,17 @@ def run_candidate_evaluation(
         device,
         max_new_tokens=fixed_new_tokens,
     )
+    generation = (
+        evaluate_fixed_prompts(
+            model,
+            tokenizer,
+            generation_prompts_path,
+            device,
+            max_new_tokens=fixed_new_tokens,
+        )
+        if generation_prompts_path is not None
+        else fixed
+    )
 
     tokenizer_identity = source_tree_sha256(root, [tokenizer_path])
     provenance = {
@@ -530,7 +732,17 @@ def run_candidate_evaluation(
         "evaluation_data_sha256": {
             "mcq": sha256_file(mcq_path),
             "fixed_prompts": sha256_file(fixed_prompts_path),
+            "generation_prompts": (
+                sha256_file(generation_prompts_path)
+                if generation_prompts_path is not None
+                else sha256_file(fixed_prompts_path)
+            ),
             "thresholds": sha256_file(thresholds_path),
+            "posttrain_thresholds": (
+                sha256_file(posttrain_thresholds_path)
+                if posttrain_thresholds_path is not None
+                else None
+            ),
         },
     }
     metrics = {
@@ -539,15 +751,29 @@ def run_candidate_evaluation(
         "domain": domain,
         "domain_blocks": domain_counts,
         "mcq": mcq,
+        "generation": generation,
         "fixed_prompts": fixed,
         "provenance": provenance,
     }
     license_ready = audit.get("gates", {}).get("public_release_license_ready") is True
     gate = evaluate_gate(metrics, thresholds, license_ready=license_ready)
+    gates: dict[str, Any] = {"pretrain": gate}
+    posttrain_thresholds = None
+    if posttrain_thresholds_path is not None:
+        posttrain_thresholds = json.loads(posttrain_thresholds_path.read_text(encoding="utf-8"))
+        gates["posttrain"] = evaluate_gate(
+            metrics,
+            posttrain_thresholds,
+            license_ready=False,
+        )
     result = {
-        "schema_version": 1,
+        "schema_version": 2,
         "metrics": metrics,
-        "thresholds": thresholds,
+        "thresholds": {
+            "pretrain": thresholds,
+            "posttrain": posttrain_thresholds,
+        },
+        "gates": gates,
         "gate": gate,
     }
     write_json_atomic(output_path, result)

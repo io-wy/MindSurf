@@ -62,3 +62,30 @@ def test_registry_rejects_failed_candidate(tmp_path: Path) -> None:
             checkpoint_path=checkpoint,
             evaluation_path=evaluation,
         )
+
+
+def test_pretrain_gate_excludes_instruction_score() -> None:
+    metrics = _metrics()
+    metrics["fixed_prompts"]["mean_score"] = 0.0
+    metrics["generation"] = {"repetition_count": 1}
+    metrics["mcq"]["wilson_interval_95"] = [0.4, 0.9]
+    thresholds = {
+        **_thresholds(),
+        "gate_kind": "pretrain",
+        "mcq_wilson_lower_bound_min": 0.25,
+    }
+    assert evaluate_gate(metrics, thresholds, license_ready=False)["internal_candidate_passed"]
+
+
+def test_posttrain_gate_is_reported_separately() -> None:
+    thresholds = {
+        "gate_kind": "posttrain",
+        "fixed_score_min": 0.5,
+        "repetition_count_max": 2,
+    }
+    passed = evaluate_gate(_metrics(), thresholds, license_ready=False)
+    assert passed["posttrain_passed"] is True
+    metrics = _metrics()
+    metrics["fixed_prompts"]["mean_score"] = 0.2
+    failed = evaluate_gate(metrics, thresholds, license_ready=False)
+    assert failed["posttrain_passed"] is False

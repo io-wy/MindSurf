@@ -21,7 +21,7 @@ from torch.utils.data import Dataset, IterableDataset
 # Allow importing src/python_starter as top-level package
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from python_starter.core.data_contract import verify_training_view_manifest
+from python_starter.core.data_contract import sha256_file, verify_training_view_manifest
 from python_starter.core.dataset import JsonlPackedDataset, SFTDataset, collate_fn
 from python_starter.core.model import ModelConfig, TransformerLM
 from python_starter.core.tokenizer import load_tokenizer
@@ -188,8 +188,20 @@ def main(cfg: DictConfig) -> None:
             run_config=resolved_config,
         )
         resume_from = cfg.get("resume_from")
+        init_from = cfg.get("init_from")
+        if resume_from and init_from:
+            raise ValueError("resume_from and init_from are mutually exclusive")
         if resume_from:
             trainer.load_checkpoint(to_absolute_path(str(resume_from)))
+        if init_from:
+            parent = Path(to_absolute_path(str(init_from)))
+            resolved_config["parent_checkpoint"] = {
+                "path": str(parent),
+                "sha256": sha256_file(parent),
+                "mode": "model_weights_only",
+            }
+            trainer.run_config = resolved_config
+            trainer.load_model_weights(parent)
         trainer.train(train_loader, val_loader)
     finally:
         tracker.finish()

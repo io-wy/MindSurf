@@ -131,6 +131,10 @@ class Trainer:
         self.training_elapsed_seconds = 0.0
         self.peak_cuda_allocated_bytes = 0
         self.peak_cuda_reserved_bytes = 0
+        self.data_wait_seconds = 0.0
+        self.optimizer_step_seconds = 0.0
+        self.checkpoint_write_seconds = 0.0
+        self.last_gradient_norm: float | None = None
         self._session_started_at: float | None = None
         self._resume_checkpoint: dict[str, Any] | None = None
         self._optimizer: AdamW | None = None
@@ -230,6 +234,10 @@ class Trainer:
                 "training_elapsed_seconds": self._current_elapsed_seconds(),
                 "peak_cuda_allocated_bytes": self._peak_cuda_allocated_bytes(),
                 "peak_cuda_reserved_bytes": self._peak_cuda_reserved_bytes(),
+                "data_wait_seconds": self.data_wait_seconds,
+                "optimizer_step_seconds": self.optimizer_step_seconds,
+                "checkpoint_write_seconds": self.checkpoint_write_seconds,
+                "last_gradient_norm": self.last_gradient_norm,
             },
             "rng_state": self._rng_state(),
         }
@@ -296,6 +304,10 @@ class Trainer:
         self.training_elapsed_seconds = progress.get("training_elapsed_seconds", 0.0)
         self.peak_cuda_allocated_bytes = progress.get("peak_cuda_allocated_bytes", 0)
         self.peak_cuda_reserved_bytes = progress.get("peak_cuda_reserved_bytes", 0)
+        self.data_wait_seconds = progress.get("data_wait_seconds", 0.0)
+        self.optimizer_step_seconds = progress.get("optimizer_step_seconds", 0.0)
+        self.checkpoint_write_seconds = progress.get("checkpoint_write_seconds", 0.0)
+        self.last_gradient_norm = progress.get("last_gradient_norm")
         self._resume_checkpoint = checkpoint
         logger.info(
             "checkpoint_loaded",
@@ -303,6 +315,22 @@ class Trainer:
             step=self.global_step,
             consumed_blocks=self.consumed_blocks,
         )
+        return checkpoint
+
+    def load_model_weights(self, path: str | Path) -> dict[str, Any]:
+        """Initialize a new run from trusted model weights without resuming mutable state."""
+        path = Path(path)
+        checkpoint = cast(
+            dict[str, Any],
+            torch.load(path, map_location="cpu", weights_only=False),
+        )
+        checkpoint_model_config = checkpoint.get("model_config")
+        if checkpoint_model_config is not None:
+            actual_config = self._model_for_state().config.to_dict()
+            if checkpoint_model_config != actual_config:
+                raise ValueError("checkpoint model configuration does not match the model")
+        self._model_for_state().load_state_dict(checkpoint["model_state_dict"])
+        logger.info("model_weights_initialized", path=str(path))
         return checkpoint
 
     def _restore_mutable_training_state(self) -> None:
@@ -372,10 +400,12 @@ class Trainer:
         iterator = iter(train_loader)
 
         while self.global_step < self.config.max_steps:
+            data_wait_started = time.perf_counter()
             try:
                 batch = next(iterator)
             except StopIteration as exc:
                 raise RuntimeError("training data exhausted before reaching max_steps") from exc
+            self.data_wait_seconds += time.perf_counter() - data_wait_started
 
             loss = self._backward_micro_batch(batch)
             self.last_train_loss = loss
@@ -385,7 +415,10 @@ class Trainer:
             if self.micro_step % self.config.accumulation_steps:
                 continue
 
-            self._optimizer_step()
+            optimizer_step_started = time.perf_counter()
+            self.last_gradient_norm = self._optimizer_step()
+            step_seconds = time.perf_counter() - optimizer_step_started
+            self.optimizer_step_seconds += step_seconds
             self.global_step += 1
             progress.update(1)
             learning_rate = self._optimizer.param_groups[0]["lr"]
@@ -399,13 +432,19 @@ class Trainer:
                         "train/consumed_blocks": float(self.consumed_blocks),
                         "train/consumed_tokens": float(self.consumed_tokens),
                         "train/tokens_per_second": self._tokens_per_second(),
+                        "train/data_wait_seconds": self.data_wait_seconds,
+                        "train/optimizer_step_seconds": step_seconds,
+                        "train/gradient_norm": self.last_gradient_norm,
+                        "train/checkpoint_write_seconds": self.checkpoint_write_seconds,
                         "train/peak_cuda_reserved_bytes": float(self._peak_cuda_reserved_bytes()),
                     },
                     step=self.global_step,
                 )
 
             if self.global_step % self.config.save_every == 0:
+                checkpoint_started = time.perf_counter()
                 self.save_checkpoint()
+                self.checkpoint_write_seconds += time.perf_counter() - checkpoint_started
 
             if (
                 eval_loader is not None
@@ -481,6 +520,10 @@ class Trainer:
             "best_eval_loss": self.best_eval_loss,
             "peak_cuda_allocated_bytes": self.peak_cuda_allocated_bytes,
             "peak_cuda_reserved_bytes": self.peak_cuda_reserved_bytes,
+            "data_wait_seconds": self.data_wait_seconds,
+            "optimizer_step_seconds": self.optimizer_step_seconds,
+            "checkpoint_write_seconds": self.checkpoint_write_seconds,
+            "last_gradient_norm": self.last_gradient_norm,
             "identity": identity,
         }
         path = self.config.output_dir / "training_summary.json"
@@ -520,12 +563,15 @@ class Trainer:
             scaled_loss.backward()
         return float(loss.detach().item())
 
-    def _optimizer_step(self) -> None:
+    def _optimizer_step(self) -> float:
         if self._optimizer is None or self._scheduler is None:
             raise RuntimeError("optimizer and scheduler must be initialized")
         if self._scaler is not None:
             self._scaler.unscale_(self._optimizer)
-        torch.nn.utils.clip_grad_norm_(self.model.parameters(), self.config.max_grad_norm)
+        gradient_norm = torch.nn.utils.clip_grad_norm_(
+            self.model.parameters(),
+            self.config.max_grad_norm,
+        )
         if self._scaler is not None:
             self._scaler.step(self._optimizer)
             self._scaler.update()
@@ -533,6 +579,7 @@ class Trainer:
             self._optimizer.step()
         self._scheduler.step()
         self._optimizer.zero_grad(set_to_none=True)
+        return float(gradient_norm.item())
 
     @torch.no_grad()
     def evaluate(

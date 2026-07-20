@@ -38,12 +38,22 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--thresholds",
         type=Path,
-        default=Path("configs/evaluation/candidate_thresholds_80m.json"),
+        default=Path("configs/evaluation/pretrain_gate_80m.json"),
+    )
+    parser.add_argument(
+        "--posttrain-thresholds",
+        type=Path,
+        default=Path("configs/evaluation/posttrain_gate_80m.json"),
     )
     parser.add_argument(
         "--mcq",
         type=Path,
-        default=Path("configs/evaluation/local_mcq_benchmark_v1.jsonl"),
+        default=Path("configs/evaluation/pretrain_mcq_benchmark_v2.jsonl"),
+    )
+    parser.add_argument(
+        "--generation-prompts",
+        type=Path,
+        default=Path("configs/evaluation/pretrain_generation_probes.jsonl"),
     )
     parser.add_argument(
         "--fixed-prompts",
@@ -84,6 +94,8 @@ def main() -> None:
         strict_batches=args.strict_batches,
         domain_blocks=args.domain_blocks,
         fixed_new_tokens=args.fixed_new_tokens,
+        generation_prompts_path=args.generation_prompts.resolve(),
+        posttrain_thresholds_path=args.posttrain_thresholds.resolve(),
     )
     print(json.dumps(result["gate"], ensure_ascii=False, sort_keys=True))
 

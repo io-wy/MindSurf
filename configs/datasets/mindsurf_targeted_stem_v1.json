@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "dataset_id": "mindsurf/targeted_stem_v1",
+  "provider": "derived-private",
+  "revision": "team-ab97cc8-targeted-stem-20260720",
+  "license": "other",
+  "license_status": "inherits_team_source_restrictions_and_is_not_public_release_ready",
+  "selection_seed": 20260720,
+  "source": {
+    "dataset": "mindsurf_team_v1",
+    "path": "data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl",
+    "audit": "artifacts/data/mindsurf_team_v1/audit.json",
+    "training_view_manifest": "artifacts/data/mindsurf_team_v1/training_view.json"
+  },
+  "components": [
+    {
+      "name": "english_code",
+      "source_key": "public/HuggingFaceTB__stack-edu",
+      "rows": 20000
+    },
+    {
+      "name": "math",
+      "source_key": "public/gair-prox__open-web-math-pro",
+      "rows": 20000
+    },
+    {
+      "name": "chinese_knowledge",
+      "source_key": "public/opencsg__chinese-cosmopedia",
+      "rows": 10000
+    },
+    {
+      "name": "quality_web",
+      "source_key": "public/openbmb__Ultra-FineWeb",
+      "rows": 10000
+    }
+  ],
+  "holdouts": [
+    "data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl",
+    "data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl",
+    "data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_val_2k.jsonl",
+    "data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl"
+  ]
+}

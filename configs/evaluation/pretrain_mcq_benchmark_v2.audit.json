@@ -1,0 +1,65 @@
+{
+  "benchmark_sha256": "e0d27b9ed9dad3409b8fe14245e989556836b578fe39082476a9f1d1d90a90b2",
+  "contamination": {
+    "collisions": [],
+    "method": "exact SHA-256 over NFKC whitespace-normalized prompt and training text",
+    "passed": false,
+    "status": "not_run",
+    "training_rows_scanned": 0
+  },
+  "human_review": {
+    "sample_size_minimum": 32,
+    "scope": "answer correctness, ambiguity, and domain assignment",
+    "status": "completed"
+  },
+  "schema_version": 1,
+  "validation": {
+    "answer_positions": {
+      "calibration_reasoning": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      },
+      "code": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      },
+      "english": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      },
+      "long_context": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      },
+      "math": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      },
+      "zh_fact": {
+        "0": 8,
+        "1": 8,
+        "2": 8,
+        "3": 8
+      }
+    },
+    "categories": {
+      "calibration_reasoning": 32,
+      "code": 32,
+      "english": 32,
+      "long_context": 32,
+      "math": 32,
+      "zh_fact": 32
+    },
+    "items": 192
+  }
+}

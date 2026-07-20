@@ -120,6 +120,23 @@ def test_resume_matches_uninterrupted_training(tmp_path: Path) -> None:
         torch.testing.assert_close(value, resumed._model_for_state().state_dict()[name])
 
 
+def test_model_only_initialization_resets_mutable_state(tmp_path: Path) -> None:
+    model_config = ModelConfig(vocab_size=32, n_embed=16, n_layer=1, n_head=4)
+    source = Trainer(TransformerLM(model_config), _config(tmp_path / "source"))
+    source.global_step = 3
+    source.consumed_blocks = 6
+    checkpoint = source.save_checkpoint("parent.pt")
+
+    target = Trainer(TransformerLM(model_config), _config(tmp_path / "target"))
+    loaded = target.load_model_weights(checkpoint)
+
+    assert loaded["progress"]["global_step"] == 3
+    assert target.global_step == 0
+    assert target.consumed_blocks == 0
+    for name, value in source._model_for_state().state_dict().items():
+        torch.testing.assert_close(value, target._model_for_state().state_dict()[name])
+
+
 def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
     torch.manual_seed(4)
     model = TransformerLM(
@@ -166,6 +183,10 @@ def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
     assert summary["global_step"] == 1
     assert summary["parameter_count"] > 0
     assert summary["tokens_per_second"] > 0
+    assert summary["data_wait_seconds"] >= 0
+    assert summary["optimizer_step_seconds"] > 0
+    assert summary["checkpoint_write_seconds"] >= 0
+    assert summary["last_gradient_norm"] is not None
     assert summary["identity"]["training_view_sha256"] == "a" * 64
 
 

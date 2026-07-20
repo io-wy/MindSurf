@@ -6,11 +6,13 @@ import json
 from pathlib import Path
 from typing import Any
 
+import pytest
 import torch
 
 from python_starter.core.evaluation import (
     DOMAIN_NAMES,
     classify_domains,
+    compare_mcq_items,
     domain_losses,
     evaluate_fixed_prompts,
     evaluate_gate,
@@ -19,6 +21,7 @@ from python_starter.core.evaluation import (
     repeated_bigram_ratio,
     run_candidate_evaluation,
     source_tree_sha256,
+    wilson_interval,
 )
 from python_starter.core.model import ModelConfig, TransformerLM
 
@@ -130,6 +133,9 @@ def test_loss_mcq_and_fixed_prompt_evaluators(tmp_path: Path) -> None:
     )
     assert mcq["total"] == 1
     assert len(mcq["items"][0]["choice_nll"]) == 2
+    assert sum(mcq["items"][0]["choice_probability"]) == pytest.approx(1.0)
+    assert mcq["by_category"]["fact"]["total"] == 1
+    assert len(mcq["wilson_interval_95"]) == 2
 
     fixed_path = tmp_path / "fixed.jsonl"
     _write_jsonl(
@@ -158,6 +164,32 @@ def test_source_tree_identity_changes_with_content(tmp_path: Path) -> None:
     first = source_tree_sha256(tmp_path, [source])
     file_path.write_text("two\n", encoding="utf-8")
     assert source_tree_sha256(tmp_path, [source]) != first
+
+
+def test_mcq_statistics_are_paired_and_deterministic() -> None:
+    baseline = [
+        {"id": "a", "correct": True},
+        {"id": "b", "correct": False},
+        {"id": "c", "correct": False},
+        {"id": "d", "correct": True},
+    ]
+    candidate = [
+        {"id": "a", "correct": True},
+        {"id": "b", "correct": True},
+        {"id": "c", "correct": True},
+        {"id": "d", "correct": False},
+    ]
+    comparison = compare_mcq_items(
+        baseline,
+        candidate,
+        bootstrap_samples=1000,
+        seed=7,
+    )
+    assert comparison["accuracy_delta"] == pytest.approx(0.25)
+    assert comparison["mcnemar_exact"]["candidate_only_correct"] == 2
+    assert comparison["mcnemar_exact"]["baseline_only_correct"] == 1
+    lower, upper = wilson_interval(3, 4)
+    assert 0 < lower < 0.75 < upper < 1
 
 
 def test_candidate_bundle_orchestration_and_gate(
@@ -252,7 +284,7 @@ def test_candidate_bundle_orchestration_and_gate(
     )
     assert result["gate"]["internal_candidate_passed"] is True
     assert result["gate"]["public_release_passed"] is False
-    assert json.loads(output.read_text(encoding="utf-8"))["schema_version"] == 1
+    assert json.loads(output.read_text(encoding="utf-8"))["schema_version"] == 2
 
     failed_metrics = {
         "strict_val": {"loss": float("nan")},

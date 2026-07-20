@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "gate_kind": "posttrain",
+  "threshold_sources": {
+    "fixed_score_min": "historical assistant-prompt regression reference",
+    "repetition_count_max": "historical assistant-generation degeneration ceiling"
+  },
+  "fixed_score_min": 0.4575,
+  "repetition_count_max": 4
+}

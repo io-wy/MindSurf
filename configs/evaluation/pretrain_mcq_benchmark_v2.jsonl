@@ -1,0 +1,192 @@
+{"id":"zh_fact_author_luxun","category":"zh_fact","prompt":"问题：《呐喊》的作者是谁？\n答案：","choices":[" 老舍"," 巴金"," 鲁迅"," 茅盾"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_binary","category":"zh_fact","prompt":"问题：二进制只使用哪两个数字？\n答案：","choices":[" 1和2"," 0和2"," 0和1"," 2和3"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_blood_pump","category":"zh_fact","prompt":"问题：人体负责泵送血液的器官是什么？\n答案：","choices":[" 肺"," 心脏"," 肝脏"," 胃"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_boiling","category":"zh_fact","prompt":"问题：标准大气压下水的沸点约是多少摄氏度？\n答案：","choices":[" 0"," 100"," 50"," 212"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_china_capital","category":"zh_fact","prompt":"问题：中国的首都是哪座城市？\n答案：","choices":[" 北京"," 上海"," 广州"," 南京"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_compiler","category":"zh_fact","prompt":"问题：编译器的主要作用是什么？\n答案：","choices":[" 翻译程序代码"," 管理文件夹"," 绘制图片"," 压缩视频"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_cpu","category":"zh_fact","prompt":"问题：CPU 通常指什么？\n答案：","choices":[" 中央处理器"," 图形处理器"," 内存"," 硬盘"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_database","category":"zh_fact","prompt":"问题：关系数据库通常以什么结构组织数据？\n答案：","choices":[" 音轨"," 表"," 像素"," 帧"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_dna","category":"zh_fact","prompt":"问题：DNA 的中文常用名称是什么？\n答案：","choices":[" 核糖核酸"," 蛋白质"," 脱氧核糖核酸"," 葡萄糖"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_earth_satellite","category":"zh_fact","prompt":"问题：地球的天然卫星叫什么？\n答案：","choices":[" 月球"," 火星"," 太阳"," 金星"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_everest","category":"zh_fact","prompt":"问题：世界海拔最高的山峰是哪一座？\n答案：","choices":[" 泰山"," 富士山"," 乞力马扎罗山"," 珠穆朗玛峰"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_gravity","category":"zh_fact","prompt":"问题：物体下落与哪种基本现象直接相关？\n答案：","choices":[" 重力"," 浮力"," 静电"," 折射"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_great_wall","category":"zh_fact","prompt":"问题：长城主要位于哪个国家？\n答案：","choices":[" 印度"," 埃及"," 意大利"," 中国"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_http","category":"zh_fact","prompt":"问题：HTTP 主要用于哪类通信？\n答案：","choices":[" 卫星导航"," 电力输送"," 音频编码"," 网页资源传输"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_ice_state","category":"zh_fact","prompt":"问题：冰属于水的哪种物态？\n答案：","choices":[" 液态"," 气态"," 固态"," 等离子态"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_largest_ocean","category":"zh_fact","prompt":"问题：世界面积最大的海洋是哪一个？\n答案：","choices":[" 大西洋"," 印度洋"," 太平洋"," 北冰洋"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_mammal","category":"zh_fact","prompt":"问题：下面哪种动物属于哺乳动物？\n答案：","choices":[" 鲨鱼"," 章鱼"," 海豚"," 企鹅"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_meter","category":"zh_fact","prompt":"问题：国际单位制中长度的基本单位是什么？\n答案：","choices":[" 升"," 米"," 克"," 秒"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_oxygen_symbol","category":"zh_fact","prompt":"问题：氧元素的化学符号是什么？\n答案：","choices":[" H"," O"," C"," N"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_photosynthesis","category":"zh_fact","prompt":"问题：光合作用主要发生在植物细胞的哪个结构？\n答案：","choices":[" 叶绿体"," 细胞核"," 核糖体"," 液泡"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_pi","category":"zh_fact","prompt":"问题：圆周率通常用哪个希腊字母表示？\n答案：","choices":[" π"," α"," β"," λ"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_plants_gas","category":"zh_fact","prompt":"问题：绿色植物光合作用通常吸收哪种气体？\n答案：","choices":[" 氧气"," 氮气"," 氢气"," 二氧化碳"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_ram","category":"zh_fact","prompt":"问题：计算机断电后通常会丢失内容的是哪种存储？\n答案：","choices":[" 固态硬盘"," 内存"," 光盘"," 磁带"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_red_planet","category":"zh_fact","prompt":"问题：常被称为红色星球的是哪颗行星？\n答案：","choices":[" 火星"," 木星"," 水星"," 海王星"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_seasons","category":"zh_fact","prompt":"问题：北半球通常一年有几个季节？\n答案：","choices":[" 两个"," 三个"," 六个"," 四个"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_sound_medium","category":"zh_fact","prompt":"问题：声音不能在哪种环境中传播？\n答案：","choices":[" 空气"," 水"," 钢铁"," 真空"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_sun_type","category":"zh_fact","prompt":"问题：太阳属于哪类天体？\n答案：","choices":[" 行星"," 卫星"," 恒星"," 彗星"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_triangle","category":"zh_fact","prompt":"问题：平面三角形内角和是多少度？\n答案：","choices":[" 90"," 180"," 270"," 360"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_volcano","category":"zh_fact","prompt":"问题：岩浆到达地表后通常称为什么？\n答案：","choices":[" 冰川"," 沉积岩"," 地下水"," 熔岩"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_water_formula","category":"zh_fact","prompt":"问题：水的化学式是什么？\n答案：","choices":[" CO2"," H2O"," NaCl"," O2"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_week_days","category":"zh_fact","prompt":"问题：通常一周有几天？\n答案：","choices":[" 5天"," 10天"," 12天"," 7天"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"zh_fact_yangtze","category":"zh_fact","prompt":"问题：中国最长的河流是哪一条？\n答案：","choices":[" 黄河"," 珠江"," 长江"," 黑龙江"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"math_multiply_00","category":"math","prompt":"问题：7 × 3 等于多少？\n答案：","choices":[" 21"," 24"," 14"," 10"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_01","category":"math","prompt":"问题：8 × 4 等于多少？\n答案：","choices":[" 36"," 32"," 24"," 12"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_02","category":"math","prompt":"问题：9 × 5 等于多少？\n答案：","choices":[" 50"," 36"," 45"," 14"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_03","category":"math","prompt":"问题：10 × 6 等于多少？\n答案：","choices":[" 66"," 50"," 16"," 60"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_04","category":"math","prompt":"问题：11 × 7 等于多少？\n答案：","choices":[" 77"," 84"," 66"," 18"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_05","category":"math","prompt":"问题：12 × 8 等于多少？\n答案：","choices":[" 104"," 96"," 84"," 20"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_06","category":"math","prompt":"问题：13 × 9 等于多少？\n答案：","choices":[" 126"," 104"," 117"," 22"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_07","category":"math","prompt":"问题：14 × 10 等于多少？\n答案：","choices":[" 150"," 126"," 24"," 140"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_08","category":"math","prompt":"问题：15 × 11 等于多少？\n答案：","choices":[" 165"," 176"," 150"," 26"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_09","category":"math","prompt":"问题：16 × 3 等于多少？\n答案：","choices":[" 51"," 48"," 32"," 19"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_10","category":"math","prompt":"问题：17 × 4 等于多少？\n答案：","choices":[" 72"," 51"," 68"," 21"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_11","category":"math","prompt":"问题：18 × 5 等于多少？\n答案：","choices":[" 95"," 72"," 23"," 90"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_12","category":"math","prompt":"问题：19 × 6 等于多少？\n答案：","choices":[" 114"," 120"," 95"," 25"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_13","category":"math","prompt":"问题：20 × 7 等于多少？\n答案：","choices":[" 147"," 140"," 120"," 27"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_14","category":"math","prompt":"问题：21 × 8 等于多少？\n答案：","choices":[" 176"," 147"," 168"," 29"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_15","category":"math","prompt":"问题：22 × 9 等于多少？\n答案：","choices":[" 207"," 176"," 31"," 198"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_16","category":"math","prompt":"问题：23 × 10 等于多少？\n答案：","choices":[" 230"," 240"," 207"," 33"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_17","category":"math","prompt":"问题：24 × 11 等于多少？\n答案：","choices":[" 275"," 264"," 240"," 35"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_18","category":"math","prompt":"问题：25 × 3 等于多少？\n答案：","choices":[" 78"," 50"," 75"," 28"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_19","category":"math","prompt":"问题：26 × 4 等于多少？\n答案：","choices":[" 108"," 78"," 30"," 104"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_20","category":"math","prompt":"问题：27 × 5 等于多少？\n答案：","choices":[" 135"," 140"," 108"," 32"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_21","category":"math","prompt":"问题：28 × 6 等于多少？\n答案：","choices":[" 174"," 168"," 140"," 34"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_22","category":"math","prompt":"问题：29 × 7 等于多少？\n答案：","choices":[" 210"," 174"," 203"," 36"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_23","category":"math","prompt":"问题：30 × 8 等于多少？\n答案：","choices":[" 248"," 210"," 38"," 240"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_24","category":"math","prompt":"问题：31 × 9 等于多少？\n答案：","choices":[" 279"," 288"," 248"," 40"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_25","category":"math","prompt":"问题：32 × 10 等于多少？\n答案：","choices":[" 330"," 320"," 288"," 42"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_26","category":"math","prompt":"问题：33 × 11 等于多少？\n答案：","choices":[" 374"," 330"," 363"," 44"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_27","category":"math","prompt":"问题：34 × 3 等于多少？\n答案：","choices":[" 105"," 68"," 37"," 102"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_28","category":"math","prompt":"问题：35 × 4 等于多少？\n答案：","choices":[" 140"," 144"," 105"," 39"],"answer":0,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_29","category":"math","prompt":"问题：36 × 5 等于多少？\n答案：","choices":[" 185"," 180"," 144"," 41"],"answer":1,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_30","category":"math","prompt":"问题：37 × 6 等于多少？\n答案：","choices":[" 228"," 185"," 222"," 43"],"answer":2,"source":"deterministic-arithmetic-v2"}
+{"id":"math_multiply_31","category":"math","prompt":"问题：38 × 7 等于多少？\n答案：","choices":[" 273"," 228"," 45"," 266"],"answer":3,"source":"deterministic-arithmetic-v2"}
+{"id":"code_api","category":"code","prompt":"问题：REST API 的资源通常由什么标识？\n答案：","choices":[" 显卡编号"," 字体"," 时钟频率"," URL"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_bool_true","category":"code","prompt":"问题：Python 布尔真值如何书写？\n答案：","choices":[" true"," TRUE"," True"," yes"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_checkpoint","category":"code","prompt":"问题：训练 checkpoint 通常应包含什么以精确恢复？\n答案：","choices":[" 只有日志标题"," 只有文件名"," 模型与优化器状态"," 只有 README"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_complexity","category":"code","prompt":"问题：二分查找的典型时间复杂度是什么？\n答案：","choices":[" O(log n)"," O(n²)"," O(2ⁿ)"," O(n!)"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_css_color","category":"code","prompt":"问题：CSS 设置文字颜色常用哪个属性？\n答案：","choices":[" color"," margin"," display"," height"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_dict_key","category":"code","prompt":"问题：Python 字典通过什么访问对应值？\n答案：","choices":[" 键"," 行号"," 像素"," 端口"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_docker_build","category":"code","prompt":"问题：Docker 根据 Dockerfile 构建镜像常用哪个命令？\n答案：","choices":[" docker ps"," docker build"," docker logs"," docker stop"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_env","category":"code","prompt":"问题：环境变量通常用于提供什么？\n答案：","choices":[" 模型参数梯度"," 图片像素"," 进程配置"," 硬盘扇区"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_exception","category":"code","prompt":"问题：Python 捕获异常使用哪个关键字？\n答案：","choices":[" break"," except"," yield"," global"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_git_commit","category":"code","prompt":"问题：Git 创建提交使用哪个子命令？\n答案：","choices":[" commit"," clone"," status"," branch"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_git_diff","category":"code","prompt":"问题：Git 查看未提交差异常用哪个子命令？\n答案：","choices":[" push"," diff"," tag"," init"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_hash","category":"code","prompt":"问题：SHA-256 常用于验证什么？\n答案：","choices":[" 屏幕亮度"," GPU 温度单位"," 键盘布局"," 内容身份"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_html_link","category":"code","prompt":"问题：HTML 创建超链接常用哪个标签？\n答案：","choices":[" div"," span"," table"," a"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_http_get","category":"code","prompt":"问题：HTTP 中读取资源通常使用哪个方法？\n答案：","choices":[" DELETE"," GET"," PATCH"," CONNECT"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_json_object","category":"code","prompt":"问题：JSON 对象使用哪种括号？\n答案：","choices":[" 方括号"," 圆括号"," 尖括号"," 花括号"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_length","category":"code","prompt":"问题：Python 获取序列长度常用哪个函数？\n答案：","choices":[" size"," length"," count"," len"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_lock","category":"code","prompt":"问题：并发写共享状态时使用锁主要防止什么？\n答案：","choices":[" 语法高亮"," 网络压缩"," 字体缺失"," 竞态条件"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_process","category":"code","prompt":"问题：操作系统中的 PID 标识什么？\n答案：","choices":[" 文件扩展名"," 进程"," 网络协议"," 显卡型号"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_py_append","category":"code","prompt":"问题：Python 列表末尾添加元素常用哪个方法？\n答案：","choices":[" split"," strip"," append"," join"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_py_def","category":"code","prompt":"问题：Python 定义函数使用哪个关键字？\n答案：","choices":[" def"," class"," import"," yield"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_py_loop","category":"code","prompt":"问题：Python 遍历序列常用哪个关键字？\n答案：","choices":[" try"," for"," raise"," lambda"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_queue","category":"code","prompt":"问题：普通队列通常遵循什么顺序？\n答案：","choices":[" 后进先出"," 随机访问"," 先进先出"," 按哈希排序"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_recursion","category":"code","prompt":"问题：递归函数必须具备什么以避免无限调用？\n答案：","choices":[" 更多线程"," 网络端口"," 图形界面"," 终止条件"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_seed","category":"code","prompt":"问题：训练时固定随机种子主要为了什么？\n答案：","choices":[" 增加显存"," 提高可复现性"," 改变许可证"," 压缩文件"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_shell_ls","category":"code","prompt":"问题：类 Unix shell 中列出目录内容常用什么命令？\n答案：","choices":[" ls"," cd"," rm"," cat"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_shell_pwd","category":"code","prompt":"问题：类 Unix shell 中显示当前目录常用什么命令？\n答案：","choices":[" mkdir"," touch"," grep"," pwd"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"code_sql_select","category":"code","prompt":"问题：SQL 查询数据通常使用哪个关键字？\n答案：","choices":[" DROP"," COMMIT"," SELECT"," GRANT"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_stack","category":"code","prompt":"问题：栈结构通常遵循什么顺序？\n答案：","choices":[" 先进先出"," 后进先出"," 随机进出"," 按字母排序"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"code_status_404","category":"code","prompt":"问题：HTTP 404 通常表示什么？\n答案：","choices":[" 请求成功"," 永久重定向"," 资源未找到"," 服务正常"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"code_test_assert","category":"code","prompt":"问题：单元测试中的断言主要验证什么？\n答案：","choices":[" 可观察行为"," 文件颜色"," 编辑器主题"," 鼠标位置"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_transaction","category":"code","prompt":"问题：数据库事务的原子性表示什么？\n答案：","choices":[" 全部成功或全部回滚"," 查询必然更快"," 数据永不删除"," 只允许一个用户"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"code_yaml","category":"code","prompt":"问题：YAML 通常使用什么表达层级？\n答案：","choices":[" 二进制位"," 固定列宽"," 缩进"," 像素"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_accurate","category":"english","prompt":"Question: Which word means correct and precise?\nAnswer:","choices":[" vague"," random"," broken"," accurate"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_antonym_early","category":"english","prompt":"Question: Which word is the opposite of early?\nAnswer:","choices":[" soon"," late"," first"," ready"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_article","category":"english","prompt":"Question: Choose the article: ___ apple.\nAnswer:","choices":[" a"," thee"," an"," am"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_because","category":"english","prompt":"Question: Which word commonly introduces a reason?\nAnswer:","choices":[" although"," because"," where"," unless"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_bird","category":"english","prompt":"Question: Which animal normally has feathers?\nAnswer:","choices":[" bird"," fish"," snake"," whale"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_book_reader","category":"english","prompt":"Question: In 'Maya reads the book', who reads?\nAnswer:","choices":[" the book"," the desk"," Maya"," the room"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_browser","category":"english","prompt":"Question: A web browser is used to view ___.\nAnswer:","choices":[" engine oil"," web pages"," paper mail"," radio waves only"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_capital_france","category":"english","prompt":"Question: What is the capital of France?\nAnswer:","choices":[" Rome"," Paris"," Madrid"," Berlin"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_child_plural","category":"english","prompt":"Question: What is the plural of child?\nAnswer:","choices":[" childs"," childes"," children"," child"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_comparative","category":"english","prompt":"Question: What is the comparative form of small?\nAnswer:","choices":[" smallest"," smallly"," smaller"," more smallest"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_computer_memory","category":"english","prompt":"Question: RAM is a type of computer ___.\nAnswer:","choices":[" memory"," keyboard"," network cable"," screen color"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_database","category":"english","prompt":"Question: A database stores organized ___.\nAnswer:","choices":[" weather"," electricity"," data"," paint"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_grass_color","category":"english","prompt":"Question: What color is healthy grass usually?\nAnswer:","choices":[" blue"," black"," purple"," green"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_hot_opposite","category":"english","prompt":"Question: What is the opposite of hot?\nAnswer:","choices":[" warm"," cold"," large"," fast"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_if_then","category":"english","prompt":"Question: In logic, 'if A, then B' states a ___.\nAnswer:","choices":[" color"," measurement unit"," conditional"," file"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_metal","category":"english","prompt":"Question: Which material conducts electricity well?\nAnswer:","choices":[" rubber"," dry wood"," glass"," copper"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_month","category":"english","prompt":"Question: Which month comes after March?\nAnswer:","choices":[" January"," February"," December"," April"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_noun","category":"english","prompt":"Question: Which word is a noun?\nAnswer:","choices":[" river"," quickly"," under"," bright"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_ocean","category":"english","prompt":"Question: Which is an ocean?\nAnswer:","choices":[" Sahara"," Alps"," Pacific"," Amazon city"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_oxygen","category":"english","prompt":"Question: Humans need which gas for respiration?\nAnswer:","choices":[" helium"," oxygen"," neon"," argon"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_past_go","category":"english","prompt":"Question: What is the past tense of go?\nAnswer:","choices":[" goed"," went"," gone"," going"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_past_walk","category":"english","prompt":"Question: What is the regular past tense of walk?\nAnswer:","choices":[" walks"," walked"," walking"," walker"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"english_photosynthesis","category":"english","prompt":"Question: Plants use sunlight in which process?\nAnswer:","choices":[" photosynthesis"," evaporation"," erosion"," combustion"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_planet","category":"english","prompt":"Question: Earth is a ___.\nAnswer:","choices":[" star"," galaxy"," comet tail"," planet"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_summary","category":"english","prompt":"Question: A summary should contain the main ___.\nAnswer:","choices":[" passwords"," pixels"," timestamps only"," ideas"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_sun_rises","category":"english","prompt":"Question: The sun appears to rise in which direction?\nAnswer:","choices":[" west"," north"," down"," east"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_synonym_fast","category":"english","prompt":"Question: Which word is closest in meaning to fast?\nAnswer:","choices":[" quick"," slow"," silent"," heavy"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_thirsty","category":"english","prompt":"Question: Complete: I drink water because I am ___.\nAnswer:","choices":[" thirsty"," square"," loud"," wooden"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_triangle","category":"english","prompt":"Question: How many sides does a triangle have?\nAnswer:","choices":[" two"," four"," three"," five"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"english_uncertain","category":"english","prompt":"Question: If evidence is missing, a careful answer should express ___.\nAnswer:","choices":[" uncertainty"," absolute certainty"," a password"," a threat"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"english_verb","category":"english","prompt":"Question: Which word is a verb?\nAnswer:","choices":[" blue"," table"," quiet"," run"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"english_water_freeze","category":"english","prompt":"Question: What does liquid water become when it freezes?\nAnswer:","choices":[" ice"," steam"," sand"," fire"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"long_context_recall_00","category":"long_context","prompt":"阅读批次 100 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_01","category":"long_context","prompt":"阅读批次 101 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_02","category":"long_context","prompt":"阅读批次 102 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_03","category":"long_context","prompt":"阅读批次 103 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_04","category":"long_context","prompt":"阅读批次 104 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_05","category":"long_context","prompt":"阅读批次 105 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_06","category":"long_context","prompt":"阅读批次 106 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_07","category":"long_context","prompt":"阅读批次 107 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_08","category":"long_context","prompt":"阅读批次 108 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_09","category":"long_context","prompt":"阅读批次 109 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_10","category":"long_context","prompt":"阅读批次 110 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_11","category":"long_context","prompt":"阅读批次 111 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_12","category":"long_context","prompt":"阅读批次 112 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_13","category":"long_context","prompt":"阅读批次 113 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_14","category":"long_context","prompt":"阅读批次 114 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_15","category":"long_context","prompt":"阅读批次 115 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_16","category":"long_context","prompt":"阅读批次 116 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_17","category":"long_context","prompt":"阅读批次 117 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_18","category":"long_context","prompt":"阅读批次 118 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_19","category":"long_context","prompt":"阅读批次 119 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_20","category":"long_context","prompt":"阅读批次 120 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_21","category":"long_context","prompt":"阅读批次 121 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_22","category":"long_context","prompt":"阅读批次 122 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_23","category":"long_context","prompt":"阅读批次 123 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_24","category":"long_context","prompt":"阅读批次 124 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_25","category":"long_context","prompt":"阅读批次 125 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_26","category":"long_context","prompt":"阅读批次 126 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_27","category":"long_context","prompt":"阅读批次 127 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_28","category":"long_context","prompt":"阅读批次 128 的记录：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库，样品丁在周四入库。\n问题：样品甲何时入库？\n答案：","choices":[" 周一"," 周二"," 周三"," 周四"],"answer":0,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_29","category":"long_context","prompt":"阅读批次 129 的记录：样品甲在周二入库，样品乙在周三入库，样品丙在周四入库，样品丁在周一入库。\n问题：样品乙何时入库？\n答案：","choices":[" 周一"," 周三"," 周二"," 周四"],"answer":1,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_30","category":"long_context","prompt":"阅读批次 130 的记录：样品甲在周三入库，样品乙在周四入库，样品丙在周一入库，样品丁在周二入库。\n问题：样品丙何时入库？\n答案：","choices":[" 周二"," 周三"," 周一"," 周四"],"answer":2,"source":"deterministic-context-v2"}
+{"id":"long_context_recall_31","category":"long_context","prompt":"阅读批次 131 的记录：样品甲在周四入库，样品乙在周一入库，样品丙在周二入库，样品丁在周三入库。\n问题：样品丁何时入库？\n答案：","choices":[" 周一"," 周二"," 周四"," 周三"],"answer":3,"source":"deterministic-context-v2"}
+{"id":"calibration_reasoning_atomic","category":"calibration_reasoning","prompt":"问题：checkpoint 原子写入防止什么？\n答案：","choices":[" 模型过拟合"," 网络延迟"," tokenizer 变大"," 中断留下半写文件"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_baseline","category":"calibration_reasoning","prompt":"问题：比较候选前为什么要冻结 baseline？\n答案：","choices":[" 建立可归因参照"," 减少数据哈希"," 删除历史"," 绕过测试"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_bootstrap","category":"calibration_reasoning","prompt":"问题：配对 bootstrap 比较同一题集候选时保留了什么？\n答案：","choices":[" 逐题配对关系"," GPU 温度"," 文件权限"," 训练进程 PID"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_capacity","category":"calibration_reasoning","prompt":"问题：并行 GPU 任务安全启动的充分依据是什么？\n答案：","choices":[" GPU 利用率为零一次"," 没有终端窗口"," 进程名不同"," 实时占用加预留峰值低于容量"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_checkpoint","category":"calibration_reasoning","prompt":"问题：验证精确恢复应比较什么？\n答案：","choices":[" 只有文件大小"," 只有进程名"," 步数、游标、优化器和随机状态"," 只有时间"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_clean_rebuild","category":"calibration_reasoning","prompt":"问题：干净环境重建主要验证什么？\n答案：","choices":[" 训练 loss 必然降低"," 模型参数自动增加"," 依赖与资产可恢复"," 网络永不失败"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_disk","category":"calibration_reasoning","prompt":"问题：训练前检查磁盘空间是为了防止什么？\n答案：","choices":[" 注意力退化"," 词表重复"," checkpoint 写入失败"," HTTP 重定向"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_domain","category":"calibration_reasoning","prompt":"问题：同域 loss 更低能否直接证明通用能力更强？\n答案：","choices":[" 一定能"," 不能"," 与数据无关"," 只由显存决定"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_fail_closed","category":"calibration_reasoning","prompt":"问题：缺少关键评测证据时门禁应该怎样？\n答案：","choices":[" 默认通过"," 拒绝通过"," 随机决定"," 只看文件名"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_hash","category":"calibration_reasoning","prompt":"问题：数据哈希变化通常说明什么？\n答案：","choices":[" 模型必然更好"," GPU 必然空闲"," 许可证自动通过"," 数据身份发生变化"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_holdout","category":"calibration_reasoning","prompt":"问题：测试集的主要用途是什么？\n答案：","choices":[" 更新模型参数"," 最终独立评估"," 存放密码"," 替代训练集"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_identity","category":"calibration_reasoning","prompt":"问题：完整 run identity 不应缺少什么？\n答案：","choices":[" 编辑器主题"," 鼠标型号"," 代码、数据、配置与 seed"," 窗口位置"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_leakage","category":"calibration_reasoning","prompt":"问题：训练集包含测试题会导致什么？\n答案：","choices":[" 显存降低"," 网络更快"," 代码更短"," 评测污染"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_license","category":"calibration_reasoning","prompt":"问题：能力门通过但数据许可未澄清时可以公开权重吗？\n答案：","choices":[" 不可以"," 可以且无需说明"," 只要 loss 低就可以"," 自动可以"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_loss_only","category":"calibration_reasoning","prompt":"问题：只看训练 loss 选择模型有什么风险？\n答案：","choices":[" 显存自动增加"," 数据自动合法"," 测试必然通过"," 不能代表完整能力"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_mcnemar","category":"calibration_reasoning","prompt":"问题：McNemar 检验适合比较什么？\n答案：","choices":[" 两个磁盘容量"," 同一批样本上的两种分类结果"," 两种字体"," 两个端口"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_mixture","category":"calibration_reasoning","prompt":"问题：混合数据实验必须新增什么？\n答案：","choices":[" 旧结果覆盖"," 相同 run ID"," 混合比例和新 manifest"," 隐藏采样策略"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_monitor","category":"calibration_reasoning","prompt":"问题：长时间无训练进展应该触发什么？\n答案：","choices":[" 公开发布"," 删除数据"," 提高阈值"," 告警和诊断"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_oom","category":"calibration_reasoning","prompt":"问题：避免 GPU OOM 最直接需要约束什么？\n答案：","choices":[" 用户名长度"," 所有任务峰值显存总和"," 提交信息"," 文件扩展名"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_parent","category":"calibration_reasoning","prompt":"问题：continuation 实验必须记录什么？\n答案：","choices":[" 桌面背景"," 父 checkpoint 身份"," SSH 密码"," 浏览器历史"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_provenance","category":"calibration_reasoning","prompt":"问题：模型血缘需要能追溯到什么？\n答案：","choices":[" 屏幕分辨率"," 键盘语言"," 登录头像"," 数据、源码、配置和 checkpoint"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_registry","category":"calibration_reasoning","prompt":"问题：候选注册表的主要作用是什么？\n答案：","choices":[" 追踪模型身份和证据"," 替代训练数据"," 保存用户密码"," 控制显示器"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_repetition","category":"calibration_reasoning","prompt":"问题：生成文本大量重复通常属于什么信号？\n答案：","choices":[" 许可通过信号"," 退化信号"," 磁盘健康信号"," 数据身份"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_resume","category":"calibration_reasoning","prompt":"问题：恢复训练后数据游标不连续会造成什么？\n答案：","choices":[" 许可证变化"," GPU 数量增加"," 模型层数减少"," 样本重复或跳过"],"answer":3,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_retry","category":"calibration_reasoning","prompt":"问题：任务重试要避免覆盖已有正式 run，需要什么性质？\n答案：","choices":[" 幂等性"," 随机性"," 匿名性"," 模糊性"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_seed","category":"calibration_reasoning","prompt":"问题：第二个独立 seed 的主要作用是什么？\n答案：","choices":[" 增加词表"," 改变许可证"," 检查结论稳定性"," 压缩 checkpoint"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_shared_gpu","category":"calibration_reasoning","prompt":"问题：共享 GPU 上启动任务前应该先做什么？\n答案：","choices":[" 检查现有占用和总显存预算"," 终止他人进程"," 删除日志"," 关闭监控"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_single_variable","category":"calibration_reasoning","prompt":"问题：受控实验一次改变一个主要变量是为了什么？\n答案：","choices":[" 增加文件数量"," 隐藏失败"," 便于归因"," 跳过评测"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_statistical","category":"calibration_reasoning","prompt":"问题：小题集上相差一两题时最稳妥的结论是什么？\n答案：","choices":[" 差异可能不稳定"," 候选必然更强"," 立即发布"," 忽略置信区间"],"answer":0,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_tokens","category":"calibration_reasoning","prompt":"问题：公平比较训练预算时优先固定什么？\n答案：","choices":[" 日志行数"," 文件名长度"," seen tokens"," 终端宽度"],"answer":2,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_trigger","category":"calibration_reasoning","prompt":"问题：pilot 未达到预设触发线时应该怎么办？\n答案：","choices":[" 无限扩训"," 停止该方向"," 修改结果"," 删除阈值"],"answer":1,"source":"maintainer-authored-v2"}
+{"id":"calibration_reasoning_unknown","category":"calibration_reasoning","prompt":"问题：证据不足时最合适的做法是什么？\n答案：","choices":[" 说明不确定并查证"," 编造答案"," 忽略问题"," 宣称绝对正确"],"answer":0,"source":"maintainer-authored-v2"}

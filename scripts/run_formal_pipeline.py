@@ -13,6 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
 from python_starter.core.data_contract import write_json_atomic  # noqa: E402
+from python_starter.core.dataset_registry import DatasetRegistry  # noqa: E402
 
 
 def _run(arguments: list[str]) -> None:
@@ -24,28 +25,24 @@ def main() -> None:
     parser.add_argument("--resume", type=Path)
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--smoke", action="store_true")
+    parser.add_argument("--training-memory-mib", type=int, default=11_000)
+    parser.add_argument("--evaluation-memory-mib", type=int, default=4096)
     parser.add_argument(
         "--dataset",
-        choices=("official", "team"),
         default="official",
-        help="Run one frozen data arm; use run_dataset_ablation.py for both",
+        help="Dataset registry name or alias; use run_dataset_ablation.py for both baselines",
+    )
+    parser.add_argument(
+        "--dataset-index",
+        type=Path,
+        default=ROOT / "configs/datasets/index.json",
     )
     args = parser.parse_args()
 
-    datasets = {
-        "official": {
-            "hydra": "minimind_official_v1",
-            "identity": "minimind_official_v1",
-            "run_name": "minimind-official-v1-80m-wsd",
-        },
-        "team": {
-            "hydra": "mindsurf_team_v1",
-            "identity": "mindsurf_team_v1",
-            "run_name": "mindsurf-team-v1-80m-wsd",
-        },
-    }
-    selected = datasets[args.dataset]
-    identity = selected["identity"]
+    registry = DatasetRegistry(ROOT, args.dataset_index)
+    selected = registry.resolve(args.dataset)
+    registry.validate_identity(selected)
+    identity = selected.identity
     checkpoint_dir = ROOT / f"models/checkpoints/{identity}_80m"
     checkpoint = checkpoint_dir / "final_model.pt"
     training_summary = checkpoint_dir / "training_summary.json"
@@ -57,14 +54,16 @@ def main() -> None:
             sys.executable,
             "scripts/preflight_training.py",
             "--audit",
-            f"artifacts/data/{identity}/audit.json",
+            str(selected.audit),
             "--spec",
-            f"configs/datasets/{identity}.json",
+            str(selected.spec),
             "--training-view-manifest",
-            f"artifacts/data/{identity}/training_view.json",
+            str(selected.training_view_manifest),
             "--train-path",
-            f"data/processed/{identity}/pretrain_train_nfkc_dedup.jsonl",
+            str(selected.train),
             "--require-cuda",
+            "--required-gpu-memory-mib",
+            str(args.training_memory_mib),
             "--output-dir",
             str(checkpoint_dir),
         ]
@@ -72,15 +71,15 @@ def main() -> None:
     train_command = [
         sys.executable,
         "scripts/train.py",
-        f"data={selected['hydra']}",
-        f"run_name={selected['run_name']}",
+        f"data={selected.hydra_config}",
+        f"run_name={identity}-80m-wsd",
         f"training.output_dir=models/checkpoints/{identity}_80m",
         f"training.device={args.device}",
     ]
     if args.smoke:
         train_command.extend(
             [
-                f"run_name={selected['run_name']}-smoke",
+                f"run_name={identity}-80m-wsd-smoke",
                 "training.max_steps=20",
                 "training.warmup_steps=2",
                 "training.eval_every=20",
@@ -91,42 +90,63 @@ def main() -> None:
         )
     if args.resume:
         train_command.append(f"resume_from={args.resume.resolve()}")
-    _run(train_command)
+    _run(
+        [
+            sys.executable,
+            "scripts/run_with_gpu_lease.py",
+            "--run-id",
+            f"train-{identity}{'-smoke' if args.smoke else ''}",
+            "--required-memory-mib",
+            str(args.training_memory_mib),
+            "--",
+            *train_command,
+        ]
+    )
     if args.smoke:
         checkpoint = ROOT / f"models/checkpoints/{identity}_80m_smoke/final_model.pt"
         training_summary = ROOT / f"models/checkpoints/{identity}_80m_smoke/training_summary.json"
         evaluation = ROOT / f"artifacts/evaluation/{identity}_80m_smoke.json"
 
+    evaluation_command = [
+        sys.executable,
+        "scripts/evaluate_candidate.py",
+        "--checkpoint",
+        str(checkpoint),
+        "--tokenizer",
+        str(selected.tokenizer),
+        "--validation",
+        str(selected.validation),
+        "--test",
+        str(selected.test),
+        "--audit",
+        str(selected.audit),
+        "--output",
+        str(evaluation),
+        "--device",
+        args.device,
+        *(
+            [
+                "--strict-batches",
+                "5",
+                "--domain-blocks",
+                "5",
+                "--fixed-new-tokens",
+                "16",
+            ]
+            if args.smoke
+            else []
+        ),
+    ]
     _run(
         [
             sys.executable,
-            "scripts/evaluate_candidate.py",
-            "--checkpoint",
-            str(checkpoint),
-            "--tokenizer",
-            f"data/raw/{identity}/tokenizer",
-            "--validation",
-            f"data/raw/{identity}/strict_splits/pretrain_strict_val_2k.jsonl",
-            "--test",
-            f"data/raw/{identity}/strict_splits/pretrain_strict_test_2k.jsonl",
-            "--audit",
-            f"artifacts/data/{identity}/audit.json",
-            "--output",
-            str(evaluation),
-            "--device",
-            args.device,
-            *(
-                [
-                    "--strict-batches",
-                    "5",
-                    "--domain-blocks",
-                    "5",
-                    "--fixed-new-tokens",
-                    "16",
-                ]
-                if args.smoke
-                else []
-            ),
+            "scripts/run_with_gpu_lease.py",
+            "--run-id",
+            f"evaluate-{identity}{'-smoke' if args.smoke else ''}",
+            "--required-memory-mib",
+            str(args.evaluation_memory_mib),
+            "--",
+            *evaluation_command,
         ]
     )
     evaluation_data = json.loads(evaluation.read_text(encoding="utf-8"))
@@ -153,8 +173,10 @@ def main() -> None:
             "schema_version": 1,
             "completed_at": datetime.now(UTC).isoformat(),
             "smoke": args.smoke,
-            "dataset_arm": args.dataset,
-            "dataset_identity": identity,
+            "dataset_name": selected.name,
+            "dataset_id": selected.dataset_id,
+            "dataset_revision": selected.revision,
+            "dataset_index_sha256": registry.sha256,
             "checkpoint": str(checkpoint),
             "training_summary": str(training_summary),
             "evaluation": str(evaluation),

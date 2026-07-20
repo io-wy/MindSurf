@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "hypothesis": "A short continuation on audited math, code, English, and knowledge sources improves the expanded pretraining MCQ suite without materially regressing the Official strict holdout.",
+  "parent_dataset": "official",
+  "continuation_dataset": "mindsurf_targeted_stem_v1",
+  "pilot": {
+    "steps": 1000,
+    "learning_rate": 0.0001,
+    "warmup_steps": 50,
+    "seed": 42,
+    "sequence_length": 384,
+    "batch_size": 32,
+    "seen_tokens": 12288000
+  },
+  "triggers": {
+    "official_strict_mean_regression_max": 0.01,
+    "mcq_accuracy_delta_min": 0.02,
+    "mcq_regressed_category_max": 0.05,
+    "generation_repetition_increase_max": 1
+  },
+  "stop_conditions": [
+    "non-finite loss",
+    "GPU capacity admission rejected",
+    "Official strict mean regression exceeds 0.01",
+    "expanded MCQ gain is below 0.02",
+    "any MCQ category regresses by more than 0.05"
+  ]
+}

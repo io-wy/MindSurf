@@ -1,0 +1,15 @@
+dataset_id: mindsurf/targeted_stem_v1
+dataset_revision: team-ab97cc8-targeted-stem-20260720
+dataset_spec: configs/datasets/mindsurf_targeted_stem_v1.json
+train_path: data/processed/mindsurf_targeted_stem_v1/pretrain_train.jsonl
+val_path: data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+test_path: data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+tokenizer_name: data/raw/minimind_official_v1/tokenizer
+audit_path: artifacts/data/mindsurf_targeted_stem_v1/audit.json
+training_view_manifest: artifacts/data/mindsurf_targeted_stem_v1/training_view.json
+max_length: 384
+text_field: text
+source_field: source_key
+id_field: null
+streaming: true
+shuffle_buffer: 0

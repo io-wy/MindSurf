@@ -1,4 +1,4 @@
-"""Fail-fast checks before occupying the single shared GPU."""
+"""Fail-fast identity, disk, and capacity checks before shared-GPU training."""
 
 from __future__ import annotations
 
@@ -16,6 +16,7 @@ from python_starter.core.data_contract import (
     sha256_file,
     verify_training_view_manifest,
 )
+from python_starter.infrastructure.gpu_capacity import capacity_decision, query_gpu_snapshot
 
 
 def _nvidia_smi(*query: str) -> list[str]:
@@ -52,6 +53,10 @@ def main() -> None:
     )
     parser.add_argument("--output-dir", type=Path, default=Path("models/checkpoints"))
     parser.add_argument("--require-cuda", action="store_true")
+    parser.add_argument("--required-gpu-memory-mib", type=int, default=11_000)
+    parser.add_argument("--gpu-safety-margin-mib", type=int, default=1536)
+    parser.add_argument("--require-branch")
+    parser.add_argument("--source-root", type=Path, default=Path.cwd())
     args = parser.parse_args()
 
     audit = json.loads(args.audit.read_text(encoding="utf-8"))
@@ -82,21 +87,37 @@ def main() -> None:
     if free_bytes < 15 * 1024**3:
         raise SystemExit("less than 15 GiB free at the checkpoint destination")
 
+    git_head = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=args.source_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    git_branch = subprocess.run(
+        ["git", "branch", "--show-current"],
+        cwd=args.source_root,
+        check=True,
+        capture_output=True,
+        text=True,
+    ).stdout.strip()
+    if args.require_branch is not None and git_branch != args.require_branch:
+        raise SystemExit(
+            f"source branch mismatch: expected {args.require_branch!r}, got {git_branch!r}"
+        )
+
     gpu: dict[str, object] = {"required": args.require_cuda}
     if args.require_cuda:
-        devices = _nvidia_smi(
-            "--query-gpu=index,name,memory.total,memory.used,utilization.gpu",
-            "--format=csv,noheader,nounits",
+        snapshot = query_gpu_snapshot()
+        decision = capacity_decision(
+            snapshot,
+            required_mib=args.required_gpu_memory_mib,
+            safety_margin_mib=args.gpu_safety_margin_mib,
+            reservations=[],
         )
-        if len(devices) != 1:
-            raise SystemExit(f"expected exactly one visible GPU, found {len(devices)}")
-        processes = _nvidia_smi(
-            "--query-compute-apps=pid,process_name,used_memory",
-            "--format=csv,noheader,nounits",
-        )
-        if processes:
-            raise SystemExit(f"GPU already has compute processes: {processes}")
-        gpu = {"required": True, "device": devices[0], "compute_processes": []}
+        if not decision["admitted"]:
+            raise SystemExit(f"insufficient shared GPU capacity: {decision}")
+        gpu = {"required": True, "capacity": decision}
 
     result = {
         "status": "passed",
@@ -106,6 +127,7 @@ def main() -> None:
         "training_view_sha256": training_view["output"]["sha256"],
         "training_view_rows": training_view["output"]["rows"],
         "free_bytes": free_bytes,
+        "source": {"git_head": git_head, "git_branch": git_branch},
         "gpu": gpu,
     }
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))

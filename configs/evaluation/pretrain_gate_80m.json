@@ -1,0 +1,23 @@
+{
+  "schema_version": 2,
+  "gate_kind": "pretrain",
+  "threshold_sources": {
+    "strict_and_domain": "historical controlled 80M reference retained until a larger baseline panel is frozen",
+    "mcq_accuracy_min": "business minimum above four-choice random performance",
+    "mcq_wilson_lower_bound_min": "statistical lower bound must exceed the four-choice random baseline",
+    "repetition_count_max": "historical generation-degeneration ceiling"
+  },
+  "strict_val_max": 2.42,
+  "strict_test_max": 2.44,
+  "domain_max": {
+    "code_like": 2.388202319542567,
+    "english_or_code_heavy": 2.903274053707719,
+    "length_long": 2.616696572303772,
+    "math_like": 2.0446277409791946,
+    "quality_pass": 2.28850013948977,
+    "repeat_high": 2.2572996597737074
+  },
+  "mcq_accuracy_min": 0.32,
+  "mcq_wilson_lower_bound_min": 0.25,
+  "repetition_count_max": 4
+}

@@ -1,0 +1,10 @@
+{"id":"zh_encyclopedic_continuation","category":"chinese_knowledge","prompt":"长江是中国重要的河流，它发源于"}
+{"id":"zh_science_continuation","category":"chinese_science","prompt":"水在标准大气压下加热到沸点时会"}
+{"id":"zh_history_continuation","category":"chinese_history","prompt":"造纸术的改进推动了知识传播，因为"}
+{"id":"math_definition_continuation","category":"math","prompt":"在代数中，一元一次方程是指"}
+{"id":"math_reasoning_continuation","category":"math","prompt":"若一个正方形的边长扩大为原来的两倍，那么它的面积"}
+{"id":"code_python_continuation","category":"code","prompt":"在 Python 中，列表推导式可以用于"}
+{"id":"code_git_continuation","category":"code","prompt":"版本控制系统 Git 使用提交记录来"}
+{"id":"english_science_continuation","category":"english","prompt":"Photosynthesis allows green plants to"}
+{"id":"english_history_continuation","category":"english","prompt":"The printing press changed society by"}
+{"id":"long_recall_continuation","category":"long_context","prompt":"记录显示：样品甲在周一入库，样品乙在周二入库，样品丙在周三入库。样品乙的入库时间是"}
