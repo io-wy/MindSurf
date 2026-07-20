@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "hypothesis": "The targeted-only pilots failed through catastrophic forgetting; an audited 80:20 Official-to-targeted replay view preserves the Official parent while retaining enough targeted signal to improve the expanded pretraining MCQ suite.",
+  "parent_dataset": "official",
+  "continuation_dataset": "mindsurf_official_targeted_replay_v1",
+  "pilot": {
+    "steps": 1000,
+    "learning_rate": 0.0001,
+    "warmup_steps": 50,
+    "seed": 42,
+    "sequence_length": 384,
+    "batch_size": 32,
+    "seen_tokens": 12288000
+  },
+  "triggers": {
+    "official_strict_mean_regression_max": 0.01,
+    "mcq_accuracy_delta_min": 0.02,
+    "mcq_regressed_category_max": 0.05,
+    "generation_repetition_increase_max": 1
+  },
+  "stop_conditions": [
+    "non-finite loss",
+    "GPU capacity admission rejected",
+    "Official strict mean regression exceeds 0.01",
+    "expanded MCQ gain is below 0.02",
+    "any MCQ category regresses by more than 0.05"
+  ]
+}

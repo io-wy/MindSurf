@@ -43,6 +43,19 @@
       "validation": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl",
       "test": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl",
       "tokenizer": "data/raw/minimind_official_v1/tokenizer"
+    },
+    "mindsurf_official_targeted_replay_v1": {
+      "dataset_id": "mindsurf/official_targeted_replay_v1",
+      "revision": "official-74aad49-targeted-3cf71c6-replay-20260720",
+      "hydra_config": "mindsurf_official_targeted_replay_v1",
+      "identity": "mindsurf_official_targeted_replay_v1",
+      "spec": "configs/datasets/mindsurf_official_targeted_replay_v1.json",
+      "audit": "artifacts/data/mindsurf_official_targeted_replay_v1/audit.json",
+      "training_view_manifest": "artifacts/data/mindsurf_official_targeted_replay_v1/training_view.json",
+      "train": "data/processed/mindsurf_official_targeted_replay_v1/pretrain_train.jsonl",
+      "validation": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl",
+      "test": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl",
+      "tokenizer": "data/raw/minimind_official_v1/tokenizer"
     }
   }
 }

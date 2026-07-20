@@ -124,6 +124,23 @@ stages:
       - artifacts/data/mindsurf_targeted_stem_v1/audit.json
       - artifacts/data/mindsurf_targeted_stem_v1/training_view.json
 
+  build_official_targeted_replay_training_view:
+    cmd: uv run python scripts/build_replay_training_view.py
+    deps:
+      - configs/datasets/mindsurf_official_targeted_replay_v1.json
+      - scripts/build_replay_training_view.py
+      - src/python_starter/core/data_contract.py
+      - artifacts/data/minimind_official_v1/audit.json
+      - artifacts/data/minimind_official_v1/training_view.json
+      - artifacts/data/mindsurf_targeted_stem_v1/audit.json
+      - artifacts/data/mindsurf_targeted_stem_v1/training_view.json
+      - data/processed/minimind_official_v1/pretrain_train_nfkc_dedup.jsonl
+      - data/processed/mindsurf_targeted_stem_v1/pretrain_train.jsonl
+    outs:
+      - data/processed/mindsurf_official_targeted_replay_v1/pretrain_train.jsonl
+      - artifacts/data/mindsurf_official_targeted_replay_v1/audit.json
+      - artifacts/data/mindsurf_official_targeted_replay_v1/training_view.json
+
   train_official_80m:
     cmd: uv run python scripts/train.py data=minimind_official_v1
     deps:

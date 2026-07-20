@@ -12,9 +12,14 @@ def test_default_and_dataset_arm_configs_remain_nested() -> None:
     with initialize_config_dir(version_base=None, config_dir=str(config_dir)):
         official = compose(config_name="default")
         team = compose(config_name="default", overrides=["data=mindsurf_team_v1"])
+        replay = compose(
+            config_name="default",
+            overrides=["data=mindsurf_official_targeted_replay_v1"],
+        )
 
     assert official.model.n_embed == 768
     assert official.training.max_steps == 10_000
     assert official.data.dataset_id == "gongjy/minimind_dataset"
     assert team.data.dataset_id == "wyywnab/mindsurf_pretrain_dataset"
+    assert replay.data.dataset_id == "mindsurf/official_targeted_replay_v1"
     assert "_group_" not in official
