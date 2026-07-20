@@ -56,6 +56,13 @@ def main() -> None:
     parser.add_argument("--required-gpu-memory-mib", type=int, default=11_000)
     parser.add_argument("--gpu-safety-margin-mib", type=int, default=1536)
     parser.add_argument("--require-branch")
+    parser.add_argument(
+        "--min-free-bytes",
+        type=int,
+        default=15 * 1024**3,
+        help="Space budget at the checkpoint destination; callers that know the "
+        "retained checkpoint count should pass their own figure",
+    )
     parser.add_argument("--source-root", type=Path, default=Path.cwd())
     args = parser.parse_args()
 
@@ -84,8 +91,11 @@ def main() -> None:
 
     args.output_dir.mkdir(parents=True, exist_ok=True)
     free_bytes = shutil.disk_usage(args.output_dir).free
-    if free_bytes < 15 * 1024**3:
-        raise SystemExit("less than 15 GiB free at the checkpoint destination")
+    if free_bytes < args.min_free_bytes:
+        raise SystemExit(
+            f"{free_bytes / 1024**3:.1f} GiB free at the checkpoint destination, "
+            f"budget {args.min_free_bytes / 1024**3:.1f} GiB"
+        )
 
     git_head = subprocess.run(
         ["git", "rev-parse", "HEAD"],
@@ -127,6 +137,7 @@ def main() -> None:
         "training_view_sha256": training_view["output"]["sha256"],
         "training_view_rows": training_view["output"]["rows"],
         "free_bytes": free_bytes,
+        "min_free_bytes": args.min_free_bytes,
         "source": {"git_head": git_head, "git_branch": git_branch},
         "gpu": gpu,
     }
