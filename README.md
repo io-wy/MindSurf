@@ -80,6 +80,24 @@ uv run dvc dag
 只有能力门和对应数据许可门同时通过时才允许公开发布。任何发布必须明确写出使用
 的是 Official、Team 还是混合数据；本对照实验本身不训练混合臂。
 
+## 最新预训练与训练 Infra 进展
+
+阶段正确的 192 题预训练门、统一数据索引、共享 GPU 容量准入、训练遥测和精确恢复
+演练已经落地。基于 Official 父模型的 targeted-only、低学习率 targeted-only 和
+80:20 Official/targeted replay 三个 1,000-step pilot 均未达到预先冻结的扩大条件，
+因此没有启动正式训练或登记新候选。完整结果、统计检验、吞吐和恢复证据见
+[2026-07-20 预训练 pilot 与训练恢复报告](docs/experiments/2026-07-20-pretrain-pilots-and-training-recovery.md)。
+
+构建审计后的 80:20 replay 训练视图：
+
+```bash
+uv run dvc repro build_official_targeted_replay_training_view
+```
+
+该 replay 视图继承 Team 数据许可限制，不可作为公开发布数据。正式 checkpoint
+远端副本、干净环境重建、主机重启演练以及 loss 突升/无进展告警闭环仍未完成，
+所以预训练与训练 Infra 的状态仍是进行中。
+
 ## 推理与服务
 
 本地 CLI 从 checkpoint 内嵌配置重建模型：

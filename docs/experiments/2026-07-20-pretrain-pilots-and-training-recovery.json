@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "date": "2026-07-20",
+  "scope": {
+    "pretraining": true,
+    "training_infrastructure": true,
+    "inference": false
+  },
+  "parent": {
+    "checkpoint_sha256": "4c57fa3ff39f35521ffdbe33dc6ddbcc1f881308251c2bf3ffe6781952cebf7f",
+    "official_strict_mean": 2.37246654983574,
+    "mcq_accuracy": 0.375,
+    "generation_repetition_count": 7
+  },
+  "pilots": [
+    {
+      "run_id": "targeted-stem-pilot-seed42",
+      "dataset_id": "mindsurf/targeted_stem_v1",
+      "learning_rate": 0.0001,
+      "steps": 1000,
+      "seen_tokens": 12288000,
+      "candidate_checkpoint_sha256": "9c82ec746a304e81bb778a64fe0c74826b83b634f36c0f2ec7d5ce6392c9850b",
+      "official_strict_mean": 2.7693854939016225,
+      "team_strict_mean": 3.5961989228331785,
+      "mcq_accuracy": 0.3177083333333333,
+      "mcq_accuracy_delta": -0.057291666666666685,
+      "mcq_paired_bootstrap_ci95": [
+        -0.109375,
+        -0.010416666666666666
+      ],
+      "mcnemar_p_value_two_sided": 0.03468966484069824,
+      "generation_repetition_count": 10,
+      "tokens_per_second": 83629.56393563922,
+      "peak_cuda_reserved_bytes": 9686745088,
+      "data_wait_seconds": 10.34668056992814,
+      "optimizer_step_seconds": 9.63973584654741,
+      "checkpoint_write_seconds": 4.580021615838632,
+      "continue_to_formal": false
+    },
+    {
+      "run_id": "targeted-stem-pilot-low-lr-seed42",
+      "dataset_id": "mindsurf/targeted_stem_v1",
+      "learning_rate": 0.00001,
+      "steps": 1000,
+      "seen_tokens": 12288000,
+      "candidate_checkpoint_sha256": "08f79b7a71696c275316bddef88c12ebcb3025ea063d722caeef83cbbd2a8b13",
+      "official_strict_mean": 2.4627777855886857,
+      "team_strict_mean": 3.608369398910797,
+      "mcq_accuracy": 0.359375,
+      "mcq_accuracy_delta": -0.015625,
+      "mcq_paired_bootstrap_ci95": [
+        -0.052083333333333336,
+        0.020833333333333332
+      ],
+      "mcnemar_p_value_two_sided": 0.5810546875,
+      "generation_repetition_count": 10,
+      "tokens_per_second": 83812.01848057119,
+      "peak_cuda_reserved_bytes": 9686745088,
+      "data_wait_seconds": 10.395079732639715,
+      "optimizer_step_seconds": 9.651667579775676,
+      "checkpoint_write_seconds": 4.304185250075534,
+      "continue_to_formal": false
+    },
+    {
+      "run_id": "official-targeted-replay-pilot-seed42",
+      "dataset_id": "mindsurf/official_targeted_replay_v1",
+      "dataset_ratio": {
+        "official": 0.8,
+        "targeted": 0.2
+      },
+      "training_view_sha256": "c5b2e57d791fd48ad56db8dc8dca29cc6f45287857c9c32a370c994d6f72d652",
+      "learning_rate": 0.0001,
+      "steps": 1000,
+      "seen_tokens": 12288000,
+      "candidate_checkpoint_sha256": "3dede497da59816e1da89db8678eff76affdd659c5d3a41abe4a4ea50520fb84",
+      "official_strict_mean": 2.6543538982691497,
+      "team_strict_mean": 3.668507185639034,
+      "mcq_accuracy": 0.3020833333333333,
+      "mcq_accuracy_delta": -0.07291666666666669,
+      "mcq_paired_bootstrap_ci95": [
+        -0.125,
+        -0.026041666666666668
+      ],
+      "mcnemar_p_value_two_sided": 0.006610751152038574,
+      "generation_repetition_count": 8,
+      "tokens_per_second": 80805.26064839952,
+      "peak_cuda_reserved_bytes": 9667870720,
+      "data_wait_seconds": 11.254869694355875,
+      "optimizer_step_seconds": 10.200643233256415,
+      "checkpoint_write_seconds": 4.245118802879006,
+      "continue_to_formal": false
+    }
+  ],
+  "gpu_telemetry": {
+    "peak_memory_used_mib": 9750,
+    "peak_utilization_percent": 100,
+    "peak_temperature_celsius": 62,
+    "peak_power_watts": 354.34,
+    "oom_events": 0,
+    "capacity_warnings": 0
+  },
+  "recovery_drill": {
+    "run_id": "recovery-drill-exact-seed31415",
+    "status": "passed",
+    "seed": 31415,
+    "interrupt_step": 10,
+    "interrupted_return_code": -15,
+    "final_step": 40,
+    "interruption_consumed_tokens": 122880,
+    "final_consumed_tokens": 491520,
+    "checks": {
+      "process_was_interrupted": true,
+      "rolling_checkpoint_step_matches": true,
+      "model_state_exact": true,
+      "optimizer_state_exact": true,
+      "scheduler_state_exact": true,
+      "rng_state_exact": true,
+      "progress_global_step_continuous": true,
+      "progress_micro_step_continuous": true,
+      "progress_consumed_blocks_continuous": true,
+      "progress_consumed_tokens_continuous": true
+    }
+  },
+  "decision": {
+    "formal_training_started": false,
+    "second_seed_started": false,
+    "candidate_registered": false,
+    "reason": "All three falsifiable pilots failed their predeclared continuation triggers."
+  }
+}
