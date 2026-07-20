@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "hypothesis": "The Official-only parent misses the pretraining gate because its token budget is far below the compute-optimal point, not because its data mix lacks a domain. Holding data identity, architecture, seed and schedule shape fixed and only raising the step budget improves the failing domain losses and reduces greedy-decoding repetition.",
+  "error_attribution": {
+    "primary": "training budget",
+    "evidence": [
+      "parent eval loss fell 2.4797 -> 2.3837 over its final 1,000 steps with no plateau",
+      "parent saw 122,880,000 tokens for 89,864,448 parameters, i.e. 1.37 tokens per parameter",
+      "three 1,000-step continuation pilots on new data mixes regressed every gate metric",
+      "the legacy archive holds 196 runs of 700-1,200 step anneals at learning rate 3e-7 to 8e-7 that moved test loss by about 0.001"
+    ],
+    "rejected": [
+      "data coverage: the same corpus that trained the threshold reference model is already in use",
+      "tokenizer: unchanged between parent and threshold reference",
+      "evaluation mismatch: strict holdout and MCQ already pass, only domain loss and repetition fail"
+    ]
+  },
+  "parent_dataset": "official",
+  "continuation_dataset": "official",
+  "baseline": {
+    "checkpoint": "models/checkpoints/minimind_official_v1_80m/final_model.pt",
+    "max_steps": 10000,
+    "seen_tokens": 122880000,
+    "strict_val": 2.38368419083682,
+    "strict_test": 2.3612489088346598,
+    "mcq_accuracy": 0.375,
+    "repetition_count": 7,
+    "gate_failures": [
+      "domain.english_or_code_heavy",
+      "domain.math_like",
+      "domain.quality_pass",
+      "generation.repetition"
+    ]
+  },
+  "arm": {
+    "max_steps": 60000,
+    "learning_rate": 0.0005,
+    "warmup_steps": 200,
+    "stable_ratio": 0.8,
+    "min_lr_ratio": 0.1,
+    "seed": 20260511,
+    "sequence_length": 384,
+    "batch_size": 32,
+    "epochs": 3,
+    "seen_tokens": 737280000,
+    "tokens_per_parameter": 8.2,
+    "note": "Only max_steps and the epoch allowance differ from the frozen parent recipe. The Official view holds about 844,000 packed blocks, so 60,000 steps at batch 32 is about 2.27 passes and needs an epoch allowance of 3."
+  },
+  "triggers": {
+    "accept_as_candidate": "every criterion in configs/evaluation/pretrain_gate_80m.json passes",
+    "confirm_with_second_seed": "accept_as_candidate holds",
+    "official_strict_mean_improvement_min": 0.02,
+    "repetition_count_max": 4
+  },
+  "stop_conditions": [
+    "non-finite loss",
+    "GPU capacity admission rejected",
+    "free disk below the training space budget",
+    "strict mean fails to improve by 0.02 over the parent, which would falsify the budget hypothesis"
+  ]
+}
