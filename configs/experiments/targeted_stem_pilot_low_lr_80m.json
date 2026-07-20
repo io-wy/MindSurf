@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "hypothesis": "The first targeted continuation failed because a 1e-4 learning rate caused catastrophic forgetting; reducing only the learning rate to 1e-5 preserves the Official strict holdout while retaining targeted-domain signal.",
+  "parent_dataset": "official",
+  "continuation_dataset": "mindsurf_targeted_stem_v1",
+  "pilot": {
+    "steps": 1000,
+    "learning_rate": 0.00001,
+    "warmup_steps": 50,
+    "seed": 42,
+    "sequence_length": 384,
+    "batch_size": 32,
+    "seen_tokens": 12288000
+  },
+  "triggers": {
+    "official_strict_mean_regression_max": 0.01,
+    "mcq_accuracy_delta_min": 0.02,
+    "mcq_regressed_category_max": 0.05,
+    "generation_repetition_increase_max": 1
+  },
+  "stop_conditions": [
+    "non-finite loss",
+    "GPU capacity admission rejected",
+    "Official strict mean regression exceeds 0.01",
+    "expanded MCQ gain is below 0.02",
+    "any MCQ category regresses by more than 0.05"
+  ]
+}

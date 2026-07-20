@@ -62,6 +62,7 @@ def main() -> None:
         type=Path,
         default=Path("artifacts/experiments/targeted_stem_pilot_seed42"),
     )
+    parser.add_argument("--run-id", default="targeted-stem-pilot-seed42")
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--training-memory-mib", type=int, default=11_000)
     parser.add_argument("--evaluation-memory-mib", type=int, default=4096)
@@ -115,7 +116,7 @@ def main() -> None:
             f"data={continuation.hydra_config}",
             f"seed={pilot['seed']}",
             f"init_from={args.parent.resolve()}",
-            "run_name=targeted-stem-pilot-seed42",
+            f"run_name={args.run_id}",
             f"training.output_dir={args.output_dir}",
             f"training.device={args.device}",
             f"training.max_steps={pilot['steps']}",
@@ -131,7 +132,7 @@ def main() -> None:
                 sys.executable,
                 "scripts/run_with_gpu_lease.py",
                 "--run-id",
-                "targeted-stem-pilot-seed42",
+                args.run_id,
                 "--required-memory-mib",
                 str(args.training_memory_mib),
                 "--",
@@ -169,7 +170,7 @@ def main() -> None:
                     sys.executable,
                     "scripts/run_with_gpu_lease.py",
                     "--run-id",
-                    f"targeted-stem-{candidate_name}-on-{dataset_name}",
+                    f"{args.run_id}-{candidate_name}-on-{dataset_name}",
                     "--required-memory-mib",
                     str(args.evaluation_memory_mib),
                     "--",
@@ -210,6 +211,7 @@ def main() -> None:
     }
     outcome = {
         "schema_version": 1,
+        "run_id": args.run_id,
         "hypothesis": spec["hypothesis"],
         "experiment_spec_sha256": sha256_file(args.spec),
         "dataset_index_sha256": registry.sha256,
