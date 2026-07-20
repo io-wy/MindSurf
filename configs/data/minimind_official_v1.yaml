@@ -13,3 +13,4 @@ source_field: null
 id_field: null
 streaming: true
 shuffle_buffer: 0
+epochs: 1

@@ -58,3 +58,23 @@ def test_absolute_block_cursor_reproduces_suffix(tmp_path: Path) -> None:
     assert [item["input_ids"].tolist() for item in resumed_blocks] == [
         item["input_ids"].tolist() for item in all_blocks[2:]
     ]
+
+
+def test_multi_epoch_extends_budget_and_keeps_cursor_absolute(tmp_path: Path) -> None:
+    path = tmp_path / "sample.jsonl"
+    path.write_text(
+        "\n".join(json.dumps({"text": "abcdefgh"}) for _ in range(3)),
+        encoding="utf-8",
+    )
+
+    one_epoch = list(_dataset(path))
+    three_epochs = list(_dataset(path, epochs=3))
+    resumed = list(_dataset(path, epochs=3, skip_blocks=len(one_epoch) + 1))
+
+    assert len(three_epochs) > 2 * len(one_epoch)
+    assert [item["input_ids"].tolist() for item in three_epochs[: len(one_epoch)]] == [
+        item["input_ids"].tolist() for item in one_epoch
+    ]
+    assert [item["input_ids"].tolist() for item in resumed] == [
+        item["input_ids"].tolist() for item in three_epochs[len(one_epoch) + 1 :]
+    ]

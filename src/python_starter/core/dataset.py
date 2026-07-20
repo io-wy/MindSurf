@@ -64,6 +64,11 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
 
     The absolute packed-block cursor is the resume boundary. Training uses a
     single data-loader worker so the cursor has one unambiguous ordering.
+
+    ``epochs`` repeats the file so a training budget can exceed one pass over
+    the corpus. The cursor stays absolute across epoch boundaries, and the
+    partial block at the end of an epoch carries into the next one, so exact
+    resume is unaffected by where an interruption lands.
     """
 
     def __init__(
@@ -77,6 +82,7 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
         max_blocks: int | None = None,
         shuffle_buffer: int = 0,
         seed: int = 20260511,
+        epochs: int = 1,
     ) -> None:
         super().__init__()
         self.data_path = Path(data_path)
@@ -87,6 +93,7 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
         self.max_blocks = max_blocks
         self.shuffle_buffer = shuffle_buffer
         self.seed = seed
+        self.epochs = epochs
 
         if not self.data_path.is_file():
             raise FileNotFoundError(self.data_path)
@@ -96,6 +103,8 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
             raise ValueError("skip_blocks must be non-negative")
         if self.shuffle_buffer < 0:
             raise ValueError("shuffle_buffer must be non-negative")
+        if self.epochs < 1:
+            raise ValueError("epochs must be at least 1")
         if tokenizer.eos_token_id is None:
             raise ValueError("tokenizer must define eos_token_id")
 
@@ -105,7 +114,7 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
             raise ValueError("skip_blocks must be non-negative")
         self.skip_blocks = skip_blocks
 
-    def _records(self) -> Iterator[str]:
+    def _records(self, epoch: int = 0) -> Iterator[str]:
         with self.data_path.open("r", encoding="utf-8") as handle:
             if self.shuffle_buffer <= 1:
                 for line_number, line in enumerate(handle, start=1):
@@ -126,7 +135,7 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
                     yield text
                 return
 
-            rng = random.Random(self.seed)
+            rng = random.Random(self.seed + epoch)
             buffer: list[str] = []
             for line_number, line in enumerate(handle, start=1):
                 line = line.strip()
@@ -168,27 +177,28 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
         absolute_block = 0
         emitted = 0
 
-        for text in self._records():
-            token_buffer.extend(self.tokenizer.encode(text, add_special_tokens=False))
-            token_buffer.append(eos_token_id)
+        for epoch in range(self.epochs):
+            for text in self._records(epoch):
+                token_buffer.extend(self.tokenizer.encode(text, add_special_tokens=False))
+                token_buffer.append(eos_token_id)
 
-            while len(token_buffer) >= block_size:
-                sample = token_buffer[:block_size]
-                del token_buffer[:block_size]
+                while len(token_buffer) >= block_size:
+                    sample = token_buffer[:block_size]
+                    del token_buffer[:block_size]
 
-                if absolute_block < self.skip_blocks:
+                    if absolute_block < self.skip_blocks:
+                        absolute_block += 1
+                        continue
+                    if self.max_blocks is not None and emitted >= self.max_blocks:
+                        return
+
                     absolute_block += 1
-                    continue
-                if self.max_blocks is not None and emitted >= self.max_blocks:
-                    return
-
-                absolute_block += 1
-                emitted += 1
-                values = torch.tensor(sample, dtype=torch.long)
-                yield {
-                    "input_ids": values[:-1],
-                    "labels": values[1:],
-                }
+                    emitted += 1
+                    values = torch.tensor(sample, dtype=torch.long)
+                    yield {
+                        "input_ids": values[:-1],
+                        "labels": values[1:],
+                    }
 
 
 class SFTDataset(Dataset[dict[str, torch.Tensor]]):
