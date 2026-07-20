@@ -10,7 +10,7 @@
   "human_review": {
     "sample_size_minimum": 32,
     "scope": "answer correctness, ambiguity, and domain assignment",
-    "status": "completed"
+    "status": "maintainer_review_required"
   },
   "schema_version": 1,
   "validation": {
