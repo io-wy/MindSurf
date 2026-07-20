@@ -168,6 +168,16 @@ def main() -> None:
         "size": args.output.stat().st_size,
         "rows": len(official) + len(targeted),
     }
+    expected_output = spec["files"]["train"]
+    expected_sha256 = str(expected_output["sha256"])
+    if expected_sha256 != "pending_materialization" and (
+        output_identity["sha256"] != expected_sha256
+        or output_identity["size"] != int(expected_output["size"])
+        or output_identity["rows"] != int(expected_output["rows"])
+    ):
+        raise ValueError(
+            f"replay output identity changed: expected {expected_output}, got {output_identity}"
+        )
     manifest = {
         "schema_version": 1,
         "dataset_id": spec["dataset_id"],

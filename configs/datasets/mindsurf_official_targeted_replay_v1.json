@@ -10,8 +10,8 @@
   "files": {
     "train": {
       "path": "data/processed/mindsurf_official_targeted_replay_v1/pretrain_train.jsonl",
-      "sha256": "pending_materialization",
-      "size": 0,
+      "sha256": "c5b2e57d791fd48ad56db8dc8dca29cc6f45287857c9c32a370c994d6f72d652",
+      "size": 428119850,
       "rows": 300000
     }
   },
