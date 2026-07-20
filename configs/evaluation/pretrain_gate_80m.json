@@ -5,7 +5,8 @@
     "strict_and_domain": "historical controlled 80M reference retained until a larger baseline panel is frozen",
     "mcq_accuracy_min": "business minimum above four-choice random performance",
     "mcq_wilson_lower_bound_min": "statistical lower bound must exceed the four-choice random baseline",
-    "repetition_count_max": "historical generation-degeneration ceiling"
+    "repetition_count_max": "historical generation-degeneration ceiling",
+    "mcq_instrument_limitation": "The 2026-07-20 maintainer review of pretrain_mcq_benchmark_v2 found every sampled label correct but ruled the suite inadmissible as evidence of general capability, long-context capability or reasoning: 32 long_context records reduce to 4 templates, two category names do not describe what they measure, and weak distractors systematically overestimate the model. The MCQ thresholds are kept unchanged and still block, but a passing MCQ result is a pipeline-regression signal, not a capability claim. See configs/evaluation/pretrain_mcq_benchmark_v2.review.json."
   },
   "strict_val_max": 2.42,
   "strict_test_max": 2.44,
