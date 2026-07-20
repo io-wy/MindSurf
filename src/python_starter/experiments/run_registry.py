@@ -11,8 +11,11 @@ from contextlib import contextmanager
 from pathlib import Path
 from typing import Any, cast
 
+from python_starter.infrastructure.gpu_capacity import _pid_alive
+
 TERMINAL_STATUSES = {"completed", "failed", "rejected"}
 VALID_STATUSES = {"queued", "running", "failed", "resumed", "completed", "rejected"}
+ACTIVE_STATUSES = {"queued", "running", "resumed"}
 
 
 class RunRegistry:
@@ -71,19 +74,37 @@ class RunRegistry:
         with self._locked():
             payload = self._read()
             previous = payload["runs"].get(run_id)
+            history: list[dict[str, Any]] = (
+                list(previous.get("history", [])) if isinstance(previous, dict) else []
+            )
             if previous and status == "queued":
                 previous_status = previous.get("status")
-                if previous_status == "completed" or (
-                    previous_status in {"queued", "running", "resumed"} and not allow_retry
-                ):
+                if previous_status == "completed":
                     raise ValueError(f"duplicate active or completed run: {run_id}")
+                if previous_status in ACTIVE_STATUSES and not allow_retry:
+                    # An active record whose process is gone was abandoned, not
+                    # duplicated. Blocking it would force allow_retry, which also
+                    # permits clobbering a genuinely live run.
+                    owner_pid = previous.get("pid")
+                    if isinstance(owner_pid, int) and _pid_alive(owner_pid):
+                        raise ValueError(f"duplicate active or completed run: {run_id}")
+                    history.append(
+                        {
+                            "status": "failed",
+                            "unix_time": time.time(),
+                            "pid": owner_pid,
+                            "detail": {
+                                "reason": "abandoned: owner process is no longer running",
+                                "previous_status": previous_status,
+                            },
+                        }
+                    )
             event = {
                 "status": status,
                 "unix_time": time.time(),
                 "pid": os.getpid(),
                 "detail": detail or {},
             }
-            history = list(previous.get("history", [])) if isinstance(previous, dict) else []
             history.append(event)
             record = {"run_id": run_id, **event, "history": history}
             payload["runs"][run_id] = record
