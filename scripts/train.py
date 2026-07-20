@@ -150,6 +150,8 @@ def main(cfg: DictConfig) -> None:
             else None
         )
 
+    train_loader_generator = torch.Generator()
+    train_loader_generator.manual_seed(int(seed))
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=cfg.training.batch_size,
@@ -157,9 +159,12 @@ def main(cfg: DictConfig) -> None:
         collate_fn=collate_fn,
         num_workers=0,
         pin_memory=torch.cuda.is_available(),
+        generator=train_loader_generator,
     )
     val_loader = None
     if val_dataset:
+        val_loader_generator = torch.Generator()
+        val_loader_generator.manual_seed(int(seed) + 1)
         val_loader = torch.utils.data.DataLoader(
             val_dataset,
             batch_size=cfg.training.batch_size,
@@ -167,6 +172,7 @@ def main(cfg: DictConfig) -> None:
             collate_fn=collate_fn,
             num_workers=0,
             pin_memory=torch.cuda.is_available(),
+            generator=val_loader_generator,
         )
 
     trainer_cfg = TrainerConfig(**_plain_mapping(cfg.training))
