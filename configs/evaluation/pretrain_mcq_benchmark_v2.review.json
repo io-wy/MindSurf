@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "reviewed_at": "2026-07-20",
+  "reviewer": "maintainer",
+  "benchmark": "configs/evaluation/pretrain_mcq_benchmark_v2.jsonl",
+  "benchmark_sha256": "e0d27b9ed9dad3409b8fe14245e989556836b578fe39082476a9f1d1d90a90b2",
+  "sample_record": "artifacts/evaluation/mcq_v2_review_sample_seed20260720.json",
+  "sample_seed": 20260720,
+  "sample_size": 32,
+  "scope": "answer correctness, ambiguity, and domain assignment",
+  "labels": {
+    "checked": 32,
+    "correct": 32,
+    "incorrect": [],
+    "conclusion": "every labelled answer in the sample is correct"
+  },
+  "findings": [
+    {
+      "kind": "substantive_ambiguity",
+      "severity": "high",
+      "item_ids": ["calibration_reasoning_oom"],
+      "detail": "The stem never states whether the tasks run concurrently. Summing peak memory across tasks is only required for concurrent execution; serial tasks do not need it. Fragmentation, framework caching and resident models are also unaddressed."
+    },
+    {
+      "kind": "template_duplication",
+      "severity": "high",
+      "item_ids": [
+        "long_context_recall_08",
+        "long_context_recall_16",
+        "long_context_recall_24"
+      ],
+      "detail": "The 32 long_context records reduce to 4 distinct templates, each copied 8 times with only the batch number changed. Sample-item mapping, question target, choices and answer position are identical inside a group, so each template carries 8x weight and the category accuracy is a 4-point measurement reported as 32.",
+      "library_effect": "at most 164 distinct item templates across the 192 records"
+    },
+    {
+      "kind": "category_misnamed",
+      "severity": "high",
+      "categories": ["long_context", "calibration_reasoning"],
+      "detail": "long_context supplies 30-50 characters of context and asks for one adjacent explicit fact, which is short-context retrieval, not long-context capability. calibration_reasoning tests project MLOps vocabulary against absurd distractors, not multi-step reasoning, conditional inference, causal judgement or conflict resolution.",
+      "suggested_names": {
+        "long_context": "short_context_retrieval",
+        "calibration_reasoning": "mlops_knowledge"
+      }
+    },
+    {
+      "kind": "category_too_broad",
+      "severity": "medium",
+      "categories": ["code", "math", "zh_fact"],
+      "detail": "code mixes Python, Docker, HTTP and databases. math is entirely integer multiplication, mostly two-digit by one-digit. zh_fact mixes language with computing, physics, metrology, astronomy and geography, so a score cannot be attributed to any one of them."
+    },
+    {
+      "kind": "weak_distractors",
+      "severity": "high",
+      "detail": "Distractors frequently sit at a different semantic level from the key, collapsing four choices toward one obvious answer. A model can score by recognising the only on-topic token without knowing the fact, so results systematically overestimate knowledge, reasoning, language understanding, calibration, and any measured fine-tuning gain.",
+      "examples": ["code_dict_key", "english_ocean", "zh_fact_meter", "calibration_reasoning_parent"]
+    },
+    {
+      "kind": "imprecise_wording",
+      "severity": "low",
+      "item_ids": [
+        "calibration_reasoning_hash",
+        "calibration_reasoning_repetition",
+        "code_dict_key",
+        "code_http_get",
+        "code_transaction",
+        "english_ocean",
+        "zh_fact_ice_state",
+        "zh_fact_yangtze"
+      ],
+      "detail": "Answers are correct but stems or options could be tightened: a content-hash change means the hashed bytes changed rather than semantic identity; repetition is a degeneration signal but has other causes; GET retrieves a resource representation; atomicity means no partial commit on failure; 'Amazon city' is unnatural; ice is solid at ordinary temperature and pressure."
+    },
+    {
+      "kind": "answer_position",
+      "severity": "medium",
+      "detail": "Sample positions are balanced at A 8, B 9, C 8, D 7, and the per-category histogram is 8/8/8/8. But the duplicated long_context templates hold answer position fixed inside each group, so a model can learn template-to-position mapping while the aggregate histogram still looks balanced."
+    }
+  ],
+  "fitness": {
+    "formal_capability_evidence": false,
+    "long_context_claims": false,
+    "reasoning_claims": false,
+    "smoke_and_regression": true,
+    "conclusion": "Usable for training-pipeline checks, basic regression and smoke testing. Not admissible as evidence of general capability, long-context capability or reasoning."
+  },
+  "required_for_next_benchmark_version": [
+    "keep one item per duplicated long_context template, or rebuild with randomised entities, fact order, question target, option order and answer position",
+    "rename long_context to short_context_retrieval and calibration_reasoning to mlops_knowledge, or build genuine long-context items spanning thousands of tokens with distractors, positional variation and conflict resolution",
+    "replace distractors with ones drawn from real error modes, for example dropped carries, digit errors, multiplication read as addition",
+    "split the overbroad categories, or move to independent language, domain, skill and difficulty labels instead of one mixed category axis",
+    "rewrite calibration_reasoning_oom to state whether the tasks run concurrently"
+  ]
+}

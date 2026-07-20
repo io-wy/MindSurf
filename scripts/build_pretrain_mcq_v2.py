@@ -871,6 +871,36 @@ def contamination_audit(items: list[dict[str, Any]], training_paths: list[Path])
     }
 
 
+def _human_review(record_path: Path | None, benchmark_path: Path) -> dict[str, Any]:
+    """Summarise the maintainer review, or record plainly that none exists."""
+    base = {
+        "sample_size_minimum": 32,
+        "scope": "answer correctness, ambiguity, and domain assignment",
+    }
+    if record_path is None:
+        return {**base, "status": "maintainer_review_required"}
+
+    review = json.loads(record_path.read_text(encoding="utf-8"))
+    benchmark_digest = sha256_file(benchmark_path)
+    reviewed_digest = str(review.get("benchmark_sha256", ""))
+    return {
+        **base,
+        "status": "completed",
+        "record": str(record_path),
+        "record_sha256": sha256_file(record_path),
+        "reviewer": review.get("reviewer"),
+        "reviewed_at": review.get("reviewed_at"),
+        "sample_seed": review.get("sample_seed"),
+        "sample_size": review.get("sample_size"),
+        # A review of a different build tells you nothing about this one.
+        "reviewed_this_benchmark": reviewed_digest == benchmark_digest,
+        "labels_correct": review.get("labels", {}).get("correct"),
+        "labels_checked": review.get("labels", {}).get("checked"),
+        "finding_kinds": [str(item.get("kind")) for item in review.get("findings", [])],
+        "fitness": review.get("fitness"),
+    }
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -885,9 +915,11 @@ def main() -> None:
     )
     parser.add_argument("--training-view", type=Path, action="append", default=[])
     parser.add_argument(
-        "--human-reviewed",
-        action="store_true",
-        help="Record that answer correctness, ambiguity, and category assignment were reviewed",
+        "--review-record",
+        type=Path,
+        help="Maintainer review document; its digest and verdict are embedded in the audit. "
+        "Without it the audit records that no review has happened. A boolean flag used to "
+        "set this, which let the claim be made without anyone reviewing anything.",
     )
     args = parser.parse_args()
 
@@ -902,11 +934,7 @@ def main() -> None:
         "benchmark_sha256": sha256_file(args.output),
         "validation": validation,
         "contamination": contamination_audit(items, args.training_view),
-        "human_review": {
-            "status": "completed" if args.human_reviewed else "maintainer_review_required",
-            "sample_size_minimum": 32,
-            "scope": "answer correctness, ambiguity, and domain assignment",
-        },
+        "human_review": _human_review(args.review_record, args.output),
     }
     write_json_atomic(args.audit_output, audit)
     print(json.dumps(audit, ensure_ascii=False, sort_keys=True))
