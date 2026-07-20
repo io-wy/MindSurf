@@ -37,12 +37,23 @@ def main() -> None:
         type=Path,
         default=ROOT / "configs/datasets/index.json",
     )
+    parser.add_argument(
+        "--run-suffix",
+        default="",
+        help="Distinguish an arm from the frozen baseline run of the same dataset",
+    )
+    parser.add_argument(
+        "--override",
+        action="append",
+        default=[],
+        help="Extra Hydra override appended to the training command; repeatable",
+    )
     args = parser.parse_args()
 
     registry = DatasetRegistry(ROOT, args.dataset_index)
     selected = registry.resolve(args.dataset)
     registry.validate_identity(selected)
-    identity = selected.identity
+    identity = f"{selected.identity}{args.run_suffix}"
     checkpoint_dir = ROOT / f"models/checkpoints/{identity}_80m"
     checkpoint = checkpoint_dir / "final_model.pt"
     training_summary = checkpoint_dir / "training_summary.json"
@@ -90,6 +101,7 @@ def main() -> None:
         )
     if args.resume:
         train_command.append(f"resume_from={args.resume.resolve()}")
+    train_command.extend(args.override)
     _run(
         [
             sys.executable,
