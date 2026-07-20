@@ -65,6 +65,11 @@ def main() -> None:
     parser.add_argument("--device", default="cuda:0")
     parser.add_argument("--training-memory-mib", type=int, default=11_000)
     parser.add_argument("--evaluation-memory-mib", type=int, default=4096)
+    parser.add_argument(
+        "--skip-training",
+        action="store_true",
+        help="Reuse the completed pilot checkpoint and continue evaluation.",
+    )
     args = parser.parse_args()
 
     spec = json.loads(args.spec.read_text(encoding="utf-8"))
@@ -79,57 +84,61 @@ def main() -> None:
     for record in evaluation_sets.values():
         registry.validate_identity(record)
 
-    _run(
-        [
-            sys.executable,
-            "scripts/preflight_training.py",
-            "--audit",
-            str(continuation.audit),
-            "--spec",
-            str(continuation.spec),
-            "--training-view-manifest",
-            str(continuation.training_view_manifest),
-            "--train-path",
-            str(continuation.train),
-            "--require-cuda",
-            "--required-gpu-memory-mib",
-            str(args.training_memory_mib),
-            "--output-dir",
-            str(args.output_dir),
-        ]
-    )
-    train_command = [
-        sys.executable,
-        "scripts/train.py",
-        f"data={continuation.hydra_config}",
-        f"seed={pilot['seed']}",
-        f"init_from={args.parent.resolve()}",
-        "run_name=targeted-stem-pilot-seed42",
-        f"training.output_dir={args.output_dir}",
-        f"training.device={args.device}",
-        f"training.max_steps={pilot['steps']}",
-        f"training.learning_rate={pilot['learning_rate']}",
-        f"training.warmup_steps={pilot['warmup_steps']}",
-        "training.stable_ratio=0.8",
-        "training.save_every=250",
-        "training.eval_every=500",
-        "training.logging_every=10",
-    ]
-    _run(
-        [
-            sys.executable,
-            "scripts/run_with_gpu_lease.py",
-            "--run-id",
-            "targeted-stem-pilot-seed42",
-            "--required-memory-mib",
-            str(args.training_memory_mib),
-            "--",
-            *train_command,
-        ]
-    )
-
     args.artifact_dir.mkdir(parents=True, exist_ok=True)
     candidate_checkpoint = args.output_dir / "final_model.pt"
+    if args.skip_training:
+        if not candidate_checkpoint.is_file():
+            raise FileNotFoundError(candidate_checkpoint)
+    else:
+        _run(
+            [
+                sys.executable,
+                "scripts/preflight_training.py",
+                "--audit",
+                str(continuation.audit),
+                "--spec",
+                str(continuation.spec),
+                "--training-view-manifest",
+                str(continuation.training_view_manifest),
+                "--train-path",
+                str(continuation.train),
+                "--require-cuda",
+                "--required-gpu-memory-mib",
+                str(args.training_memory_mib),
+                "--output-dir",
+                str(args.output_dir),
+            ]
+        )
+        train_command = [
+            sys.executable,
+            "scripts/train.py",
+            f"data={continuation.hydra_config}",
+            f"seed={pilot['seed']}",
+            f"init_from={args.parent.resolve()}",
+            "run_name=targeted-stem-pilot-seed42",
+            f"training.output_dir={args.output_dir}",
+            f"training.device={args.device}",
+            f"training.max_steps={pilot['steps']}",
+            f"training.learning_rate={pilot['learning_rate']}",
+            f"training.warmup_steps={pilot['warmup_steps']}",
+            "training.stable_ratio=0.8",
+            "training.save_every=250",
+            "training.eval_every=500",
+            "training.logging_every=10",
+        ]
+        _run(
+            [
+                sys.executable,
+                "scripts/run_with_gpu_lease.py",
+                "--run-id",
+                "targeted-stem-pilot-seed42",
+                "--required-memory-mib",
+                str(args.training_memory_mib),
+                "--",
+                *train_command,
+            ]
+        )
+
     results: dict[str, dict[str, dict[str, Any]]] = {"parent": {}, "candidate": {}}
     for candidate_name, checkpoint in (
         ("parent", args.parent),
