@@ -7,6 +7,7 @@ defaults:
 experiment_name: mindsurf-team-pretrain
 run_name: minimind-official-v1-80m-wsd
 resume_from: null
+init_from: null
 seed: 20260511
 dataset_type: pretrain
 expected_parameters: 89864448
