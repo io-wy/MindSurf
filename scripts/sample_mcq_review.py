@@ -93,7 +93,7 @@ def main() -> None:
     parser.add_argument("--record", type=Path, required=True)
     args = parser.parse_args()
 
-    items = list(iter_jsonl(args.benchmark))
+    items = [row for _, row in iter_jsonl(args.benchmark)]
     if args.count > len(items):
         raise SystemExit(f"asked for {args.count} items, benchmark holds {len(items)}")
 
