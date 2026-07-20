@@ -3,9 +3,9 @@
   "contamination": {
     "collisions": [],
     "method": "exact SHA-256 over NFKC whitespace-normalized prompt and training text",
-    "passed": false,
-    "status": "not_run",
-    "training_rows_scanned": 0
+    "passed": true,
+    "status": "passed",
+    "training_rows_scanned": 3443826
   },
   "human_review": {
     "sample_size_minimum": 32,

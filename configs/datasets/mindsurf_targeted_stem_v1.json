@@ -2,10 +2,19 @@
   "schema_version": 1,
   "dataset_id": "mindsurf/targeted_stem_v1",
   "provider": "derived-private",
+  "repository_url": "https://www.modelscope.cn/datasets/wyywnab/mindsurf_pretrain_dataset.git",
   "revision": "team-ab97cc8-targeted-stem-20260720",
   "license": "other",
   "license_status": "inherits_team_source_restrictions_and_is_not_public_release_ready",
   "selection_seed": 20260720,
+  "files": {
+    "train": {
+      "path": "data/processed/mindsurf_targeted_stem_v1/pretrain_train.jsonl",
+      "sha256": "3cf71c6a938e20493eac930220cff053a64770123ba89a9fcaa1a91680ec3fed",
+      "size": 189737777,
+      "rows": 60000
+    }
+  },
   "source": {
     "dataset": "mindsurf_team_v1",
     "path": "data/processed/mindsurf_team_v1/pretrain_train_nfkc_dedup.jsonl",
