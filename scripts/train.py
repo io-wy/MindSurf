@@ -137,6 +137,7 @@ def main(cfg: DictConfig) -> None:
             text_key=str(cfg.data.get("text_field", "text")),
             shuffle_buffer=int(cfg.data.get("shuffle_buffer", 0)),
             seed=int(seed),
+            epochs=int(cfg.data.get("epochs", 1)),
         )
         val_path = Path(to_absolute_path(str(cfg.data.val_path)))
         val_dataset = (
