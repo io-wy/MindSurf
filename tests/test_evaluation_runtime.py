@@ -166,6 +166,19 @@ def test_source_tree_identity_changes_with_content(tmp_path: Path) -> None:
     assert source_tree_sha256(tmp_path, [source]) != first
 
 
+def test_source_tree_identity_supports_external_assets(tmp_path: Path) -> None:
+    repository = tmp_path / "repository"
+    tokenizer = tmp_path / "assets" / "tokenizer"
+    repository.mkdir()
+    tokenizer.mkdir(parents=True)
+    (tokenizer / "tokenizer.json").write_text("{}\n", encoding="utf-8")
+
+    first = source_tree_sha256(repository, [tokenizer])
+    (tokenizer / "tokenizer.json").write_text('{"version": 1}\n', encoding="utf-8")
+
+    assert source_tree_sha256(repository, [tokenizer]) != first
+
+
 def test_mcq_statistics_are_paired_and_deterministic() -> None:
     baseline = [
         {"id": "a", "correct": True},

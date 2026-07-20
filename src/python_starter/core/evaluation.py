@@ -460,15 +460,23 @@ def evaluate_fixed_prompts(
 def source_tree_sha256(root: Path, paths: Iterable[Path]) -> str:
     """Hash relevant source/config files with their repository-relative names."""
     digest = hashlib.sha256()
-    files: list[Path] = []
-    for path in paths:
-        files.extend(
-            item
-            for item in (path.rglob("*") if path.is_dir() else [path])
-            if item.is_file() and "__pycache__" not in item.parts
-        )
-    for path in sorted(files):
-        digest.update(path.relative_to(root).as_posix().encode())
+    files: list[tuple[str, Path]] = []
+    for input_path in paths:
+        for path in input_path.rglob("*") if input_path.is_dir() else [input_path]:
+            if not path.is_file() or "__pycache__" in path.parts:
+                continue
+            try:
+                label = path.relative_to(root).as_posix()
+            except ValueError:
+                relative = (
+                    path.relative_to(input_path)
+                    if input_path.is_dir()
+                    else Path(path.name)
+                )
+                label = (Path(input_path.name) / relative).as_posix()
+            files.append((label, path))
+    for label, path in sorted(files):
+        digest.update(label.encode())
         digest.update(b"\0")
         with path.open("rb") as handle:
             while chunk := handle.read(1024 * 1024):
