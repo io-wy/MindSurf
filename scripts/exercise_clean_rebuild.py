@@ -92,7 +92,9 @@ def main() -> None:
         ok = _step(
             steps,
             "uv_sync_frozen",
-            _run([str(args.uv), "sync", "--frozen"], cwd=checkout),
+            # --extra dev, not a bare sync: the plain lock install has no pytest,
+            # so a rebuilt environment could not verify itself.
+            _run([str(args.uv), "sync", "--frozen", "--extra", "dev"], cwd=checkout),
         )
 
     restored: list[dict[str, Any]] = []
