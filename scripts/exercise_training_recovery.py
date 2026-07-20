@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import argparse
-import hashlib
-import io
 import json
 import subprocess
 import sys
@@ -12,6 +10,7 @@ import time
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import torch
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -20,10 +19,21 @@ sys.path.insert(0, str(ROOT / "src"))
 from python_starter.core.data_contract import sha256_file, write_json_atomic  # noqa: E402
 
 
-def _torch_hash(value: object) -> str:
-    buffer = io.BytesIO()
-    torch.save(value, buffer)
-    return hashlib.sha256(buffer.getvalue()).hexdigest()
+def _state_equal(left: object, right: object) -> bool:
+    if isinstance(left, torch.Tensor) and isinstance(right, torch.Tensor):
+        return torch.equal(left, right)
+    if isinstance(left, np.ndarray) and isinstance(right, np.ndarray):
+        return bool(np.array_equal(left, right))
+    if isinstance(left, dict) and isinstance(right, dict):
+        return left.keys() == right.keys() and all(
+            _state_equal(left[key], right[key]) for key in left
+        )
+    if isinstance(left, (list, tuple)) and isinstance(right, (list, tuple)):
+        return len(left) == len(right) and all(
+            _state_equal(left_value, right_value)
+            for left_value, right_value in zip(left, right, strict=True)
+        )
+    return bool(left == right)
 
 
 def _train_command(
@@ -159,15 +169,17 @@ def main() -> None:
             interruption_progress["global_step"] == args.interrupt_step
         ),
         "optimizer_state_exact": (
-            _torch_hash(baseline["optimizer_state_dict"])
-            == _torch_hash(recovered["optimizer_state_dict"])
+            _state_equal(
+                baseline["optimizer_state_dict"], recovered["optimizer_state_dict"]
+            )
         ),
         "scheduler_state_exact": (
-            _torch_hash(baseline["scheduler_state_dict"])
-            == _torch_hash(recovered["scheduler_state_dict"])
+            _state_equal(
+                baseline["scheduler_state_dict"], recovered["scheduler_state_dict"]
+            )
         ),
         "rng_state_exact": (
-            _torch_hash(baseline["rng_state"]) == _torch_hash(recovered["rng_state"])
+            _state_equal(baseline["rng_state"], recovered["rng_state"])
         ),
         "model_state_exact": model_exact,
         **{f"progress_{key}_continuous": value for key, value in progress_continuity.items()},
