@@ -27,6 +27,18 @@ from python_starter.infrastructure.training_monitor import (  # noqa: E402
 )
 
 
+def _run_finished(path: Path) -> bool:
+    """True once the tracker has written its finish row."""
+    if not path.is_file():
+        return False
+    for line in reversed(path.read_text(encoding="utf-8").splitlines()):
+        line = line.strip()
+        if not line:
+            continue
+        return bool(json.loads(line).get("type") == "finish")
+    return False
+
+
 def _gpu_total_bytes(index: int) -> int | None:
     try:
         completed = subprocess.run(
@@ -82,6 +94,7 @@ def main() -> None:
     while True:
         polls += 1
         samples = parse_metrics(args.metrics) if args.metrics.is_file() else []
+        finished = _run_finished(args.metrics)
         now = time.monotonic()
         if samples and samples[-1].step != last_step:
             last_step = samples[-1].step
@@ -90,7 +103,7 @@ def main() -> None:
 
         state = MonitorState(
             samples=samples,
-            seconds_since_last_step=now - last_step_at,
+            seconds_since_last_step=0.0 if finished else now - last_step_at,
             free_bytes=shutil.disk_usage(args.output.parent if args.output.parent.exists() else ROOT).free,
             gpu_total_bytes=gpu_total_bytes,
         )
@@ -115,10 +128,11 @@ def main() -> None:
                 "free_bytes": state.free_bytes,
                 "alerts": fired,
                 "clean": not fired,
+                "run_finished": finished,
             },
         )
 
-        if args.max_polls and polls >= args.max_polls:
+        if finished or (args.max_polls and polls >= args.max_polls):
             break
         time.sleep(args.poll_seconds)
 
