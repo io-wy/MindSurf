@@ -71,3 +71,23 @@ def test_verify_file_rejects_wrong_identity(tmp_path: Path) -> None:
     )
     with pytest.raises(ValueError, match="SHA-256 mismatch"):
         verify_file(path, wrong)
+
+
+def test_training_view_text_is_not_normalised_despite_the_digest_being() -> None:
+    """The stored corpus is verbatim; only the matching digest is normalised.
+
+    Named explicitly because the manifest key, the gate name and the output
+    filename all say "nfkc", and a reader could reasonably conclude the text
+    itself was rewritten. It was not, and a downstream consumer that assumes
+    otherwise would be wrong about what the model was trained on.
+    """
+    from python_starter.core.data_contract import normalized_text, text_digest
+
+    # Full-width digits and a non-breaking space differ from their ASCII forms
+    # as bytes, and NFKC folds them together.
+    wide = "ＡＢ １２"
+    plain = "AB 12"
+
+    assert text_digest(wide) == text_digest(plain)
+    assert normalized_text(wide) == plain
+    assert wide != plain
