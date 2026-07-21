@@ -223,7 +223,7 @@ def evaluate_alerts(state: MonitorState, thresholds: AlertThresholds) -> list[di
     if (
         window > 1
         and len(norms) == window
-        and all(later > earlier for earlier, later in zip(norms, norms[1:], strict=True))
+        and all(later > earlier for earlier, later in zip(norms[:-1], norms[1:], strict=True))
     ):
         alerts.append(
                 {
