@@ -8,6 +8,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import torch
 from torch.utils.data import Dataset, IterableDataset, get_worker_info
 from transformers import PreTrainedTokenizerBase
@@ -280,3 +281,73 @@ def collate_fn(batch: list[dict[str, torch.Tensor]]) -> dict[str, torch.Tensor]:
         labels[i, :seq_len] = item["labels"]
 
     return {"input_ids": input_ids, "labels": labels}
+
+
+class PackedBlockDataset(IterableDataset[dict[str, torch.Tensor]]):
+    """Stream pre-tokenised blocks from a memory-mapped uint16 array.
+
+    Same contract as :class:`JsonlPackedDataset` — absolute block cursor, one
+    worker, deterministic order — but the tokenisation already happened, so the
+    training process slices instead of parsing JSON and encoding text. That
+    removes the saturated core and the data wait, and makes a second epoch cost
+    nothing beyond re-reading the array.
+    """
+
+    def __init__(
+        self,
+        data_path: str | Path,
+        *,
+        max_length: int,
+        skip_blocks: int = 0,
+        max_blocks: int | None = None,
+        epochs: int = 1,
+    ) -> None:
+        super().__init__()
+        self.data_path = Path(data_path)
+        self.max_length = max_length
+        self.skip_blocks = skip_blocks
+        self.max_blocks = max_blocks
+        self.epochs = epochs
+
+        if not self.data_path.is_file():
+            raise FileNotFoundError(self.data_path)
+        if max_length <= 0:
+            raise ValueError("max_length must be positive")
+        if skip_blocks < 0:
+            raise ValueError("skip_blocks must be non-negative")
+        if epochs < 1:
+            raise ValueError("epochs must be at least 1")
+
+        self.block_size = max_length + 1
+        item_size = np.dtype(np.uint16).itemsize
+        size_bytes = self.data_path.stat().st_size
+        if size_bytes % (self.block_size * item_size):
+            raise ValueError(
+                f"{self.data_path} is not a whole number of {self.block_size}-token blocks"
+            )
+        self.blocks_per_epoch = size_bytes // (self.block_size * item_size)
+
+    def set_skip_blocks(self, skip_blocks: int) -> None:
+        """Move the absolute resume cursor before constructing an iterator."""
+        if skip_blocks < 0:
+            raise ValueError("skip_blocks must be non-negative")
+        self.skip_blocks = skip_blocks
+
+    def __iter__(self) -> Iterator[dict[str, torch.Tensor]]:
+        worker = get_worker_info()
+        if worker is not None:
+            raise RuntimeError(
+                "PackedBlockDataset requires DataLoader(num_workers=0) "
+                "to preserve an exact resume cursor"
+            )
+
+        array = np.memmap(self.data_path, dtype=np.uint16, mode="r")
+        array = array.reshape(-1, self.block_size)
+        total = self.blocks_per_epoch * self.epochs
+        for emitted, absolute in enumerate(range(self.skip_blocks, total)):
+            if self.max_blocks is not None and emitted >= self.max_blocks:
+                return
+            # Wrapping by epoch keeps the cursor absolute across epoch
+            # boundaries, exactly as the JSONL packer does.
+            values = torch.from_numpy(array[absolute % self.blocks_per_epoch].astype(np.int64))
+            yield {"input_ids": values[:-1], "labels": values[1:]}
