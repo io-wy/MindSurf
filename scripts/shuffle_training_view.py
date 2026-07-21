@@ -36,7 +36,8 @@ def main() -> None:
     parser.add_argument(
         "--source-manifest",
         type=Path,
-        help="Training-view manifest of the input, carried through for lineage",
+        required=True,
+        help="Training-view manifest of the input; identity and safety gates are inherited",
     )
     args = parser.parse_args()
 
@@ -69,38 +70,33 @@ def main() -> None:
     finally:
         temporary.unlink(missing_ok=True)
 
-    source_manifest = (
-        json.loads(args.source_manifest.read_text(encoding="utf-8"))
-        if args.source_manifest and args.source_manifest.is_file()
-        else None
-    )
-    write_json_atomic(
-        args.manifest,
-        {
-            "schema_version": 1,
-            "recorded_at": datetime.now(UTC).isoformat(),
-            "derivation": "global row permutation",
-            "shuffle_seed": args.seed,
-            "input": {
-                "path": args.input.as_posix(),
-                "rows": len(offsets),
-                "sha256": (source_manifest or {}).get("output", {}).get("sha256"),
-            },
-            "output": {
-                "path": args.output.as_posix(),
-                "rows": len(offsets),
-                "sha256": digest.hexdigest(),
-                "size": args.output.stat().st_size,
-            },
-            "source_training_view": (
-                args.source_manifest.as_posix() if args.source_manifest else None
-            ),
-            "note": (
-                "Row content is untouched; only order changes. Deduplication and "
-                "holdout removal are inherited from the source view."
-            ),
-        },
-    )
+    # A shuffled view is still a training view and must satisfy the same
+    # contract, so the identity and safety gates are inherited rather than
+    # re-asserted: reordering rows cannot change which rows are present, so the
+    # source's dedup and holdout guarantees carry over unchanged.
+    source_manifest = json.loads(args.source_manifest.read_text(encoding="utf-8"))
+    if source_manifest.get("output", {}).get("rows") != len(offsets):
+        raise SystemExit(
+            f"row count disagrees with the source manifest: "
+            f"{source_manifest.get('output', {}).get('rows')} vs {len(offsets)}"
+        )
+
+    manifest = dict(source_manifest)
+    manifest["output"] = {
+        "path": args.output.as_posix(),
+        "sha256": digest.hexdigest(),
+        "size": args.output.stat().st_size,
+        "rows": len(offsets),
+    }
+    manifest["derivation"] = {
+        "kind": "global row permutation",
+        "shuffle_seed": args.seed,
+        "recorded_at": datetime.now(UTC).isoformat(),
+        "source_training_view": args.source_manifest.as_posix(),
+        "source_output_sha256": source_manifest.get("output", {}).get("sha256"),
+        "note": "Row content is untouched; only order changes.",
+    }
+    write_json_atomic(args.manifest, manifest)
     print(json.dumps({"rows": len(offsets), "sha256": digest.hexdigest()}))
 
 
