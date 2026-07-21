@@ -135,6 +135,8 @@ class LocalCandidateRegistry:
         name: str,
         checkpoint_path: str | Path,
         evaluation_path: str | Path,
+        training_summary_path: str | Path | None = None,
+        preflight_path: str | Path | None = None,
     ) -> dict[str, Any]:
         """Register an internally passing candidate with immutable identities."""
         checkpoint = Path(checkpoint_path).resolve(strict=True)
@@ -155,6 +157,22 @@ class LocalCandidateRegistry:
             "public_release_eligible": gate.get("public_release_passed") is True,
             "registered_at": datetime.now(UTC).isoformat(),
         }
+        # Data identity already reaches the record through the evaluation
+        # provenance. The training summary carries the run's seed and consumed
+        # tokens, and the preflight record carries the source commit, which is
+        # otherwise only ever printed to a log.
+        for key, value in (
+            ("training_summary", training_summary_path),
+            ("preflight", preflight_path),
+        ):
+            if value is None:
+                continue
+            resolved = Path(value).resolve(strict=True)
+            record[f"{key}_path"] = str(resolved)
+            record[f"{key}_sha256"] = sha256_file(resolved)
+            if key == "preflight":
+                source = json.loads(resolved.read_text(encoding="utf-8")).get("source", {})
+                record["source_git_head"] = source.get("git_head")
         if any(
             item.get("checkpoint_sha256") == record["checkpoint_sha256"]
             for item in registry["models"]

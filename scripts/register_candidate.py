@@ -17,6 +17,12 @@ def main() -> None:
     parser.add_argument("--name", required=True)
     parser.add_argument("--checkpoint", required=True, type=Path)
     parser.add_argument("--evaluation", required=True, type=Path)
+    parser.add_argument("--training-summary", type=Path)
+    parser.add_argument(
+        "--preflight",
+        type=Path,
+        help="Preflight record; binds the source commit to the candidate",
+    )
     parser.add_argument(
         "--registry",
         type=Path,
@@ -27,6 +33,8 @@ def main() -> None:
         name=args.name,
         checkpoint_path=args.checkpoint,
         evaluation_path=args.evaluation,
+        training_summary_path=args.training_summary,
+        preflight_path=args.preflight,
     )
     print(json.dumps(record, ensure_ascii=False, sort_keys=True))
 

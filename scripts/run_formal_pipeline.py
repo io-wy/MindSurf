@@ -175,6 +175,10 @@ def main() -> None:
                 str(checkpoint),
                 "--evaluation",
                 str(evaluation),
+                "--training-summary",
+                str(training_summary),
+                "--preflight",
+                str(checkpoint_dir / "preflight.json"),
             ]
         )
         registered = True

@@ -15,6 +15,7 @@ from python_starter.core.data_contract import (
     load_dataset_spec,
     sha256_file,
     verify_training_view_manifest,
+    write_json_atomic,
 )
 from python_starter.infrastructure.gpu_capacity import capacity_decision, query_gpu_snapshot
 
@@ -56,6 +57,11 @@ def main() -> None:
     parser.add_argument("--required-gpu-memory-mib", type=int, default=11_000)
     parser.add_argument("--gpu-safety-margin-mib", type=int, default=1536)
     parser.add_argument("--require-branch")
+    parser.add_argument(
+        "--report",
+        type=Path,
+        help="Where to persist the preflight record; defaults to preflight.json in --output-dir",
+    )
     parser.add_argument(
         "--min-free-bytes",
         type=int,
@@ -141,6 +147,10 @@ def main() -> None:
         "source": {"git_head": git_head, "git_branch": git_branch},
         "gpu": gpu,
     }
+    # Persist beside the checkpoint: the source commit is the only record of
+    # which code produced the run, and a log line does not survive as evidence.
+    report_path = args.report or args.output_dir / "preflight.json"
+    write_json_atomic(report_path, result)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 
 
