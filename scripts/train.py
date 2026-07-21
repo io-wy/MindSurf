@@ -22,7 +22,12 @@ from torch.utils.data import Dataset, IterableDataset
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
 from python_starter.core.data_contract import sha256_file, verify_training_view_manifest
-from python_starter.core.dataset import JsonlPackedDataset, SFTDataset, collate_fn
+from python_starter.core.dataset import (
+    JsonlPackedDataset,
+    PackedBlockDataset,
+    SFTDataset,
+    collate_fn,
+)
 from python_starter.core.model import ModelConfig, TransformerLM
 from python_starter.core.tokenizer import load_tokenizer
 from python_starter.core.trainer import Trainer, TrainerConfig
@@ -130,15 +135,45 @@ def main(cfg: DictConfig) -> None:
             source_sha256=str(audit["splits"]["train"]["sha256"]),
         )
         resolved_config["training_view"] = training_view
-        train_dataset = JsonlPackedDataset(
-            train_path,
-            tokenizer,
-            max_length=cfg.data.max_length,
-            text_key=str(cfg.data.get("text_field", "text")),
-            shuffle_buffer=int(cfg.data.get("shuffle_buffer", 0)),
-            seed=int(seed),
-            epochs=int(cfg.data.get("epochs", 1)),
-        )
+        pretokenized = cfg.data.get("pretokenized_path")
+        if pretokenized:
+            # Pre-tokenised blocks are byte-for-byte what the inline packer
+            # would have produced, so the block cursor keeps its meaning and
+            # exact resume is unaffected. shuffle_buffer is refused rather than
+            # ignored: the blocks are fixed at build time, so accepting the
+            # setting would silently drop a requested randomisation.
+            if int(cfg.data.get("shuffle_buffer", 0)) > 1:
+                raise ValueError(
+                    "shuffle_buffer cannot apply to a pre-tokenised view; "
+                    "shuffle the source view before pre-tokenising"
+                )
+            pretokenized_path = Path(to_absolute_path(str(pretokenized)))
+            manifest = json.loads(
+                Path(to_absolute_path(str(cfg.data.pretokenized_manifest))).read_text(
+                    encoding="utf-8"
+                )
+            )
+            declared = manifest.get("output", {})
+            if sha256_file(pretokenized_path) != declared.get("sha256"):
+                raise ValueError(
+                    f"pre-tokenised block array does not match its manifest: {pretokenized_path}"
+                )
+            resolved_config["pretokenized"] = manifest.get("pretokenized")
+            train_dataset = PackedBlockDataset(
+                pretokenized_path,
+                max_length=cfg.data.max_length,
+                epochs=int(cfg.data.get("epochs", 1)),
+            )
+        else:
+            train_dataset = JsonlPackedDataset(
+                train_path,
+                tokenizer,
+                max_length=cfg.data.max_length,
+                text_key=str(cfg.data.get("text_field", "text")),
+                shuffle_buffer=int(cfg.data.get("shuffle_buffer", 0)),
+                seed=int(seed),
+                epochs=int(cfg.data.get("epochs", 1)),
+            )
         val_path = Path(to_absolute_path(str(cfg.data.val_path)))
         val_dataset = (
             JsonlPackedDataset(
