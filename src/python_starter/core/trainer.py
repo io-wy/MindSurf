@@ -75,6 +75,11 @@ class TrainerConfig:
     batch_size: int = 4
     accumulation_steps: int = 1
     learning_rate: float = 5e-4
+    # LLM pretraining runs use a shorter second-moment horizon than the PyTorch
+    # default 0.999, whose ~1000-step half-life adapts too slowly over a run of
+    # this length and recovers sluggishly after a loss spike.
+    beta1: float = 0.9
+    beta2: float = 0.95
     weight_decay: float = 0.01
     max_grad_norm: float = 1.0
     warmup_steps: int = 100
@@ -83,7 +88,9 @@ class TrainerConfig:
     eval_every: int = 500
     eval_batches: int = 50
     save_every: int = 1_000
-    checkpoint_keep_last: int = 2
+    # Two leaves a single fallback if the newest checkpoint is corrupt or the
+    # last steps diverged; three is the low end of the usual range.
+    checkpoint_keep_last: int = 3
     logging_every: int = 10
     device: str = "auto"
     dtype: str = "float32"
@@ -188,6 +195,7 @@ class Trainer:
                 {"params": no_decay_params, "weight_decay": 0.0},
             ],
             lr=self.config.learning_rate,
+            betas=(self.config.beta1, self.config.beta2),
         )
 
     def _model_for_state(self) -> TransformerLM:

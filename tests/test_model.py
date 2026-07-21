@@ -91,3 +91,30 @@ def test_grouped_query_sampling_and_config_validation() -> None:
         TransformerLM(ModelConfig(n_embed=30, n_head=4))
     with pytest.raises(ValueError, match="n_head"):
         TransformerLM(ModelConfig(n_embed=32, n_head=4, n_kv_head=3))
+
+
+def test_rms_norm_eps_is_validated() -> None:
+    from python_starter.core.model import ModelConfig
+
+    for bad in (0.0, -1e-6, 1e-4, 1e-3):
+        with pytest.raises(ValueError, match="rms_norm_eps"):
+            ModelConfig(vocab_size=64, n_embed=16, n_layer=1, n_head=2, rms_norm_eps=bad)
+
+    assert ModelConfig(
+        vocab_size=64, n_embed=16, n_layer=1, n_head=2, rms_norm_eps=1e-6
+    ).rms_norm_eps == 1e-6
+
+
+def test_rms_norm_reduces_in_float32_under_half_precision() -> None:
+    from python_starter.core.model import RMSNorm
+
+    norm = RMSNorm(8, eps=1e-6)
+    half = torch.full((2, 8), 1e-3, dtype=torch.float16)
+
+    out = norm(half)
+
+    # A fp16 reduction of 1e-3 squared underflows toward zero and the eps is
+    # lost; upcasting keeps the result finite and near unit scale.
+    assert out.dtype == torch.float16
+    assert torch.isfinite(out).all()
+    assert float(out.abs().mean()) > 0.5

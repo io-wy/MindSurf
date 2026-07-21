@@ -11,7 +11,7 @@ min_lr_ratio: 0.1
 eval_every: 1000
 eval_batches: 250
 save_every: 500
-checkpoint_keep_last: 2
+checkpoint_keep_last: 3
 logging_every: 10
 device: auto
 dtype: bfloat16

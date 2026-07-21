@@ -28,8 +28,11 @@ class RMSNorm(nn.Module):
         self.weight = nn.Parameter(torch.ones(dim))
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        norm = x * torch.rsqrt(x.pow(2).mean(-1, keepdim=True) + self.eps)
-        return self.weight * norm
+        # Reduce in float32 and come back: under fp16 autocast both the mean of
+        # squares and the addition of eps would otherwise happen at fp16, where
+        # 1e-6 already sits in the subnormal range and flushes toward zero.
+        norm = x.float() * torch.rsqrt(x.float().pow(2).mean(-1, keepdim=True) + self.eps)
+        return self.weight * norm.type_as(x)
 
 
 class RotaryEmbedding(nn.Module):
@@ -201,6 +204,10 @@ class ModelConfig:
             raise ValueError("hidden_dim must be positive")
         if self.max_seq_len <= 0:
             raise ValueError("max_seq_len must be positive")
+        # Zero divides by zero inside the norm; 1e-4 and above over-smooths and
+        # costs final loss. The usable band is 1e-6 to 1e-5.
+        if not 0 < self.rms_norm_eps < 1e-4:
+            raise ValueError("rms_norm_eps must be in (0, 1e-4)")
 
     def to_dict(self) -> dict[str, Any]:
         """Return a checkpoint-safe plain mapping."""

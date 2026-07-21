@@ -20,6 +20,7 @@ import argparse
 import hashlib
 import json
 import os
+import random
 import sys
 import uuid
 from datetime import UTC, datetime
@@ -55,6 +56,13 @@ def main() -> None:
     parser.add_argument("--dataset-id", default="gongjy/minimind_dataset")
     parser.add_argument("--revision", default="74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5")
     parser.add_argument("--split-seed", type=int, default=20260511)
+    parser.add_argument(
+        "--shuffle-seed",
+        type=int,
+        help="Globally shuffle the surviving rows. Required whenever a run may "
+        "consume less than a whole epoch: this corpus is ordered by source, so a "
+        "sequential prefix is a biased sample, not a smaller one.",
+    )
     args = parser.parse_args()
 
     holdout, published = _holdout_digests([args.validation, args.test])
@@ -67,6 +75,7 @@ def main() -> None:
 
     args.output.parent.mkdir(parents=True, exist_ok=True)
     temporary = args.output.with_name(f".{args.output.name}.{uuid.uuid4().hex}.tmp")
+    kept: list[bytes] = []
     try:
         with args.corpus.open("rb") as source, temporary.open("wb") as sink:
             for line_number, raw in enumerate(source, start=1):
@@ -82,9 +91,19 @@ def main() -> None:
                     holdout_rows_removed += 1
                     continue
                 canonical = raw.rstrip(b"\r\n") + b"\n"
-                sink.write(canonical)
-                train_sha.update(canonical)
                 train_rows += 1
+                if args.shuffle_seed is None:
+                    sink.write(canonical)
+                    train_sha.update(canonical)
+                else:
+                    kept.append(canonical)
+
+            if args.shuffle_seed is not None:
+                random.Random(args.shuffle_seed).shuffle(kept)
+                for canonical in kept:
+                    sink.write(canonical)
+                    train_sha.update(canonical)
+                kept.clear()
             sink.flush()
             os.fsync(sink.fileno())
         os.replace(temporary, args.output)
@@ -99,6 +118,8 @@ def main() -> None:
             "dataset_id": args.dataset_id,
             "dataset_revision": args.revision,
             "seed": args.split_seed,
+            "shuffle_seed": args.shuffle_seed,
+            "globally_shuffled": args.shuffle_seed is not None,
             "split_size": 2000,
             "selection": (
                 "frozen strict holdout inherited unchanged; the full corpus is filtered "
