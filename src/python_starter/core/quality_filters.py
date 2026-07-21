@@ -7,6 +7,14 @@ question for a corpus that may be published.
 
 Every rule returns a reason string rather than a bare boolean, so a dropped row
 can be accounted for instead of vanishing into a count.
+
+A distinct-character-ratio rule was tried and removed. It correlated with
+document length at -0.588 and, worse, with script: an alphabet has 26 letters
+where Chinese has thousands, so every long English or code document sits near
+the threshold while Chinese prose sits far above it. It was deleting 2.2% of
+the corpus, concentrated in exactly the English and code material the model is
+weakest on. :func:`top_bigram_mass` covers the degenerate case it was meant to
+catch, without the bias.
 """
 
 from __future__ import annotations
@@ -51,7 +59,6 @@ class QualityThresholds:
     # longest and richest documents, not the degenerate ones.
     max_repetition_ratio: float = 0.8
     max_top_bigram_mass: float = 0.2
-    min_distinct_character_ratio: float = 0.05
     max_replacement_character_ratio: float = 0.01
 
 
@@ -159,13 +166,6 @@ def quality_reasons(text: str, thresholds: QualityThresholds) -> list[str]:
         replacements = normalized.count("�") / len(normalized)
         if replacements > thresholds.max_replacement_character_ratio:
             reasons.append("mojibake")
-
-        distinct = len(set(normalized)) / len(normalized)
-        # A long text built from a handful of characters is a filler artefact,
-        # not language. Short texts are exempt because distinctness is
-        # mechanically low when the denominator is small.
-        if len(normalized) >= 100 and distinct < thresholds.min_distinct_character_ratio:
-            reasons.append("low_character_diversity")
 
     if repetition_ratio(normalized) > thresholds.max_repetition_ratio:
         reasons.append("repetitive")
