@@ -25,6 +25,8 @@ import numpy as np
 
 MERSENNE_PRIME = (1 << 61) - 1
 MAX_HASH = (1 << 32) - 1
+# Reserved signature for a document with no shingles.
+EMPTY_SENTINEL = MAX_HASH
 
 
 @dataclass(frozen=True)
@@ -103,9 +105,11 @@ def permutation_parameters(config: MinHashConfig) -> tuple[np.ndarray, np.ndarra
 def signature(hashes: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.ndarray:
     """Minimum of each permutation over the document's shingle hashes."""
     if hashes.size == 0:
-        # An empty document shares a bucket with nothing rather than with
-        # every other empty-signature document.
-        return np.full(a.size, MAX_HASH, dtype=np.uint32)
+        # Sentinel, recognised by duplicate_indices and excluded from
+        # bucketing. Returning a constant here without that exclusion would
+        # give every empty document an identical signature and collapse them
+        # all into one near-duplicate group.
+        return np.full(a.size, EMPTY_SENTINEL, dtype=np.uint32)
     permuted = (np.outer(a, hashes) + b[:, None]) % MERSENNE_PRIME
     return (permuted.min(axis=1) % (MAX_HASH + 1)).astype(np.uint32)
 
@@ -133,6 +137,7 @@ def duplicate_indices(signatures: np.ndarray, config: MinHashConfig) -> set[int]
     how the work was chunked across processes.
     """
     keys = band_keys(signatures, config)
+    empty = np.all(signatures == EMPTY_SENTINEL, axis=1)
     duplicates: set[int] = set()
     representative: dict[tuple[int, int], int] = {}
     for band in range(config.bands):
@@ -140,7 +145,8 @@ def duplicate_indices(signatures: np.ndarray, config: MinHashConfig) -> set[int]
         order = np.argsort(column, kind="stable")
         sorted_keys = column[order]
         boundaries = np.flatnonzero(np.diff(sorted_keys)) + 1
-        for group in np.split(order, boundaries):
+        for raw_group in np.split(order, boundaries):
+            group = raw_group[~empty[raw_group]]
             if group.size < 2:
                 continue
             earliest = int(group.min())

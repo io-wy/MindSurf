@@ -34,7 +34,16 @@ def test_normalisation_folds_width_and_spacing() -> None:
 
 def test_near_duplicate_is_caught_where_exact_hashing_fails() -> None:
     config = MinHashConfig()
-    base = "深度学习模型的训练需要大量的算力和数据，" * 6
+    # Non-repeating text: a repeated passage collapses its shingle set, so a
+    # short suffix would drop Jaccard far below the documented threshold and
+    # the pair genuinely should not match.
+    base = (
+        "深度学习模型的训练需要大量算力与高质量语料，"
+        "而数据管线的去重环节直接决定了有效样本数量。"
+        "精确哈希只能发现逐字节相同的文档，"
+        "对于仅有细微差异的抓取副本完全无能为力。"
+        "因此工业界普遍采用局部敏感哈希来做近似去重。"
+    )
     edited = base + "本文最后更新于二零二六年七月。"
 
     assert base != edited  # exact digest deduplication keeps both
