@@ -45,7 +45,12 @@ class QualityThresholds:
     """
 
     min_characters: int = 20
-    max_repetition_ratio: float = 0.5
+    # 0.8 is the 99.5th percentile of 60,000 real rows. The earlier 0.5 sat at
+    # the 89th percentile and removed 11% of the corpus, with a median dropped
+    # length of 729 characters against 269 for kept rows: it was deleting the
+    # longest and richest documents, not the degenerate ones.
+    max_repetition_ratio: float = 0.8
+    max_top_bigram_mass: float = 0.2
     min_distinct_character_ratio: float = 0.05
     max_replacement_character_ratio: float = 0.01
 
@@ -99,12 +104,47 @@ def find_pii(text: str) -> dict[str, int]:
     return found
 
 
+def _collapsed(text: str) -> str:
+    """NFKC with whitespace runs collapsed.
+
+    Degeneracy is measured on this rather than the raw text: a formatted poem
+    or table carries long whitespace runs that dominate every repetition
+    statistic while saying nothing about the content, and both rules below
+    would otherwise reject perfectly good documents for their indentation.
+    """
+    return " ".join(unicodedata.normalize("NFKC", text).split())
+
+
 def repetition_ratio(text: str) -> float:
-    """Fraction of character bigrams that are repeats of an earlier bigram."""
-    if len(text) < 3:
+    """Fraction of character bigrams that repeat an earlier bigram.
+
+    Length-dependent by construction: on 60,000 real rows this correlates with
+    document length at 0.545, because the space of common Chinese bigrams is
+    finite and a longer text exhausts it. The threshold is therefore set from
+    the measured distribution to catch structural junk only, and
+    :func:`top_bigram_mass` carries the length-robust part of the job.
+    """
+    collapsed = _collapsed(text)
+    if len(collapsed) < 3:
         return 0.0
-    bigrams = [text[index : index + 2] for index in range(len(text) - 1)]
+    bigrams = [collapsed[index : index + 2] for index in range(len(collapsed) - 1)]
     return 1.0 - (len(set(bigrams)) / len(bigrams))
+
+
+def top_bigram_mass(text: str) -> float:
+    """Share of all bigrams taken by the single most frequent one.
+
+    Natural language spreads its mass; degenerate text concentrates it. On the
+    same 60,000 rows this correlates with length at -0.188, so unlike
+    :func:`repetition_ratio` it does not double as a length filter.
+    """
+    from collections import Counter
+
+    collapsed = _collapsed(text)
+    if len(collapsed) < 3:
+        return 0.0
+    bigrams = [collapsed[index : index + 2] for index in range(len(collapsed) - 1)]
+    return Counter(bigrams).most_common(1)[0][1] / len(bigrams)
 
 
 def quality_reasons(text: str, thresholds: QualityThresholds) -> list[str]:
@@ -129,6 +169,9 @@ def quality_reasons(text: str, thresholds: QualityThresholds) -> list[str]:
 
     if repetition_ratio(normalized) > thresholds.max_repetition_ratio:
         reasons.append("repetitive")
+
+    if top_bigram_mass(normalized) > thresholds.max_top_bigram_mass:
+        reasons.append("degenerate_ngram")
 
     return reasons
 

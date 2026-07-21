@@ -43,7 +43,7 @@ def test_digits_embedded_in_a_longer_run_are_not_phones() -> None:
     [
         ("太短", "too_short"),
         ("正常的中文段落" + "�" * 30, "mojibake"),
-        ("ab" * 200, "repetitive"),
+        ("ab" * 400, "degenerate_ngram"),
         ("啊" * 300, "low_character_diversity"),
     ],
 )
@@ -70,6 +70,40 @@ def test_repetition_ratio_bounds() -> None:
     assert repetition_ratio("") == 0.0
     assert repetition_ratio("abcdefgh") == 0.0
     assert repetition_ratio("abababab") > 0.5
+
+
+def test_long_chinese_prose_survives_the_degeneracy_rules() -> None:
+    """The case the first calibration got wrong.
+
+    A 0.5 repetition threshold removed 11% of the corpus with a median dropped
+    length of 729 characters against 269 kept: it was a length filter wearing a
+    quality filter's name, and it deleted the longest documents.
+    """
+    prose = (
+        "假装你是一个财务顾问，帮助我制定有效的理财方案。好的，我可以为您提供以下建议，"
+        "以帮助您制定有效的理财方案。首先，您需要制定一个详细的预算计划，以便了解自己的"
+        "收入和支出情况，这可以帮助您确定可用于投资的资金量。其次，建立应急储备金，通常"
+        "建议覆盖三到六个月的生活开支。第三，根据风险承受能力配置资产，年轻时可适当提高"
+        "权益类比例，临近退休则应逐步转向稳健品种。最后，定期复盘并根据人生阶段调整方案。"
+    ) * 3
+
+    assert quality_reasons(prose, THRESHOLDS) == []
+
+
+def test_whitespace_runs_do_not_condemn_a_formatted_document() -> None:
+    """Indentation is formatting noise, not content degeneracy."""
+    poem = "帮我生成一首爱情诗吧！
+" + "
+".join(
+        " " * 20 + line
+        for line in ["五月的风轻轻吹动", "恋人的心相约桥头", "心与心距离渐近", "你我并肩看晚霞"]
+    )
+
+    assert "degenerate_ngram" not in quality_reasons(poem, THRESHOLDS)
+
+
+def test_padding_is_still_caught() -> None:
+    assert "degenerate_ngram" in quality_reasons("txgfjhk" + "l" * 300, THRESHOLDS)
 
 
 def test_evaluate_row_reports_why_it_dropped() -> None:
