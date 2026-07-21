@@ -53,7 +53,16 @@ def _stratified_sample(
     return sorted(picked, key=lambda row: (str(row["category"]), str(row["id"])))
 
 
-def _render(items: list[dict[str, Any]], benchmark: Path, digest: str, seed: int) -> str:
+def _repo_relative(path: Path) -> str:
+    """Absolute paths cannot be checked against a public repository."""
+    resolved = path.resolve()
+    try:
+        return resolved.relative_to(ROOT).as_posix()
+    except ValueError:
+        return resolved.name
+
+
+def _render(items: list[dict[str, Any]], benchmark: str, digest: str, seed: int) -> str:
     lines = [
         "# MCQ 人工抽检样本",
         "",
@@ -101,19 +110,20 @@ def main() -> None:
     sample = _stratified_sample(items, args.count, args.seed)
 
     args.markdown.parent.mkdir(parents=True, exist_ok=True)
-    args.markdown.write_text(_render(sample, args.benchmark, digest, args.seed), encoding="utf-8")
+    benchmark_name = _repo_relative(args.benchmark)
+    args.markdown.write_text(_render(sample, benchmark_name, digest, args.seed), encoding="utf-8")
     write_json_atomic(
         args.record,
         {
             "schema_version": 1,
             "drawn_at": datetime.now(UTC).isoformat(),
-            "benchmark": str(args.benchmark),
+            "benchmark": benchmark_name,
             "benchmark_sha256": digest,
             "seed": args.seed,
             "count": len(sample),
             "sampling": "stratified by category, then global fill",
             "item_ids": [str(item["id"]) for item in sample],
-            "review_sheet": str(args.markdown),
+            "review_sheet": _repo_relative(args.markdown),
             "reviewed": False,
         },
     )
