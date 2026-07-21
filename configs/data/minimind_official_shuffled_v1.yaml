@@ -1,0 +1,16 @@
+dataset_id: gongjy/minimind_dataset
+dataset_revision: 74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5
+dataset_spec: configs/datasets/minimind_official_v1.json
+train_path: data/processed/minimind_official_shuffled_v1/pretrain_train_nfkc_dedup.jsonl
+val_path: data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl
+test_path: data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl
+tokenizer_name: data/raw/minimind_official_v1/tokenizer
+audit_path: artifacts/data/minimind_official_v1/audit.json
+training_view_manifest: artifacts/data/minimind_official_shuffled_v1/training_view.json
+max_length: 384
+text_field: text
+source_field: null
+id_field: null
+streaming: true
+shuffle_buffer: 0
+epochs: 1
