@@ -113,8 +113,9 @@ def test_rms_norm_reduces_in_float32_under_half_precision() -> None:
 
     out = norm(half)
 
-    # A fp16 reduction of 1e-3 squared underflows toward zero and the eps is
-    # lost; upcasting keeps the result finite and near unit scale.
-    assert out.dtype == torch.float16
+    # 1e-3 squared is 1e-6, which is subnormal in fp16 and flushes toward zero
+    # together with the eps. Reducing in float32 keeps both: the mean of
+    # squares is 1e-6, plus eps gives 2e-6, and rsqrt of that scales 1e-3 to
+    # 1/sqrt(2). A fp16 reduction would leave 0/0 territory instead.
     assert torch.isfinite(out).all()
-    assert float(out.abs().mean()) > 0.5
+    assert float(out.abs().mean()) == pytest.approx(2**-0.5, rel=1e-2)
