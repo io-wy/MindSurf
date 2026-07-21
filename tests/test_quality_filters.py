@@ -69,12 +69,24 @@ def test_long_english_and_code_are_not_penalised_for_a_small_alphabet() -> None:
     thousands. It was removing 2.2% of the corpus, concentrated in the exact
     domain the model scores worst on.
     """
-    english = (
-        "Can you suggest a code snippet that can be used to delete a specific record "
-        "from a SQL table? Certainly. You would normally use a DELETE statement with a "
-        "WHERE clause that identifies the row by its primary key, and you should wrap it "
-        "in a transaction so that an accidental match can be rolled back cleanly. "
-    ) * 6
+    # Genuinely varied prose. A repeated paragraph would trip the repetition
+    # rule for the right reason and prove nothing about script bias.
+    english = " ".join(
+        [
+            "Can you suggest a code snippet that deletes a specific record from a table?",
+            "Certainly. Use a DELETE statement whose WHERE clause identifies the row by",
+            "its primary key, and wrap the whole thing in a transaction so an accidental",
+            "match can be rolled back before it is committed anywhere permanent.",
+            "Before running it against production, check how many rows the equivalent",
+            "SELECT returns; a missing predicate silently matches everything.",
+            "Foreign keys referencing that row will either block the delete or cascade,",
+            "depending on how the constraint was declared when the schema was created.",
+            "Soft deletion is often preferable for audit purposes: mark a status column",
+            "instead, and exclude those rows from ordinary queries through a view.",
+            "Finally, confirm that any cached aggregate derived from the table is",
+            "invalidated, otherwise dashboards keep reporting the vanished record.",
+        ]
+    )
 
     assert quality_reasons(english, THRESHOLDS) == []
 
