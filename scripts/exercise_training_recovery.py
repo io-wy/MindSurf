@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import signal
 import subprocess
 import sys
 import time
@@ -96,6 +97,13 @@ def main() -> None:
     )
     parser.add_argument("--max-steps", type=int, default=40)
     parser.add_argument("--interrupt-step", type=int, default=10)
+    parser.add_argument(
+        "--interrupt-signal",
+        type=lambda value: getattr(signal, value),
+        default=signal.SIGTERM,
+        help="Signal name, e.g. SIGTERM or SIGKILL. SIGKILL stands in for a host "
+        "that vanishes: no handler runs and nothing is flushed.",
+    )
     args = parser.parse_args()
 
     baseline_dir = args.output_root / "baseline"
@@ -135,7 +143,9 @@ def main() -> None:
             interrupted.wait(timeout=30)
             raise TimeoutError(f"timed out waiting for {rolling}")
         time.sleep(0.1)
-    interrupted.terminate()
+    # SIGKILL is the closest reachable stand-in for a host that disappears:
+    # no handler runs, nothing is flushed, and the process cannot refuse.
+    interrupted.send_signal(args.interrupt_signal)
     interrupted_return_code = interrupted.wait(timeout=30)
 
     interruption_checkpoint = _load(rolling)
