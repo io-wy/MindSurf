@@ -11,6 +11,7 @@ from python_starter.core.quality_filters import (
     language_profile,
     quality_reasons,
     repetition_ratio,
+    top_bigram_mass,
 )
 
 THRESHOLDS = QualityThresholds()
@@ -66,12 +67,6 @@ def test_short_text_is_not_penalised_for_low_diversity() -> None:
     assert "low_character_diversity" not in quality_reasons("你好你好你好你好你好你好", THRESHOLDS)
 
 
-def test_repetition_ratio_bounds() -> None:
-    assert repetition_ratio("") == 0.0
-    assert repetition_ratio("abcdefgh") == 0.0
-    assert repetition_ratio("abababab") > 0.5
-
-
 def test_long_chinese_prose_survives_the_degeneracy_rules() -> None:
     """The case the first calibration got wrong.
 
@@ -92,18 +87,30 @@ def test_long_chinese_prose_survives_the_degeneracy_rules() -> None:
 
 def test_whitespace_runs_do_not_condemn_a_formatted_document() -> None:
     """Indentation is formatting noise, not content degeneracy."""
-    poem = "帮我生成一首爱情诗吧！
-" + "
-".join(
+    body = "\n".join(
         " " * 20 + line
         for line in ["五月的风轻轻吹动", "恋人的心相约桥头", "心与心距离渐近", "你我并肩看晚霞"]
     )
+    poem = "帮我生成一首爱情诗吧！\n" + body
 
     assert "degenerate_ngram" not in quality_reasons(poem, THRESHOLDS)
 
 
 def test_padding_is_still_caught() -> None:
     assert "degenerate_ngram" in quality_reasons("txgfjhk" + "l" * 300, THRESHOLDS)
+
+
+def test_top_bigram_mass_separates_prose_from_padding() -> None:
+    prose = "深度学习模型的训练需要大量算力与高质量语料，数据管线决定有效样本数量。"
+
+    assert top_bigram_mass(prose) < 0.2
+    assert top_bigram_mass("l" * 300) > 0.9
+
+
+def test_repetition_ratio_bounds() -> None:
+    assert repetition_ratio("") == 0.0
+    assert repetition_ratio("abcdefgh") == 0.0
+    assert repetition_ratio("abababab") > 0.5
 
 
 def test_evaluate_row_reports_why_it_dropped() -> None:
