@@ -200,11 +200,16 @@ class GpuLeaseStore:
             payload = self._read()
             leases = self._live_leases(payload)
             snapshot = query_gpu_snapshot(gpu_index)
+            # A reservation only constrains the card it was taken on. Counting
+            # every live lease against every card makes the second arm of a
+            # two-card host wait on memory that is reserved elsewhere.
             decision = capacity_decision(
                 snapshot,
                 required_mib=required_mib,
                 safety_margin_mib=safety_margin_mib,
-                reservations=leases,
+                reservations=[
+                    value for value in leases if int(value.get("gpu_index", 0)) == gpu_index
+                ],
             )
             if decision["admitted"]:
                 lease_id = uuid.uuid4().hex

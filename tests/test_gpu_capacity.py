@@ -94,3 +94,38 @@ def test_lease_store_acquire_update_release(
     assert payload["leases"][0]["child_pid"] == 123
     store.release(lease_id)
     assert json.loads((tmp_path / "leases.json").read_text(encoding="utf-8"))["leases"] == []
+
+
+def test_lease_on_another_card_does_not_block_this_one(tmp_path, monkeypatch) -> None:
+    """A reservation constrains only the card it was taken on."""
+    from python_starter.infrastructure import gpu_capacity
+
+    store = gpu_capacity.GpuLeaseStore(tmp_path / "leases.json")
+
+    def snapshot_for(index: int = 0) -> gpu_capacity.GpuSnapshot:
+        return gpu_capacity.GpuSnapshot(
+            index=index,
+            name="NVIDIA GeForce RTX 4090",
+            total_mib=23028,
+            used_mib=0,
+            free_mib=23028,
+            utilization_percent=0,
+            processes=(),
+        )
+
+    monkeypatch.setattr(gpu_capacity, "query_gpu_snapshot", snapshot_for)
+
+    first, first_decision = store.try_acquire(
+        required_mib=11000, safety_margin_mib=1536, run_id="arm-0", gpu_index=0
+    )
+    second, second_decision = store.try_acquire(
+        required_mib=11000, safety_margin_mib=1536, run_id="arm-1", gpu_index=1
+    )
+    third, third_decision = store.try_acquire(
+        required_mib=11000, safety_margin_mib=1536, run_id="arm-2", gpu_index=0
+    )
+
+    assert first is not None and first_decision["admitted"]
+    assert second is not None and second_decision["admitted"]
+    # Two 11 GiB arms plus margin do not fit on one 23 GiB card.
+    assert third is None and not third_decision["admitted"]
