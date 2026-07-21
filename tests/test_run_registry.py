@@ -102,3 +102,34 @@ def test_completed_run_stays_blocked_even_when_owner_is_gone(
 
     with pytest.raises(ValueError, match="duplicate"):
         registry.transition("run-done", "queued")
+
+
+def test_candidate_record_binds_source_commit_and_training_summary(tmp_path: Path) -> None:
+    from python_starter.experiments.registry import LocalCandidateRegistry
+
+    checkpoint = tmp_path / "final_model.pt"
+    checkpoint.write_bytes(b"weights")
+    evaluation = tmp_path / "evaluation.json"
+    evaluation.write_text(
+        json.dumps({"gate": {"internal_candidate_passed": True, "public_release_passed": False}}),
+        encoding="utf-8",
+    )
+    summary = tmp_path / "training_summary.json"
+    summary.write_text(json.dumps({"global_step": 60000, "seed": 20260511}), encoding="utf-8")
+    preflight = tmp_path / "preflight.json"
+    preflight.write_text(
+        json.dumps({"status": "passed", "source": {"git_head": "deadbeef", "git_branch": "x"}}),
+        encoding="utf-8",
+    )
+
+    record = LocalCandidateRegistry(tmp_path / "registry.json").register(
+        name="candidate-1",
+        checkpoint_path=checkpoint,
+        evaluation_path=evaluation,
+        training_summary_path=summary,
+        preflight_path=preflight,
+    )
+
+    assert record["source_git_head"] == "deadbeef"
+    assert record["training_summary_sha256"]
+    assert record["preflight_sha256"]
