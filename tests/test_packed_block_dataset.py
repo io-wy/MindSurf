@@ -110,3 +110,19 @@ def test_labels_are_the_inputs_shifted_by_one(tmp_path: Path) -> None:
 
     assert first["labels"].tolist()[:-1] == first["input_ids"].tolist()[1:]
     assert len(first["input_ids"]) == 7
+
+
+def test_block_capacity_is_exposed_for_budget_checking(tmp_path: Path) -> None:
+    """The number train.py needs to refuse an over-long budget up front.
+
+    A 172,000-step request against a corpus holding 171,892 steps failed only
+    when the loader ran dry, which for a single-epoch run is at the very end:
+    two GPUs spent seven hours to surface an arithmetic error.
+    """
+    blocks = tmp_path / "blocks.bin"
+    np.asarray(list(range(8 * 5)), dtype=np.uint16).tofile(blocks)
+
+    dataset = PackedBlockDataset(blocks, max_length=7)
+
+    assert dataset.blocks_per_epoch == 5
+    assert PackedBlockDataset(blocks, max_length=7, epochs=3).blocks_per_epoch == 5
