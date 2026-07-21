@@ -76,6 +76,8 @@ def main() -> None:
             "--require-cuda",
             "--required-gpu-memory-mib",
             str(args.training_memory_mib),
+            "--gpu-index",
+            gpu_index,
             "--output-dir",
             str(checkpoint_dir),
         ]

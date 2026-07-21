@@ -55,6 +55,13 @@ def main() -> None:
     parser.add_argument("--output-dir", type=Path, default=Path("models/checkpoints"))
     parser.add_argument("--require-cuda", action="store_true")
     parser.add_argument("--required-gpu-memory-mib", type=int, default=11_000)
+    parser.add_argument(
+        "--gpu-index",
+        type=int,
+        default=0,
+        help="Device to admit against; a second arm on a two-card host must not "
+        "be judged by the card the first arm already fills",
+    )
     parser.add_argument("--gpu-safety-margin-mib", type=int, default=1536)
     parser.add_argument("--require-branch")
     parser.add_argument(
@@ -124,7 +131,7 @@ def main() -> None:
 
     gpu: dict[str, object] = {"required": args.require_cuda}
     if args.require_cuda:
-        snapshot = query_gpu_snapshot()
+        snapshot = query_gpu_snapshot(args.gpu_index)
         decision = capacity_decision(
             snapshot,
             required_mib=args.required_gpu_memory_mib,
