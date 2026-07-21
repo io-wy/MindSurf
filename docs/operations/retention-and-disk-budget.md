@@ -21,9 +21,15 @@ GB，所以每一类产物都必须有明确的保留期限和删除条件。本
 删除更早的 step checkpoint。恢复演练只需要最近一个 rolling checkpoint，保留 2 份是
 为了容忍一次写入损坏。
 
-**final checkpoint**：无限期保留，且必须存在经反查的备份副本
-（`scripts/backup_assets.py`）。删除条件只有一个：该 run 已被明确判定为废弃臂，且
-其结论已写入 `docs/experiments/`，并且备份副本仍在。
+**正式候选的 final checkpoint**：无限期保留，且必须存在经反查的备份副本
+（`scripts/backup_assets.py`）。删除条件：已被判定为废弃，结论写入
+`docs/experiments/`，且备份副本仍在。
+
+**失败 pilot 的 checkpoint**：与正式候选区分。pilot 的价值在其结论与逐项评测
+产物，权重本身被否证后无未来用途；因此在结论写入 `docs/experiments/`、评测
+JSON 保留的前提下即可删除，不要求备份副本——在同一磁盘上复制一份不增加任何
+耐久性，只消耗被守卫保护的空间。2026-07-21 依此删除三个 targeted pilot 目录，
+释放 12.3 GB。
 
 **演练产物**：故障注入和恢复演练的 checkpoint 在演练证据 JSON
 （`artifacts/infra/training_recovery_drill*.json`，含 SHA-256 与逐项一致性检查）
