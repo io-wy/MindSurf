@@ -45,7 +45,7 @@ def test_digits_embedded_in_a_longer_run_are_not_phones() -> None:
         ("太短", "too_short"),
         ("正常的中文段落" + "�" * 30, "mojibake"),
         ("ab" * 400, "degenerate_ngram"),
-        ("啊" * 300, "low_character_diversity"),
+        ("啊" * 300, "degenerate_ngram"),
     ],
 )
 def test_quality_rules_fire(text: str, reason: str) -> None:
@@ -61,10 +61,22 @@ def test_ordinary_prose_passes_every_rule() -> None:
     assert quality_reasons(text, THRESHOLDS) == []
 
 
-def test_short_text_is_not_penalised_for_low_diversity() -> None:
-    # Distinctness is mechanically low when the denominator is small; the rule
-    # must not turn that into a quality judgement.
-    assert "low_character_diversity" not in quality_reasons("你好你好你好你好你好你好", THRESHOLDS)
+def test_long_english_and_code_are_not_penalised_for_a_small_alphabet() -> None:
+    """The second calibration failure, and the more damaging one.
+
+    A distinct-character-ratio rule put every long English or code document
+    near its threshold, because an alphabet has 26 letters where Chinese has
+    thousands. It was removing 2.2% of the corpus, concentrated in the exact
+    domain the model scores worst on.
+    """
+    english = (
+        "Can you suggest a code snippet that can be used to delete a specific record "
+        "from a SQL table? Certainly. You would normally use a DELETE statement with a "
+        "WHERE clause that identifies the row by its primary key, and you should wrap it "
+        "in a transaction so that an accidental match can be rolled back cleanly. "
+    ) * 6
+
+    assert quality_reasons(english, THRESHOLDS) == []
 
 
 def test_long_chinese_prose_survives_the_degeneracy_rules() -> None:
