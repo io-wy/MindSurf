@@ -8,6 +8,7 @@ the same optimizer boundary.
 from __future__ import annotations
 
 import json
+import math
 import os
 import random
 import time
@@ -406,6 +407,7 @@ class Trainer:
             desc="Training",
         )
         iterator = iter(train_loader)
+        window_losses: list[float] = []
 
         while self.global_step < self.config.max_steps:
             data_wait_started = time.perf_counter()
@@ -420,8 +422,14 @@ class Trainer:
             self.micro_step += 1
             self.consumed_blocks += int(batch["input_ids"].shape[0])
             self.consumed_tokens += int(batch["input_ids"].numel())
+            # The optimizer step consumes every micro-batch in the window, so
+            # the loss it acted on is their mean. Reporting only the last one
+            # would silently discard K-1 of every K observations.
+            window_losses.append(loss)
             if self.micro_step % self.config.accumulation_steps:
                 continue
+            step_loss = sum(window_losses) / len(window_losses)
+            window_losses.clear()
 
             optimizer_step_started = time.perf_counter()
             self.last_gradient_norm = self._optimizer_step()
@@ -430,12 +438,13 @@ class Trainer:
             self.global_step += 1
             progress.update(1)
             learning_rate = self._optimizer.param_groups[0]["lr"]
-            progress.set_postfix(loss=f"{loss:.4f}", lr=f"{learning_rate:.2e}")
+            progress.set_postfix(loss=f"{step_loss:.4f}", lr=f"{learning_rate:.2e}")
 
             if self.global_step % self.config.logging_every == 0 and self.tracker:
                 self.tracker.log_metrics(
                     {
-                        "train/loss": loss,
+                        "train/loss": step_loss,
+                        "train/perplexity": math.exp(min(step_loss, 20.0)),
                         "train/lr": learning_rate,
                         "train/consumed_blocks": float(self.consumed_blocks),
                         "train/consumed_tokens": float(self.consumed_tokens),
@@ -445,6 +454,7 @@ class Trainer:
                         "train/gradient_norm": self.last_gradient_norm,
                         "train/checkpoint_write_seconds": self.checkpoint_write_seconds,
                         "train/peak_cuda_reserved_bytes": float(self._peak_cuda_reserved_bytes()),
+                        "train/mfu": self._model_flops_utilization(),
                     },
                     step=self.global_step,
                 )
@@ -504,6 +514,40 @@ class Trainer:
     def _tokens_per_second(self) -> float:
         elapsed = self._current_elapsed_seconds()
         return self.consumed_tokens / elapsed if elapsed > 0 else 0.0
+
+    def _model_flops_utilization(self) -> float:
+        """Live MFU, so a throughput collapse is visible while it is happening.
+
+        Returns 0.0 when the device peak is unknown rather than guessing: a
+        fabricated denominator would read as a real measurement.
+        """
+        from python_starter.core.utils import (
+            DEVICE_PEAK_BF16_FLOPS,
+            model_flops_per_token,
+            model_flops_utilization,
+        )
+
+        if self.device.type != "cuda":
+            return 0.0
+        peak = DEVICE_PEAK_BF16_FLOPS.get(torch.cuda.get_device_name(self.device), 0.0)
+        if not peak:
+            return 0.0
+        if self.consumed_blocks <= 0:
+            return 0.0
+        # The trained sequence length is a property of the packed data, not of
+        # the model's maximum context, so derive it from what was consumed.
+        sequence_length = self.consumed_tokens // self.consumed_blocks
+        model_config = self._model_for_state().config
+        return model_flops_utilization(
+            flops_per_token=model_flops_per_token(
+                parameter_count=sum(p.numel() for p in self._model_for_state().parameters()),
+                n_layer=model_config.n_layer,
+                n_embed=model_config.n_embed,
+                sequence_length=sequence_length,
+            ),
+            tokens_per_second=self._tokens_per_second(),
+            device_peak_flops=peak,
+        )
 
     def _write_training_summary(self) -> dict[str, Any]:
         training_view = self.run_config.get("training_view", {})
