@@ -1,0 +1,157 @@
+# 2026-07-21 预训练预算归因与首个过门候选
+
+本轮只覆盖预训练算法与训练 Infra，不含推理服务。结论是：此前所有实验撞的墙是
+**训练预算**，不是数据配比。只把 `max_steps` 从 10,000 提到 60,000、其余配方一个字
+不改，候选就通过了完整预训练门，此前卡门的四项全部翻过。同时发现官方上游还有一份
+比在用语料大 6.7 倍的完整预训练文件，从未被使用过，也从未有人论证过为什么不用。
+
+机器可读结果见 `artifacts/evaluation/minimind_official_v1_budget60k_seed20260511_80m.json`
+与同目录的 `_formal_pipeline_outcome.json`。
+
+## 错误归因
+
+父模型（Official-only，10,000 步）在预训练门上失败四项：
+
+| 判据 | 实测 | 门限 |
+| --- | ---: | ---: |
+| `domain.english_or_code_heavy` | 3.1571 | 2.9033 |
+| `domain.math_like` | 2.2346 | 2.0446 |
+| `domain.quality_pass` | 2.3701 | 2.2885 |
+| `generation.repetition` | 7 | 4 |
+
+`strict_val` 2.3837、`strict_test` 2.3612 与 MCQ 0.3750 本就通过。四项失败里三项是
+loss、一项是生成退化，**没有一项依赖 MCQ**。
+
+三条证据把原因指向预算：
+
+1. 父模型 eval loss 在最后 1,000 步仍从 2.4797 掉到 2.3837，而那时 LR 已在退火，
+   **没有任何平台期**。
+2. 122,880,000 tokens / 89,864,448 参数 = **每参数 1.37 tokens**，计算最优约在 20，
+   差约 15 倍。模型还在 loss-数据幂律的陡坡上。
+3. `archive/legacy-minimind` 存档里有 **196 个历史 run**，全是 700–1,200 步、
+   LR `3e-7`–`8e-7` 的退火，test loss 总共只移动约 0.001。
+
+被排除的其他归因：**数据覆盖**（在用语料与门限参考模型同源）、**tokenizer**（父模型
+与参考模型一致）、**评测错位**（strict holdout 与 MCQ 本就通过，失败集中在 domain
+loss 与生成退化）。
+
+此前三个 1,000 步 continuation pilot 的结论必须重述为**受混淆**：它们用 LR `1e-4`，
+是父模型收敛时 LR（`5e-4 × 0.1 = 5e-5`）的两倍，并且重置了 optimizer 与数据游标。
+"targeted 数据有害"这个结论无法从中推出，真实变量是续训机制与预算，不是数据。
+
+## 预算臂
+
+冻结的假设与触发条件见 `configs/experiments/official_budget_scaling_80m.json`，在
+占用 GPU 之前提交。
+
+配置差异经逐键比对：**159 个键中 152 个完全相同**。实质差异只有
+`training.max_steps` 10,000 → 60,000；`data.epochs` 从缺省到 3 是为了让这个预算跑得
+起来（Official 视图单遍约 844,000 packed block，batch 32 下单遍上限约 26,000 步）。
+其余差异是 run 名、输出目录与日志频率。架构、LR `5e-4`、warmup 200、`stable_ratio`
+0.8、`min_lr_ratio` 0.1、batch 32、seq 384、bf16、weight decay、grad clip、seed
+`20260511`、数据集 revision 与 tokenizer 全部未动。
+
+结果：`failures: []`，候选已登记。
+
+| 判据 | 父模型 | 候选 | 门限 |
+| --- | ---: | ---: | ---: |
+| `strict_val` | 2.3837 | **1.9529** | 2.42 |
+| `strict_test` | 2.3612 | **1.9455** | 2.44 |
+| `domain.code_like` | 2.1992 | 1.5636 | 2.3882 |
+| `domain.english_or_code_heavy` | 3.1571 | **1.8907** | 2.9033 |
+| `domain.length_long` | 2.0810 | 1.6103 | 2.6167 |
+| `domain.math_like` | 2.2346 | **1.8472** | 2.0446 |
+| `domain.quality_pass` | 2.3701 | **2.0626** | 2.2885 |
+| `domain.repeat_high` | 2.2172 | 1.8432 | 2.2573 |
+| `generation.repetition` | 7 | **1** | 4 |
+
+strict mean 2.3725 → 1.9492。冻结的扩大触发线是改善 0.02，实测 **0.4233**。
+seen tokens 737,280,000，每参数 8.2 tokens，2.27 个 epoch，MFU 28.7%。
+
+## 跨数据 holdout 复核
+
+候选在 Team holdout（域外）上 3.7645 → **3.3017**，改善 0.463，与 Official 上的
+0.416 同量级。收益不是把 Official holdout 拟合过去，是真实泛化。同域专门化依然成立：
+Team 训练的模型在自己域上是 2.9743，候选没有超过它。
+
+## MCQ 与题库审核
+
+MCQ 0.3750 → 0.3542，配对 bootstrap 95% 区间 `[-9.4, +4.7] pp`、
+McNemar `p = 0.665`（26 题仅父模型对，22 题仅候选对），统计上与无变化不可区分。
+
+同日维护者按种子 `20260720` 分层抽检 32 题，结论记于
+`configs/evaluation/pretrain_mcq_benchmark_v2.review.json`：**标注答案 32/32 全部
+正确**，但该套件**不可作为能力、长上下文或推理的正式证据**。主要缺陷：`long_context`
+的 32 条记录实为 4 个模板各复制 8 份，全库去重后最多 164 个独立题目模板；两个类别名
+与实测能力不符；干扰项与正确答案不在同一语义层级，会系统性高估模型。
+
+审计中原本写着 `human_review.status = "completed"`，但那只由一个命令行开关决定，
+没有任何人抽检过。该字段已改为必须指向真实审核文档并嵌入其摘要与
+`reviewed_this_benchmark` 标志。MCQ 门限一个未动、仍然阻塞——仪器偏松时放松门限是
+反方向的处理——但门配置中已记录该局限，禁止把"MCQ 通过"读作能力结论。
+
+## 数据源发现：mini 与 full
+
+在用语料是 `pretrain_t2t_mini.jsonl`（1.24 GB）。同一上游 revision 还发布着
+`pretrain_t2t.jsonl`，**8.28 GB，是在用语料的 6.7 倍**。按 mini 实测 token 密度外推，
+完整语料约 21.6 亿 tokens ≈ 每参数 24 tokens，正好落在计算最优附近。
+
+追溯选型理由：**仓库任何地方都没有记录**。引入该 spec 的 commit `a03f6e4` 未说明，
+文档只写"延续项目此前的 MiniMind 官方基线"。legacy 存档里完整语料**早已登记在案**
+（`asset_sources.json` 中 id 为 `full-pretraining-dataset`，带恢复流程），但整个存档
+中 mini 出现 31 次、full 出现 7 次且**全部是资产登记，没有一次用于训练**。
+
+即：一个从未被论证过的继承决策，成了项目的主要瓶颈，而 196 + 3 次实验都在这个瓶颈
+之下调配方。本文件记录此事，以免下一轮再被"延续基线"继承一次。
+
+已建立可比的全量臂：`configs/datasets/minimind_official_full_v1.json` 保持冻结的
+4,000 条 strict holdout 不变，只把 `train` 指向完整语料。训练视图构建器按 NFKC 文本
+摘要从 `train` 中剔除 holdout 行，因此得到的是"完整语料减去冻结 holdout"，现有门限与
+此前全部对比保持有效，且 manifest 中的 `holdout_rows_removed` 会直接回答 mini 是否为
+full 的子集。
+
+## 训练 Infra 本轮补齐
+
+**告警闭环**（`scripts/watch_training.py`）：非有限 loss、loss 突升、长时间无进展、
+显存压力、磁盘水位。两次正式训练全程 `alerts: []`。突升规则用相邻两窗中位数对比而非
+最新值对比——父模型逐 1,000 步的单 micro-batch loss 在 1.498 到 4.726 之间波动而无任何
+故障，最新值对比会持续误报。这条规则是被真实数据证伪后改的。
+
+**吞吐基线**（`scripts/report_throughput_baseline.py`）：父模型 91,238 tokens/s、
+51.8 TFLOPS、MFU **31.3%**；60k 预算臂 83,494 tokens/s、47.4 TFLOPS、28.7%。按 PaLM
+口径计 FLOPs，除以设备 bf16 稠密峰值。结论是吞吐不构成瓶颈，不值得投入优化。
+
+**不可捕获中断演练**：主机重启无权限执行，改用 SIGKILL 作为最接近的替代——不运行任何
+处理器、不刷新任何缓冲、进程无法拒绝。`interrupted_return_code: -9`，10 项检查全部
+通过：模型、optimizer、scheduler、CPU/CUDA RNG、global step、micro step、
+packed-block 游标、seen tokens 全部与不中断基线逐位一致。证据见
+`artifacts/infra/training_recovery_drill_sigkill.json`。残留未覆盖：内核级掉电语义与
+开机自动重启，该项标记为受权限阻塞。
+
+**GPU 准入**：真实并发下验证——训练持 11,000 MiB lease 时，评测以 4,096 MiB 被准入，
+projected 16,642 / 24,564 MiB，未 OOM、未抢占外部进程。被杀 run 的死 lease 在下次
+申请时按 `owner_pid` 存活自动回收（实测确认）。
+
+**run 注册表**：原先只记录 pid 从不核活，被杀的 run 永远停在 `running` 并挡住重试，
+唯一出路是 `allow_retry`——而该开关连真正在运行的 run 也能覆盖。已改为按存活判定：
+owner 已死则记为 `failed` 并放行重试，owner 存活仍然阻塞，`completed` 无条件阻塞。
+
+**血缘**：注册表原先只有 checkpoint 与评测哈希，源码 commit 仅存在于 preflight 打到
+日志的一行里，候选无法追溯到训练它的代码。preflight 记录现落盘到 checkpoint 目录，
+注册时连同训练摘要一并绑定，`source_git_head` 进入记录。
+
+**资产与保留**：13 个资产 3.40 GB，按 SHA-256 内容寻址存放并重新哈希反查，全部通过，
+并已复制到异机。未找到任何对象存储凭据；`/data/cubelet` 是 root 所有的容器运行时状态
+目录，不是数据盘，不得写入。训练视图与 checkpoint 均为指向权威 checkout 的符号链接，
+让 DVC 改写这些路径会危及唯一权威副本，故采用只读镜像而非 DVC remote，耐久性范围
+如实记为"另一文件系统 + 另一主机"。保留策略与磁盘预算见
+`docs/operations/retention-and-disk-budget.md`。
+
+## 未完成
+
+- 第二 seed（`seed=20260721`，同预算）确认中，未完成前候选只能表述为"内部过门并登记"，
+  不能表述为预训练完成。
+- MCQ v3 题库：模板去重、类别改名或重建、干扰项按真实错误模式重写、类别轴拆分。
+- 全量语料臂：数据已就位，环境构建中。
+- 主机重启演练受权限阻塞，SIGKILL 已作为替代路径穷尽。
+- 服务器工作区收敛（当前两个 workspace）。
