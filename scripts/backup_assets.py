@@ -14,7 +14,6 @@ and an object-store mount later without changing the inventory format.
 from __future__ import annotations
 
 import argparse
-import json
 import shutil
 import sys
 from datetime import UTC, datetime

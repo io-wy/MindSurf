@@ -9,7 +9,6 @@ categories, and written out with the benchmark digest it came from.
 from __future__ import annotations
 
 import argparse
-import json
 import random
 import sys
 from collections import defaultdict
@@ -20,7 +19,11 @@ from typing import Any
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
 
-from python_starter.core.data_contract import iter_jsonl, sha256_file, write_json_atomic  # noqa: E402
+from python_starter.core.data_contract import (  # noqa: E402
+    iter_jsonl,
+    sha256_file,
+    write_json_atomic,
+)
 
 LETTERS = "ABCD"
 

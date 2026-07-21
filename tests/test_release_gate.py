@@ -5,7 +5,6 @@ from __future__ import annotations
 import re
 
 import pytest
-
 from scripts.release_gate import CONTENT_RULES, PATH_RULES, RULE_EXEMPT_PATHS
 
 CONTENT_BY_NAME = {name: pattern for name, pattern, _ in CONTENT_RULES}
