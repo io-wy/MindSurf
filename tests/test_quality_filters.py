@@ -91,6 +91,20 @@ def test_long_english_and_code_are_not_penalised_for_a_small_alphabet() -> None:
     assert quality_reasons(english, THRESHOLDS) == []
 
 
+def test_the_surviving_degeneracy_rule_is_script_neutral() -> None:
+    """Both removed rules measured inventory coverage, which is script-relative.
+
+    Over 60,000 real rows the bigram-diversity rule dropped 6.07% of English
+    and code documents against 0.00% of Chinese. top_bigram_mass measures
+    concentration instead: 90th percentile 0.047 for Chinese, 0.048 for
+    English, so one threshold means the same thing in both.
+    """
+    chinese = "深度学习模型的训练需要大量算力与高质量语料，数据管线决定有效样本数量。"
+    english = "Training a language model needs compute and a carefully filtered corpus."
+
+    assert abs(top_bigram_mass(chinese) - top_bigram_mass(english)) < 0.1
+
+
 def test_long_chinese_prose_survives_the_degeneracy_rules() -> None:
     """The case the first calibration got wrong.
 

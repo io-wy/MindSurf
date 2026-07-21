@@ -209,8 +209,8 @@ def main() -> None:
         },
         "quality_thresholds": {
             "min_characters": thresholds.min_characters,
-            "max_repetition_ratio": thresholds.max_repetition_ratio,
-            "min_distinct_character_ratio": thresholds.min_distinct_character_ratio,
+            "max_top_bigram_mass": thresholds.max_top_bigram_mass,
+            "max_replacement_character_ratio": thresholds.max_replacement_character_ratio,
         },
         "pii_rows_dropped": not args.keep_pii_rows,
         "source_training_view": args.source_manifest.as_posix(),
