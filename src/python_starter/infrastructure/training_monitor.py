@@ -33,6 +33,12 @@ class AlertThresholds:
     stall_seconds: float = 600.0
     gpu_reserved_fraction_max: float = 0.95
     free_bytes_min: int = 20_000_000_000
+    # Hardware limits. Temperature must be sustained rather than instantaneous:
+    # a single sample above the line is a sampling artefact, a run of them is a
+    # cooling problem.
+    gpu_temperature_max_celsius: float = 85.0
+    gpu_temperature_sustained_samples: int = 3
+    gradient_norm_rise_samples: int = 100
 
     def as_dict(self) -> dict[str, Any]:
         return {
@@ -41,6 +47,9 @@ class AlertThresholds:
             "stall_seconds": self.stall_seconds,
             "gpu_reserved_fraction_max": self.gpu_reserved_fraction_max,
             "free_bytes_min": self.free_bytes_min,
+            "gpu_temperature_max_celsius": self.gpu_temperature_max_celsius,
+            "gpu_temperature_sustained_samples": self.gpu_temperature_sustained_samples,
+            "gradient_norm_rise_samples": self.gradient_norm_rise_samples,
         }
 
 
@@ -51,6 +60,8 @@ class Sample:
     step: int
     loss: float
     peak_reserved_bytes: float
+    gradient_norm: float | None = None
+    learning_rate: float | None = None
 
 
 @dataclass
@@ -58,6 +69,10 @@ class MonitorState:
     """Everything the rules need beyond the samples themselves."""
 
     samples: list[Sample] = field(default_factory=list)
+    # Hardware samples arrive on a separate channel from the tracker log; the
+    # alert rules are the point where the two must finally meet.
+    temperatures_celsius: list[float] = field(default_factory=list)
+    uncorrectable_ecc_errors: int = 0
     seconds_since_last_step: float = 0.0
     free_bytes: int | None = None
     gpu_total_bytes: int | None = None
@@ -82,6 +97,8 @@ def parse_metrics(path: Path) -> list[Sample]:
                     step=int(row["step"]),
                     loss=float(metrics["train/loss"]),
                     peak_reserved_bytes=float(metrics.get("train/peak_cuda_reserved_bytes", 0.0)),
+                    gradient_norm=_optional_float(metrics.get("train/gradient_norm")),
+                    learning_rate=_optional_float(metrics.get("train/lr")),
                 )
             )
     return samples
@@ -166,6 +183,97 @@ def evaluate_alerts(state: MonitorState, thresholds: AlertThresholds) -> list[di
             }
         )
 
+    if state.uncorrectable_ecc_errors:
+        alerts.append(
+            {
+                "alert": "hbm_uncorrectable_ecc",
+                "severity": "critical",
+                "step": samples[-1].step if samples else None,
+                "detail": (
+                    f"{state.uncorrectable_ecc_errors} uncorrectable ECC error(s); "
+                    "memory corruption invalidates the run"
+                ),
+            }
+        )
+
+    sustained = thresholds.gpu_temperature_sustained_samples
+    recent_temperatures = state.temperatures_celsius[-sustained:]
+    if (
+        sustained > 0
+        and len(recent_temperatures) == sustained
+        and all(value > thresholds.gpu_temperature_max_celsius for value in recent_temperatures)
+    ):
+        alerts.append(
+                {
+                    "alert": "gpu_temperature",
+                    "severity": "warning",
+                    "step": samples[-1].step if samples else None,
+                    "detail": (
+                        f"{sustained} consecutive samples above "
+                        f"{thresholds.gpu_temperature_max_celsius:.0f}C, "
+                        f"latest {recent_temperatures[-1]:.0f}C"
+                    ),
+                }
+            )
+
+    # A single large gradient is ordinary; a monotone climb is divergence
+    # building up, which is what the trend rule is for.
+    window = thresholds.gradient_norm_rise_samples
+    norms = [item.gradient_norm for item in samples[-window:] if item.gradient_norm is not None]
+    if (
+        window > 1
+        and len(norms) == window
+        and all(later > earlier for earlier, later in zip(norms, norms[1:], strict=True))
+    ):
+        alerts.append(
+                {
+                    "alert": "gradient_norm_rising",
+                    "severity": "critical",
+                    "step": samples[-1].step,
+                    "detail": (
+                        f"gradient norm rose on {window} consecutive logged steps, "
+                        f"{norms[0]:.4f} -> {norms[-1]:.4f}"
+                    ),
+                }
+            )
+
     order = {"critical": 0, "warning": 1}
     alerts.sort(key=lambda item: order.get(str(item["severity"]), 2))
     return alerts
+
+
+def _optional_float(value: Any) -> float | None:
+    if value is None:
+        return None
+    try:
+        return float(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def parse_telemetry(path: Path) -> tuple[list[float], int]:
+    """Read the GPU sampler's log: temperatures, and any uncorrectable ECC count.
+
+    The sampler writes to its own file rather than the tracker log, so without
+    this the hardware thresholds could never fire no matter how they were set.
+    """
+    temperatures: list[float] = []
+    uncorrectable = 0
+    if not path.is_file():
+        return temperatures, uncorrectable
+    with path.open("r", encoding="utf-8") as handle:
+        for line in handle:
+            line = line.strip()
+            if not line:
+                continue
+            try:
+                row = json.loads(line)
+            except json.JSONDecodeError:
+                continue
+            temperature = _optional_float(row.get("temperature_celsius"))
+            if temperature is not None:
+                temperatures.append(temperature)
+            errors = _optional_float(row.get("ecc_uncorrectable_total"))
+            if errors:
+                uncorrectable = max(uncorrectable, int(errors))
+    return temperatures, uncorrectable

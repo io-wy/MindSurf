@@ -24,6 +24,7 @@ from python_starter.infrastructure.training_monitor import (  # noqa: E402
     MonitorState,
     evaluate_alerts,
     parse_metrics,
+    parse_telemetry,
 )
 
 
@@ -60,6 +61,17 @@ def _gpu_total_bytes(index: int) -> int | None:
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--metrics", type=Path, required=True)
+    parser.add_argument(
+        "--telemetry",
+        type=Path,
+        help="GPU sampler log; without it the hardware thresholds cannot fire",
+    )
+    parser.add_argument(
+        "--checkpoint-dir",
+        type=Path,
+        help="Volume to check for free space; defaults to the output's volume, "
+        "which is only correct when the report sits beside the checkpoints",
+    )
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--poll-seconds", type=float, default=60.0)
     parser.add_argument(
@@ -74,6 +86,7 @@ def main() -> None:
     parser.add_argument("--loss-spike-window", type=int, default=40)
     parser.add_argument("--free-bytes-min", type=int, default=20_000_000_000)
     parser.add_argument("--gpu-reserved-fraction-max", type=float, default=0.95)
+    parser.add_argument("--gpu-temperature-max-celsius", type=float, default=85.0)
     args = parser.parse_args()
 
     thresholds = AlertThresholds(
@@ -82,10 +95,12 @@ def main() -> None:
         stall_seconds=args.stall_seconds,
         gpu_reserved_fraction_max=args.gpu_reserved_fraction_max,
         free_bytes_min=args.free_bytes_min,
+        gpu_temperature_max_celsius=args.gpu_temperature_max_celsius,
     )
     gpu_total_bytes = _gpu_total_bytes(args.gpu_index)
     started_at = datetime.now(UTC).isoformat()
     fired: list[dict[str, object]] = []
+    seen: dict[str, dict[str, object]] = {}
     polls = 0
     last_step: int | None = None
     last_step_at = time.monotonic()
@@ -101,15 +116,36 @@ def main() -> None:
             last_step_at = now
         highest_step = max(highest_step, last_step or 0)
 
+        temperatures, uncorrectable_ecc = (
+            parse_telemetry(args.telemetry) if args.telemetry else ([], 0)
+        )
+        disk_target = args.checkpoint_dir or (
+            args.output.parent if args.output.parent.exists() else ROOT
+        )
         state = MonitorState(
             samples=samples,
+            temperatures_celsius=temperatures,
+            uncorrectable_ecc_errors=uncorrectable_ecc,
             seconds_since_last_step=0.0 if finished else now - last_step_at,
-            free_bytes=shutil.disk_usage(args.output.parent if args.output.parent.exists() else ROOT).free,
+            free_bytes=shutil.disk_usage(disk_target).free,
             gpu_total_bytes=gpu_total_bytes,
         )
-        alerts = evaluate_alerts(state, thresholds)
-        for alert in alerts:
-            record = {**alert, "observed_at": datetime.now(UTC).isoformat()}
+        # A persisting condition trips its rule on every poll. Record the first
+        # occurrence and a count, otherwise one low-disk episode buries the
+        # report under hundreds of copies of itself.
+        for alert in evaluate_alerts(state, thresholds):
+            key = str(alert["alert"])
+            if key in seen:
+                seen[key]["occurrences"] = int(seen[key]["occurrences"]) + 1
+                seen[key]["last_observed_at"] = datetime.now(UTC).isoformat()
+                continue
+            record = {
+                **alert,
+                "first_observed_at": datetime.now(UTC).isoformat(),
+                "last_observed_at": datetime.now(UTC).isoformat(),
+                "occurrences": 1,
+            }
+            seen[key] = record
             fired.append(record)
             print(json.dumps(record), flush=True)
 
@@ -120,6 +156,8 @@ def main() -> None:
                 "started_at": started_at,
                 "updated_at": datetime.now(UTC).isoformat(),
                 "metrics_path": str(args.metrics),
+                "telemetry_path": str(args.telemetry) if args.telemetry else None,
+                "disk_watched": str(disk_target),
                 "thresholds": thresholds.as_dict(),
                 "polls": polls,
                 "observed_steps": highest_step,

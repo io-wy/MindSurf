@@ -37,7 +37,7 @@ def _monitor_gpu(
                     "nvidia-smi",
                     f"--id={gpu_index}",
                     "--query-gpu=memory.total,memory.used,memory.free,utilization.gpu,"
-                    "temperature.gpu,power.draw",
+                    "temperature.gpu,power.draw,ecc.errors.uncorrected.volatile.total",
                     "--format=csv,noheader,nounits",
                 ],
                 check=True,
@@ -55,6 +55,11 @@ def _monitor_gpu(
                 "gpu_utilization_percent": int(values[3]),
                 "temperature_celsius": int(values[4]),
                 "power_watts": float(values[5]),
+                # Not every card reports ECC; "[N/A]" must stay absent rather
+                # than become a zero that reads as "checked, none found".
+                "ecc_uncorrectable_total": (
+                    int(values[6]) if len(values) > 6 and values[6].isdigit() else None
+                ),
                 "checkpoint_free_bytes": checkpoint_free_bytes,
             }
             warnings = []
@@ -62,6 +67,8 @@ def _monitor_gpu(
                 warnings.append("gpu_memory_below_512_mib")
             if checkpoint_free_bytes < 10 * 1024**3:
                 warnings.append("checkpoint_disk_below_10_gib")
+            if event["ecc_uncorrectable_total"]:
+                warnings.append("hbm_uncorrectable_ecc")
             event["warnings"] = warnings
         except (OSError, ValueError, subprocess.SubprocessError) as exc:
             event = {
