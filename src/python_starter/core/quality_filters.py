@@ -8,13 +8,19 @@ question for a corpus that may be published.
 Every rule returns a reason string rather than a bare boolean, so a dropped row
 can be accounted for instead of vanishing into a count.
 
-A distinct-character-ratio rule was tried and removed. It correlated with
-document length at -0.588 and, worse, with script: an alphabet has 26 letters
-where Chinese has thousands, so every long English or code document sits near
-the threshold while Chinese prose sits far above it. It was deleting 2.2% of
-the corpus, concentrated in exactly the English and code material the model is
-weakest on. :func:`top_bigram_mass` covers the degenerate case it was meant to
-catch, without the bias.
+Two diversity rules were tried and removed, both for the same reason. A
+distinct-character-ratio rule and a distinct-bigram-ratio rule each measure how
+much of a script's inventory a document uses, and an alphabet has 26 letters
+where Chinese has thousands. Measured over 60,000 real rows, the bigram rule at
+its 99.5th-percentile threshold dropped 6.07% of English and code documents and
+0.00% of Chinese ones. That bias points at exactly the material the model is
+weakest on: english_or_code_heavy is one of the four gate criteria the parent
+failed.
+
+:func:`top_bigram_mass` replaces both. It measures concentration rather than
+coverage, and over the same rows its 90th percentile is 0.047 for Chinese and
+0.048 for English, so a single threshold means the same thing in both scripts.
+Both original functions are kept for diagnostics, out of the filter path.
 """
 
 from __future__ import annotations
@@ -53,11 +59,6 @@ class QualityThresholds:
     """
 
     min_characters: int = 20
-    # 0.8 is the 99.5th percentile of 60,000 real rows. The earlier 0.5 sat at
-    # the 89th percentile and removed 11% of the corpus, with a median dropped
-    # length of 729 characters against 269 for kept rows: it was deleting the
-    # longest and richest documents, not the degenerate ones.
-    max_repetition_ratio: float = 0.8
     max_top_bigram_mass: float = 0.2
     max_replacement_character_ratio: float = 0.01
 
@@ -166,9 +167,6 @@ def quality_reasons(text: str, thresholds: QualityThresholds) -> list[str]:
         replacements = normalized.count("�") / len(normalized)
         if replacements > thresholds.max_replacement_character_ratio:
             reasons.append("mojibake")
-
-    if repetition_ratio(normalized) > thresholds.max_repetition_ratio:
-        reasons.append("repetitive")
 
     if top_bigram_mass(normalized) > thresholds.max_top_bigram_mass:
         reasons.append("degenerate_ngram")
