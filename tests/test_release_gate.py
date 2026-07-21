@@ -72,3 +72,14 @@ def test_path_rules(name: str, expected: bool) -> None:
     matched = any(re.search(pattern, name, re.IGNORECASE) for pattern in PATH_BY_NAME.values())
 
     assert matched is expected
+
+
+def test_every_exempt_file_exists() -> None:
+    """An exemption for a path that no longer exists is a silent hole."""
+    from pathlib import Path
+
+    from scripts.release_gate import EXEMPT, ROOT
+
+    missing = sorted(name for name in EXEMPT if not (ROOT / Path(name)).is_file())
+
+    assert missing == []

@@ -9,7 +9,14 @@ report from a leaked absolute path, so it discarded documentation while the
 real traces went through untouched.
 
 Run this against the staged set before committing, or against a commit range
-before pushing to the shared branch.
+before pushing to the shared branch::
+
+    python scripts/release_gate.py
+    python scripts/release_gate.py --range origin/pretrain...HEAD
+
+Read the exit code, and do not pipe it into ``tail`` or ``head`` when chaining
+with ``&&``: a pipeline reports the last command's status, so a failing gate
+becomes a success and the commit proceeds. That has already happened once.
 """
 
 from __future__ import annotations
@@ -21,8 +28,15 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 
-# PROJECT_RULES.md documents these two as the standard's own text.
-EXEMPT = {"PROJECT_RULES.md", "AGENTS.md", "scripts/release_gate.py"}
+# PROJECT_RULES.md documents the first two as the standard's own text. The gate
+# and its tests state the forbidden patterns by necessity: a test that pins
+# "this credential shape is caught" has to contain that shape.
+EXEMPT = {
+    "PROJECT_RULES.md",
+    "AGENTS.md",
+    "scripts/release_gate.py",
+    "tests/test_release_gate.py",
+}
 
 # A dotted quad in a generated dependency manifest is a package version, not a
 # host: nvidia-curand-cu12 10.3.5.147 parses as an RFC1918 address. Nobody
