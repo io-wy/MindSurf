@@ -127,7 +127,16 @@ def main() -> None:
             "size": args.output.stat().st_size,
             "rows": output_rows,
         },
-        "normalization": "NFKC plus whitespace collapse",
+        # The rows are copied through byte for byte apart from the line
+        # terminator. NFKC and whitespace collapse are applied to the digest
+        # used for matching, never to the stored text, so a reader must not
+        # infer that the corpus itself was normalised.
+        "normalization": {
+            "applied_to": "duplicate and holdout matching digest only",
+            "digest_rule": "NFKC plus whitespace collapse, SHA-1",
+            "stored_text": "verbatim source bytes, line terminator normalised to LF",
+        },
+        "duplicate_detection": "exact digest match; near-duplicates are not detected",
         "duplicate_rows_removed": duplicate_rows_removed,
         "holdout_rows_removed": holdout_rows_removed,
         "gates": {
