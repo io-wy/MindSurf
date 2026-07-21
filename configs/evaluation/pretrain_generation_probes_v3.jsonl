@@ -1,0 +1,100 @@
+{"id":"zhk_changjiang","category":"zh_knowledge","prompt":"长江是中国最长的河流，它发源于"}
+{"id":"zhk_changcheng","category":"zh_knowledge","prompt":"长城是中国古代重要的军事防御工程，它的修建始于"}
+{"id":"zhk_huanghe","category":"zh_knowledge","prompt":"黄河被称为中华民族的母亲河，因为"}
+{"id":"zhk_taiyangxi","category":"zh_knowledge","prompt":"太阳系一共有八颗行星，其中离太阳最近的是"}
+{"id":"zhk_zhinanzhen","category":"zh_knowledge","prompt":"指南针是中国古代四大发明之一，它利用"}
+{"id":"zhk_daxiongmao","category":"zh_knowledge","prompt":"大熊猫是中国特有的珍稀动物，主要栖息在"}
+{"id":"zhk_dayunhe","category":"zh_knowledge","prompt":"京杭大运河连接北京和杭州，是世界上"}
+{"id":"zhk_zhumulangma","category":"zh_knowledge","prompt":"珠穆朗玛峰是世界最高峰，位于"}
+{"id":"zhk_sichouzhilu","category":"zh_knowledge","prompt":"丝绸之路是古代连接东西方的贸易通道，起点位于"}
+{"id":"zhk_yinshuashu","category":"zh_knowledge","prompt":"活字印刷术的发明大大提高了书籍的生产效率，发明者是"}
+{"id":"zhk_qingzang","category":"zh_knowledge","prompt":"青藏高原被称为世界屋脊，平均海拔"}
+{"id":"zhk_gugong","category":"zh_knowledge","prompt":"故宫是明清两代的皇家宫殿，位于北京"}
+{"id":"zhk_kongzi","category":"zh_knowledge","prompt":"孔子是春秋时期的思想家和教育家，他创立了"}
+{"id":"zhk_tangshi","category":"zh_knowledge","prompt":"唐代是中国诗歌的黄金时代，著名诗人李白被后人称为"}
+{"id":"zhk_jieqi","category":"zh_knowledge","prompt":"二十四节气是中国古代农业文明的产物，其中立春表示"}
+{"id":"zhk_zhenjiu","category":"zh_knowledge","prompt":"针灸是中医的重要治疗手段，通过刺激"}
+{"id":"zhk_ciqi","category":"zh_knowledge","prompt":"中国瓷器闻名世界，景德镇被称为"}
+{"id":"zhk_dunhuang","category":"zh_knowledge","prompt":"敦煌莫高窟保存着大量古代壁画和佛教艺术，位于"}
+{"id":"zhk_zhenghe","category":"zh_knowledge","prompt":"郑和七次下西洋，船队最远到达"}
+{"id":"zhk_hanzi","category":"zh_knowledge","prompt":"汉字是世界上使用时间最长的文字之一，最早的成熟汉字是"}
+{"id":"zhs_zhaoshe","category":"zh_science","prompt":"光从空气进入水中时会发生折射，这是因为"}
+{"id":"zhs_zizhuan","category":"zh_science","prompt":"地球自转产生了昼夜交替，自转一周大约需要"}
+{"id":"zhs_shengyin","category":"zh_science","prompt":"声音的传播需要介质，在真空中"}
+{"id":"zhs_citie","category":"zh_science","prompt":"磁铁有南北两极，同极相斥，异极"}
+{"id":"zhs_zhengfa","category":"zh_science","prompt":"晾在外面的湿衣服会慢慢变干，这是因为水分"}
+{"id":"zhs_genxi","category":"zh_science","prompt":"植物的根系除了固定植株，还负责"}
+{"id":"zhs_dianliu","category":"zh_science","prompt":"电流通过导体时会产生热量，这个现象被称为"}
+{"id":"zhs_mocali","category":"zh_science","prompt":"汽车轮胎表面有花纹，是为了增大"}
+{"id":"zhs_midu","category":"zh_science","prompt":"木块能浮在水面上，是因为木块的密度"}
+{"id":"zhs_yimiao","category":"zh_science","prompt":"疫苗的原理是让免疫系统提前认识病原体，从而"}
+{"id":"zhs_jiyin","category":"zh_science","prompt":"基因携带着生物的遗传信息，存在于细胞的"}
+{"id":"zhs_shengxiu","category":"zh_science","prompt":"铁器暴露在潮湿空气中容易生锈，防止生锈的常用方法是"}
+{"id":"zhs_caihong","category":"zh_science","prompt":"雨后天空有时会出现彩虹，这是阳光经过水滴的"}
+{"id":"zhs_yueshi","category":"zh_science","prompt":"月食发生时，地球位于太阳和月亮之间，挡住了"}
+{"id":"zhs_qiya","category":"zh_science","prompt":"海拔越高气压越低，所以在高山上烧水"}
+{"id":"zhs_rongjie","category":"zh_science","prompt":"糖放入热水中溶解得更快，是因为温度升高使分子"}
+{"id":"zhs_huxi","category":"zh_science","prompt":"人体通过呼吸吸入氧气，氧气在细胞中参与"}
+{"id":"zhs_ganggan","category":"zh_science","prompt":"使用杠杆可以省力，支点离重物越近"}
+{"id":"zhs_bandaoti","category":"zh_science","prompt":"半导体的导电能力介于导体和绝缘体之间，常用的半导体材料是"}
+{"id":"zhs_guanghe","category":"zh_science","prompt":"绿色植物通过光合作用把二氧化碳和水转化为"}
+{"id":"zhd_zhumifan","category":"zh_daily","prompt":"煮米饭时水和米的比例很重要，一般来说"}
+{"id":"zhd_ganmao","category":"zh_daily","prompt":"预防感冒的有效方法包括勤洗手、多通风，以及"}
+{"id":"zhd_zixingche","category":"zh_daily","prompt":"骑自行车出行时要注意安全，首先应该"}
+{"id":"zhd_laji","category":"zh_daily","prompt":"垃圾分类有助于资源回收，厨余垃圾包括"}
+{"id":"zhd_cunqian","category":"zh_daily","prompt":"养成储蓄习惯可以从记账开始，每个月"}
+{"id":"zhd_mianshi","category":"zh_daily","prompt":"参加面试前应该做好准备，比如提前了解"}
+{"id":"zhd_shuimian","category":"zh_daily","prompt":"良好的睡眠对健康很重要，睡前应该避免"}
+{"id":"zhd_yuedu","category":"zh_daily","prompt":"培养阅读习惯可以从每天固定的时间开始，比如"}
+{"id":"zhd_shijian","category":"zh_daily","prompt":"合理管理时间的一个方法是把任务按重要性"}
+{"id":"zhd_jijiu","category":"zh_daily","prompt":"被开水烫伤后，正确的处理方法是立即用"}
+{"id":"zhn_yufu","category":"zh_narrative","prompt":"老渔夫每天清晨都会划着小船出海，那天他撒下网，却拉上来一个"}
+{"id":"zhn_tushuguan","category":"zh_narrative","prompt":"深夜的图书馆里只剩下她一个人，忽然书架深处传来"}
+{"id":"zhn_lieche","category":"zh_narrative","prompt":"雨夜的末班列车上，男孩发现对面的座位上留着一把"}
+{"id":"zhn_jiaoshi","category":"zh_narrative","prompt":"山村小学的王老师收到一封来自二十年前学生的信，信里写道"}
+{"id":"zhn_jiqiren","category":"zh_narrative","prompt":"家用机器人小七第一次违背了指令，它没有打扫客厅，而是"}
+{"id":"zhn_mujiang","category":"zh_narrative","prompt":"古镇上的老木匠做了一辈子家具，临退休前他决定做最后一件作品："}
+{"id":"zhn_shamo","category":"zh_narrative","prompt":"旅人在沙漠里走了三天，水壶见底时，远处出现了"}
+{"id":"zhn_dengta","category":"zh_narrative","prompt":"灯塔守望者已经三十年没有下过岛，直到那艘白色的帆船"}
+{"id":"zhn_miandian","category":"zh_narrative","prompt":"巷口的小面馆每天只卖五十碗面，卖完就关门，因为老板"}
+{"id":"zhn_dengshan","category":"zh_narrative","prompt":"登山队在暴风雪来临前找到了一个山洞，洞壁上刻着"}
+{"id":"zhr_tiankong","category":"zh_reasoning","prompt":"天空看起来是蓝色的，原因在于阳光进入大气层后"}
+{"id":"zhr_dongtian","category":"zh_reasoning","prompt":"冬天白天比夏天短，这是因为地球的自转轴"}
+{"id":"zhr_chuanfu","category":"zh_reasoning","prompt":"钢铁做的轮船很重却能浮在水面上，关键在于"}
+{"id":"zhr_shandian","category":"zh_reasoning","prompt":"雷雨天总是先看到闪电后听到雷声，这是因为"}
+{"id":"zhr_xintiao","category":"zh_reasoning","prompt":"剧烈运动后心跳会加快，因为肌肉需要更多的"}
+{"id":"zhr_bingxiang","category":"zh_reasoning","prompt":"冰箱能延缓食物变质，原理是低温会抑制"}
+{"id":"zhr_feiji","category":"zh_reasoning","prompt":"飞机比空气重却能飞上天，是因为机翼上下表面的"}
+{"id":"zhr_chaoxi","category":"zh_reasoning","prompt":"海水每天有规律地涨落形成潮汐，主要是受到"}
+{"id":"zhr_shuye","category":"zh_reasoning","prompt":"秋天树叶会变黄，是因为天气转凉后叶片中的"}
+{"id":"zhr_yanxue","category":"zh_reasoning","prompt":"下雪后在路面撒盐可以化雪，因为盐水的凝固点"}
+{"id":"enp_photosynthesis","category":"en_prose","prompt":"Photosynthesis is the process by which green plants convert sunlight into"}
+{"id":"enp_internet","category":"en_prose","prompt":"The internet has fundamentally changed the way people communicate, because"}
+{"id":"enp_gravity","category":"en_prose","prompt":"Gravity is the force that pulls objects toward each other, and on Earth it"}
+{"id":"enp_habit","category":"en_prose","prompt":"Building a good habit takes time and patience. The first step is usually"}
+{"id":"enp_ocean","category":"en_prose","prompt":"Ocean currents move warm and cold water around the globe, which affects"}
+{"id":"enp_printing","category":"en_prose","prompt":"The invention of the printing press allowed books to be produced quickly, and as a result"}
+{"id":"enp_exercise","category":"en_prose","prompt":"Regular exercise benefits both the body and the mind. For example, it can"}
+{"id":"enp_bees","category":"en_prose","prompt":"Honey bees play an important role in agriculture because they"}
+{"id":"enp_volcano","category":"en_prose","prompt":"A volcano erupts when molten rock beneath the surface"}
+{"id":"enp_maps","category":"en_prose","prompt":"Before satellites existed, mapmakers had to rely on"}
+{"id":"cod_fib","category":"code","prompt":"def fibonacci(n):\n    \"\"\"返回第 n 个斐波那契数。\"\"\"\n    if n <= 1:\n"}
+{"id":"cod_maxlist","category":"code","prompt":"def find_max(numbers):\n    \"\"\"返回列表中的最大值。\"\"\"\n"}
+{"id":"cod_reverse","category":"code","prompt":"def reverse_string(s):\n    \"\"\"反转字符串。\"\"\"\n    return"}
+{"id":"cod_prime","category":"code","prompt":"def is_prime(n):\n    \"\"\"判断 n 是否为质数。\"\"\"\n    if n < 2:\n        return False\n    for i in range(2,"}
+{"id":"cod_wordcount","category":"code","prompt":"def count_words(text):\n    \"\"\"统计文本中每个单词出现的次数。\"\"\"\n    counts = {}\n"}
+{"id":"cod_readfile","category":"code","prompt":"# 读取文件并逐行打印\nwith open('data.txt', 'r', encoding='utf-8') as f:\n"}
+{"id":"cod_jsarrow","category":"code","prompt":"// JavaScript: 过滤出数组中的偶数\nconst numbers = [1, 2, 3, 4, 5, 6];\nconst evens = numbers."}
+{"id":"cod_jsfetch","category":"code","prompt":"// JavaScript: 发送 GET 请求并解析 JSON\nasync function fetchData(url) {\n"}
+{"id":"cod_sql","category":"code","prompt":"-- 查询每个部门的平均工资，按平均工资降序排列\nSELECT department,"}
+{"id":"cod_bash","category":"code","prompt":"#!/bin/bash\n# 统计当前目录下所有 .log 文件的总行数\n"}
+{"id":"mat_apple","category":"zh_math","prompt":"小明有 12 个苹果，平均分给 3 个朋友，每个朋友能分到"}
+{"id":"mat_pencil","category":"zh_math","prompt":"一支铅笔 2 元，一块橡皮 1 元，小红买了 3 支铅笔和 2 块橡皮，一共花了"}
+{"id":"mat_rect","category":"zh_math","prompt":"一个长方形长 8 厘米，宽 5 厘米，它的面积是"}
+{"id":"mat_speed","category":"zh_math","prompt":"一辆汽车每小时行驶 60 千米，行驶 3 小时后共行驶了"}
+{"id":"mat_water","category":"zh_math","prompt":"水池里有 45 升水，用去 18 升后，还剩下"}
+{"id":"mat_class","category":"zh_math","prompt":"班里有 40 名学生，其中男生占一半，女生有"}
+{"id":"mat_book","category":"zh_math","prompt":"一本书共 200 页，小李每天读 25 页，读完这本书需要"}
+{"id":"mat_discount","category":"zh_math","prompt":"一件原价 100 元的衣服打八折出售，现在的价格是"}
+{"id":"mat_angle","category":"zh_math","prompt":"三角形的内角和是 180 度，如果两个角分别是 60 度和 80 度，第三个角是"}
+{"id":"mat_share","category":"zh_math","prompt":"把 24 颗糖平均装进 6 个袋子，每个袋子装"}
