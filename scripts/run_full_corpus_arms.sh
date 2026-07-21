@@ -22,20 +22,34 @@ LOGS="$REPO/logs"
 cd "$REPO"
 mkdir -p "$LOGS" "$RAW_ROOT"
 
-echo "=== stage 1: dataset spec ==="
-ln -sfn "$CORPUS" "$RAW_ROOT/pretrain_t2t_full.jsonl"
+SPLITS="$RAW_ROOT/strict_splits"
+TRAIN_FILE="$SPLITS/pretrain_strict_train_full.jsonl"
+META="$SPLITS/strict_splits_meta_full.json"
+
+echo "=== stage 1: holdout-disjoint train file ==="
+# Must precede the audit: it asserts train_holdout_disjoint, and the raw full
+# corpus contains the frozen holdout rows.
+"$PY" scripts/prepare_full_corpus_splits.py \
+  --corpus "$CORPUS" \
+  --validation "$SPLITS/pretrain_strict_val_2k.jsonl" \
+  --test "$SPLITS/pretrain_strict_test_2k.jsonl" \
+  --output "$TRAIN_FILE" \
+  --metadata "$META"
+
+echo "=== stage 2: dataset spec ==="
 "$PY" scripts/prepare_full_corpus_spec.py \
-  --corpus pretrain_t2t_full.jsonl \
+  --corpus "$TRAIN_FILE" \
   --root "$RAW_ROOT" \
   --output configs/datasets/minimind_official_full_v1.json
 
-echo "=== stage 2: source audit ==="
+echo "=== stage 3: source audit ==="
 "$PY" scripts/audit_pretrain_dataset.py \
   --spec configs/datasets/minimind_official_full_v1.json \
   --root "$RAW_ROOT" \
+  --metadata "$META" \
   --output artifacts/data/minimind_official_full_v1/audit.json
 
-echo "=== stage 3: training view ==="
+echo "=== stage 4: training view ==="
 "$PY" scripts/build_training_view.py \
   --spec configs/datasets/minimind_official_full_v1.json \
   --root "$RAW_ROOT" \
@@ -43,7 +57,7 @@ echo "=== stage 3: training view ==="
   --manifest artifacts/data/minimind_official_full_v1/training_view.json \
   --audit artifacts/data/minimind_official_full_v1/audit.json
 
-echo "=== stage 4: two seeds, one per GPU ==="
+echo "=== stage 5: two seeds, one per GPU ==="
 for pair in "20260511:0" "20260721:1"; do
   seed="${pair%%:*}"
   gpu="${pair##*:}"
