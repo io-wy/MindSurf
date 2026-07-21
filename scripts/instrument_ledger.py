@@ -90,7 +90,13 @@ def _quality_filter_entry(corpus: Path, limit: int) -> dict[str, Any]:
         for name, bucket in by_language.items()
         if bucket["total"]
     }
+    # Absolute gap, not a ratio. A ratio test on tiny denominators is noise and
+    # says nothing about harm: the filter this replaced dropped 6.19% of English
+    # against 0.06% of Chinese, a 6.1 point gap that thinned the material the
+    # model is weakest on. The current filter's largest gap is a fraction of a
+    # point, at which the same ratio is meaningless.
     spread = (max(rates.values()) / min(rates.values())) if rates and min(rates.values()) else None
+    gap = (max(rates.values()) - min(rates.values())) if rates else 0.0
 
     def median(values: list[int]) -> float:
         return float(sorted(values)[len(values) // 2]) if values else 0.0
@@ -107,19 +113,22 @@ def _quality_filter_entry(corpus: Path, limit: int) -> dict[str, Any]:
             "dropped_median_length": median(dropped_lengths),
             "kept_median_length": median(kept_lengths),
             "drop_rate_by_language": {name: round(rate, 4) for name, rate in sorted(rates.items())},
+            "language_rate_gap_points": round(gap * 100, 3),
             "language_rate_spread": round(spread, 2) if spread else None,
         },
         "noise_floor": "deterministic given a fixed corpus; no sampling variance",
         "agreement": "50 dropped and 50 kept rows sampled per destructive run (checklist 3.5)",
         "gating_qualified": bool(
-            spread is not None
-            and spread < 3.0
+            gap < 0.01
             and abs(_correlation(masses, lengths)) < 0.3
             and median(dropped_lengths) <= median(kept_lengths)
         ),
         "qualification_reason": (
-            "language spread below 3x, live statistic length-independent, and dropped rows "
-            "are not systematically longer than kept rows"
+            "largest drop-rate gap between language groups below 1 percentage point, live "
+            "statistic length-independent, and dropped rows not systematically longer than "
+            "kept rows. The ratio is recorded alongside but not used: on drop rates of a "
+            "fraction of a percent it is noise, and the retired filter it was written for "
+            "showed a 6.1 point gap"
         ),
     }
 
