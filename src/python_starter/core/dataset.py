@@ -69,6 +69,16 @@ class JsonlPackedDataset(IterableDataset[dict[str, torch.Tensor]]):
     the corpus. The cursor stays absolute across epoch boundaries, and the
     partial block at the end of an epoch carries into the next one, so exact
     resume is unaffected by where an interruption lands.
+
+    ponytail: tokenising inline keeps the cursor definition trivial, at the cost
+    of one saturated core per run while the rest of the host idles, roughly 6.5%
+    of wall clock spent in data wait, and re-tokenising the whole corpus on every
+    epoch. Measured on a 28-core host: training processes sat at 109% and 91%
+    CPU with 390s and 342s of accumulated data wait. Upgrade path is to
+    pre-tokenise once into a memory-mapped uint16 block array (vocab 6,400 fits,
+    2.16B tokens costs 4.3 GB) and have this class slice it, which keeps
+    ``num_workers=0`` and the absolute cursor while removing the bottleneck.
+    Do this before the next long run.
     """
 
     def __init__(
