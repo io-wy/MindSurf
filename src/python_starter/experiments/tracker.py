@@ -6,8 +6,12 @@ Either can be disabled by not configuring its API key / URI.
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
+import platform
+import subprocess
+import sys
 import uuid
 from datetime import UTC, datetime
 from pathlib import Path
@@ -20,6 +24,60 @@ from python_starter.infrastructure.config import Settings
 from python_starter.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
+
+
+def _config_fingerprint(config: dict[str, Any]) -> str:
+    """Stable digest of a run's resolved config, for spotting silent drift."""
+    payload = json.dumps(config, sort_keys=True, default=str).encode("utf-8")
+    return hashlib.sha256(payload).hexdigest()
+
+
+def _git_head() -> str | None:
+    try:
+        completed = subprocess.run(
+            ["git", "rev-parse", "HEAD"], capture_output=True, text=True, check=True
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    return completed.stdout.strip() or None
+
+
+def _environment_snapshot() -> dict[str, Any]:
+    """Record what a result cannot be reproduced without.
+
+    The standard asks for code version, dependency state and platform spec.
+    Each is cheap here and impossible to recover later: a result whose torch
+    build, GPU model or determinism setting is unknown cannot be re-derived,
+    only re-run and hoped over.
+    """
+    snapshot: dict[str, Any] = {
+        "git_head": _git_head(),
+        "python": sys.version.split()[0],
+        "platform": platform.platform(),
+        "processor_count": os.cpu_count(),
+    }
+    try:
+        import torch
+
+        snapshot["torch"] = torch.__version__
+        snapshot["cuda"] = torch.version.cuda
+        snapshot["cudnn_deterministic"] = bool(torch.backends.cudnn.deterministic)
+        snapshot["cublas_workspace_config"] = os.environ.get("CUBLAS_WORKSPACE_CONFIG")
+        if torch.cuda.is_available():
+            snapshot["gpu_name"] = torch.cuda.get_device_name(0)
+            snapshot["gpu_total_bytes"] = torch.cuda.get_device_properties(0).total_memory
+            snapshot["driver_cuda"] = torch.version.cuda
+    except ImportError:
+        snapshot["torch"] = None
+    try:
+        frozen = subprocess.run(
+            [sys.executable, "-m", "pip", "freeze"], capture_output=True, text=True, check=True
+        ).stdout
+        snapshot["dependencies_sha256"] = hashlib.sha256(frozen.encode("utf-8")).hexdigest()
+        snapshot["dependency_count"] = len([line for line in frozen.splitlines() if line.strip()])
+    except (OSError, subprocess.CalledProcessError):
+        snapshot["dependencies_sha256"] = None
+    return snapshot
 
 
 class ExperimentTracker:
@@ -49,7 +107,18 @@ class ExperimentTracker:
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_path = self.run_dir / "metrics.jsonl"
         if resumed:
-            self._append_local({"type": "resume"})
+            # An existing directory means either a genuine resume or a second
+            # experiment reusing the run name. The two are indistinguishable
+            # from here, and guessing "resume" silently interleaves two runs'
+            # metrics in one file and keeps the first run's config as the
+            # record of the second. Record the ambiguity instead of hiding it.
+            self._append_local(
+                {
+                    "type": "resume",
+                    "config_fingerprint": _config_fingerprint(config or {}),
+                    "started_at": datetime.now(UTC).isoformat(),
+                }
+            )
         else:
             self._write_json_atomic(
                 self.run_dir / "run.json",
@@ -58,6 +127,8 @@ class ExperimentTracker:
                     "experiment_name": self.experiment_name,
                     "started_at": datetime.now(UTC).isoformat(),
                     "config": config or {},
+                    "config_fingerprint": _config_fingerprint(config or {}),
+                    "environment": _environment_snapshot(),
                 },
             )
 
@@ -123,7 +194,9 @@ class ExperimentTracker:
 
     def finish(self) -> None:
         """Close tracking sessions."""
-        self._append_local({"type": "finish"})
+        # An explicit end time, so reading it does not mean scanning the metrics
+        # log for its last row and hoping the run did not die mid-write.
+        self._append_local({"type": "finish", "ended_at": datetime.now(UTC).isoformat()})
         if self._wandb_run:
             wandb.finish()
             self._wandb_run = None
