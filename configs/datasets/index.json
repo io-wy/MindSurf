@@ -31,6 +31,19 @@
       "test": "data/raw/mindsurf_team_v1/strict_splits/pretrain_strict_test_2k.jsonl",
       "tokenizer": "data/raw/mindsurf_team_v1/tokenizer"
     },
+    "minimind_official_full_v1": {
+      "dataset_id": "gongjy/minimind_dataset",
+      "revision": "74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5",
+      "hydra_config": "minimind_official_full_v1",
+      "identity": "minimind_official_full_v1",
+      "spec": "configs/datasets/minimind_official_full_v1.json",
+      "audit": "artifacts/data/minimind_official_full_v1/audit.json",
+      "training_view_manifest": "artifacts/data/minimind_official_full_v1/training_view.json",
+      "train": "data/processed/minimind_official_full_v1/pretrain_train_nfkc_dedup.jsonl",
+      "validation": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_val_2k.jsonl",
+      "test": "data/raw/minimind_official_v1/strict_splits/pretrain_strict_test_2k.jsonl",
+      "tokenizer": "data/raw/minimind_official_v1/tokenizer"
+    },
     "mindsurf_targeted_stem_v1": {
       "dataset_id": "mindsurf/targeted_stem_v1",
       "revision": "team-ab97cc8-targeted-stem-20260720",

@@ -50,6 +50,7 @@ def main() -> None:
     )
     args = parser.parse_args()
 
+    gpu_index = args.device.rsplit(":", 1)[-1] if ":" in args.device else "0"
     registry = DatasetRegistry(ROOT, args.dataset_index)
     selected = registry.resolve(args.dataset)
     registry.validate_identity(selected)
@@ -106,6 +107,10 @@ def main() -> None:
         [
             sys.executable,
             "scripts/run_with_gpu_lease.py",
+            # Without this the lease is always taken against GPU 0, so two arms
+            # on a two-card host would admit against the wrong device.
+            "--gpu-index",
+            gpu_index,
             "--run-id",
             f"train-{identity}{'-smoke' if args.smoke else ''}",
             "--required-memory-mib",
@@ -153,6 +158,10 @@ def main() -> None:
         [
             sys.executable,
             "scripts/run_with_gpu_lease.py",
+            # Without this the lease is always taken against GPU 0, so two arms
+            # on a two-card host would admit against the wrong device.
+            "--gpu-index",
+            gpu_index,
             "--run-id",
             f"evaluate-{identity}{'-smoke' if args.smoke else ''}",
             "--required-memory-mib",
