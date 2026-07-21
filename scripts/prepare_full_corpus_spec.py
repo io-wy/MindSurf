@@ -43,7 +43,7 @@ def _measure(path: Path) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--corpus", type=Path, required=True)
+    parser.add_argument("--corpus", type=Path, required=True, help="Prepared holdout-disjoint train file")
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument(
         "--base-spec",
@@ -65,7 +65,8 @@ def main() -> None:
     spec = dict(base)
     spec["files"] = {
         "source": measured,
-        # The builder reads `train` and strips the holdout rows from it.
+        # Already holdout-disjoint: prepare_full_corpus_splits.py filtered it, so the
+        # audit's train_holdout_disjoint assertion holds before the view is built.
         "train": dict(measured, path=corpus.relative_to(args.root).as_posix()),
         "validation": base["files"]["validation"],
         "test": base["files"]["test"],
