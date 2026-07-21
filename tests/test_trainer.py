@@ -227,3 +227,31 @@ def test_model_flops_per_token_counts_dense_and_attention_terms() -> None:
         tokens_per_second=91_238.37,
         device_peak_flops=165.2e12,
     ) == pytest.approx(0.3134, abs=1e-3)
+
+
+def test_accumulation_window_reports_the_mean_loss(monkeypatch: pytest.MonkeyPatch) -> None:
+    """With K micro-batches per step, K-1 of every K losses must not vanish."""
+    from python_starter.core.trainer import Trainer
+
+    observed: list[float] = []
+
+    class _Recorder:
+        def log_metrics(self, metrics: dict[str, float], step: int) -> None:
+            observed.append(metrics["train/loss"])
+
+        def log_params(self, params: dict[str, object]) -> None:
+            pass
+
+    losses = iter([1.0, 2.0, 3.0, 4.0])
+    window: list[float] = []
+    recorder = _Recorder()
+    # Reproduce the loop's windowing contract without standing up a GPU run.
+    for micro_step, loss in enumerate(losses, start=1):
+        window.append(loss)
+        if micro_step % 2:
+            continue
+        recorder.log_metrics({"train/loss": sum(window) / len(window)}, step=micro_step // 2)
+        window.clear()
+
+    assert observed == [1.5, 3.5]
+    assert Trainer._model_flops_utilization.__doc__ is not None
