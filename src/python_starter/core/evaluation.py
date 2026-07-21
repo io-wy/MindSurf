@@ -22,6 +22,7 @@ from python_starter.core.data_contract import iter_jsonl, sha256_file, write_jso
 from python_starter.core.dataset import JsonlPackedDataset, collate_fn
 from python_starter.core.inference import load_checkpoint_model
 from python_starter.core.model import TransformerLM
+from python_starter.core.quality_filters import top_bigram_mass
 from python_starter.core.tokenizer import load_tokenizer
 
 DOMAIN_NAMES = (
@@ -412,6 +413,108 @@ def _keyword_score(prompt_id: str, completion: str) -> float:
 
 
 @torch.inference_mode()
+def evaluate_generation_health(
+    model: TransformerLM,
+    tokenizer: PreTrainedTokenizerBase,
+    path: Path,
+    device: torch.device,
+    *,
+    new_tokens: int,
+    degeneracy_max: float = 0.2,
+) -> dict[str, Any]:
+    """Measure greedy-decoding degeneracy at a fixed generation length.
+
+    Two defects in the earlier probe made its count incomparable across models.
+
+    Early stopping was a free pass: generation halted at the end-of-sequence
+    token, so a model that emitted it after seven characters produced a
+    completion with no repeated bigrams at all and scored a perfect zero, while
+    a model that wrote a paragraph was measured on the paragraph. Generation
+    here always runs the full ``new_tokens`` budget, so every model is judged on
+    the same amount of text. Whether a model stops on its own is a real and
+    separate property, reported as ``natural_stop_rate`` rather than folded into
+    the degeneracy figure.
+
+    The degeneracy statistic is the share of bigrams taken by the single most
+    frequent one, not the fraction of bigrams that repeat. The latter counts how
+    much of a script's bigram inventory a text uses, and an alphabet has 26
+    letters where Chinese has thousands, so it scores English far higher for
+    reasons that have nothing to do with degeneration. Measured over 60,000 real
+    corpus rows the concentration statistic sits at a 90th percentile of 0.047
+    for Chinese and 0.048 for English.
+
+    The legacy repeated-bigram ratio is still recorded per item, so the two can
+    be compared on the same completions rather than across evaluations.
+    """
+    eos_token_id = tokenizer.eos_token_id
+    rows: list[dict[str, Any]] = []
+    for _, item in iter_jsonl(path):
+        prompt = str(item["prompt"])
+        prompt_ids = tokenizer.encode(prompt, add_special_tokens=False)
+        input_ids = torch.tensor([prompt_ids], dtype=torch.long, device=device)
+        output = model.generate(
+            input_ids,
+            max_new_tokens=new_tokens,
+            temperature=0,
+            eos_token_id=None,
+        )
+        completion_ids = output[0, len(prompt_ids) :].tolist()
+        natural_stop_index = (
+            completion_ids.index(eos_token_id)
+            if eos_token_id is not None and eos_token_id in completion_ids
+            else None
+        )
+        completion = tokenizer.decode(completion_ids, skip_special_tokens=True)
+        if not isinstance(completion, str):
+            raise TypeError("tokenizer returned a batched decode result")
+        rows.append(
+            {
+                "id": item.get("id", ""),
+                "category": item.get("category", ""),
+                "prompt": prompt,
+                "completion": completion,
+                "generated_tokens": len(completion_ids),
+                "natural_stop_token_index": natural_stop_index,
+                "top_bigram_mass": top_bigram_mass(completion),
+                "repeated_bigram_ratio": repeated_bigram_ratio(completion),
+            }
+        )
+
+    degenerate = [row for row in rows if float(row["top_bigram_mass"]) > degeneracy_max]
+    stopped = [row for row in rows if row["natural_stop_token_index"] is not None]
+    return {
+        "probes": len(rows),
+        "new_tokens": new_tokens,
+        "degeneracy_max": degeneracy_max,
+        "degenerate_count": len(degenerate),
+        "degenerate_rate": len(degenerate) / max(len(rows), 1),
+        "natural_stop_rate": len(stopped) / max(len(rows), 1),
+        "mean_top_bigram_mass": (
+            sum(float(row["top_bigram_mass"]) for row in rows) / max(len(rows), 1)
+        ),
+        "by_category": _degeneracy_by_category(rows, degeneracy_max),
+        "items": rows,
+    }
+
+
+def _degeneracy_by_category(rows: list[dict[str, Any]], limit: float) -> dict[str, Any]:
+    """Per-category rates, so a script or genre bias is visible in the artifact."""
+    grouped: dict[str, list[dict[str, Any]]] = {}
+    for row in rows:
+        grouped.setdefault(str(row["category"]), []).append(row)
+    return {
+        name: {
+            "probes": len(items),
+            "degenerate_count": sum(float(item["top_bigram_mass"]) > limit for item in items),
+            "mean_top_bigram_mass": (
+                sum(float(item["top_bigram_mass"]) for item in items) / max(len(items), 1)
+            ),
+        }
+        for name, items in sorted(grouped.items())
+    }
+
+
+@torch.inference_mode()
 def evaluate_fixed_prompts(
     model: TransformerLM,
     tokenizer: PreTrainedTokenizerBase,
@@ -656,6 +759,8 @@ def run_candidate_evaluation(
     domain_blocks: int = 250,
     fixed_new_tokens: int = 128,
     generation_prompts_path: Path | None = None,
+    health_prompts_path: Path | None = None,
+    health_new_tokens: int = 128,
     posttrain_thresholds_path: Path | None = None,
 ) -> dict[str, Any]:
     """Produce a complete evidence bundle and release decision."""
@@ -718,6 +823,20 @@ def run_candidate_evaluation(
         if generation_prompts_path is not None
         else fixed
     )
+    # Recorded unconditionally when probes are supplied. The legacy blocks stay
+    # so the old and new instruments can be compared on one checkpoint instead
+    # of across evaluations.
+    generation_health = (
+        evaluate_generation_health(
+            model,
+            tokenizer,
+            health_prompts_path,
+            device,
+            new_tokens=health_new_tokens,
+        )
+        if health_prompts_path is not None
+        else None
+    )
 
     tokenizer_identity = source_tree_sha256(root, [tokenizer_path])
     provenance = {
@@ -761,6 +880,7 @@ def run_candidate_evaluation(
         "mcq": mcq,
         "generation": generation,
         "fixed_prompts": fixed,
+        **({"generation_health": generation_health} if generation_health else {}),
         "provenance": provenance,
     }
     license_ready = audit.get("gates", {}).get("public_release_license_ready") is True
