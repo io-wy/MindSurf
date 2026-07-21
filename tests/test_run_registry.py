@@ -60,3 +60,45 @@ def test_live_active_run_still_blocks_a_duplicate(tmp_path: Path) -> None:
 
     with pytest.raises(ValueError, match="duplicate active or completed run"):
         registry.transition("train-live", "queued")
+
+
+def test_abandoned_run_is_retryable_but_live_run_is_not(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = RunRegistry(tmp_path / "runs.json")
+    registry.transition("run-killed", "queued")
+    registry.transition("run-killed", "running")
+
+    # A crash or a kill leaves the record in an active status forever. Requeuing
+    # must stay blocked while the owner lives and open up once it is gone.
+    with pytest.raises(ValueError, match="duplicate"):
+        registry.transition("run-killed", "queued")
+
+    monkeypatch.setattr(
+        "python_starter.experiments.run_registry._pid_alive", lambda pid: False
+    )
+    record = registry.transition("run-killed", "queued")
+
+    assert record["status"] == "queued"
+    assert [event["status"] for event in record["history"]] == [
+        "queued",
+        "running",
+        "failed",
+        "queued",
+    ]
+    assert record["history"][2]["detail"]["reason"].startswith("abandoned")
+
+
+def test_completed_run_stays_blocked_even_when_owner_is_gone(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    registry = RunRegistry(tmp_path / "runs.json")
+    registry.transition("run-done", "queued")
+    registry.transition("run-done", "completed")
+
+    monkeypatch.setattr(
+        "python_starter.experiments.run_registry._pid_alive", lambda pid: False
+    )
+
+    with pytest.raises(ValueError, match="duplicate"):
+        registry.transition("run-done", "queued")
