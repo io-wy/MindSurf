@@ -133,3 +133,83 @@ def test_candidate_record_binds_source_commit_and_training_summary(tmp_path: Pat
     assert record["source_git_head"] == "deadbeef"
     assert record["training_summary_sha256"]
     assert record["preflight_sha256"]
+
+
+def test_candidate_registers_on_a_later_gate_verdict_over_a_stale_evaluation(
+    tmp_path: Path,
+) -> None:
+    """A gate v3 verdict overrides the gate the evaluation was born with."""
+    from python_starter.experiments.registry import LocalCandidateRegistry
+
+    checkpoint = tmp_path / "checkpoint_step_168000.pt"
+    checkpoint.write_bytes(b"weights")
+    evaluation = tmp_path / "full168k_seed20260511_80m.json"
+    evaluation.write_text(
+        json.dumps({"gate": {"internal_candidate_passed": False}}),
+        encoding="utf-8",
+    )
+    verdict = tmp_path / "verdict_full168k_seed20260511.json"
+    verdict.write_text(
+        json.dumps(
+            {
+                "evaluation": "artifacts/evaluation/full168k_seed20260511_80m.json",
+                "gate": "configs/evaluation/pretrain_gate_v3.json",
+                "passed": True,
+                "reference": "artifacts/evaluation/reeval_shuf60k_seed20260721_80m.json",
+            }
+        ),
+        encoding="utf-8",
+    )
+    registry = LocalCandidateRegistry(tmp_path / "registry.json")
+
+    record = registry.register(
+        name="candidate-v3",
+        checkpoint_path=checkpoint,
+        evaluation_path=evaluation,
+        verdict_path=verdict,
+        limitations=["trained 168000 steps, not the planned 172000"],
+    )
+
+    assert record["gate_source"] == "verdict"
+    assert record["verdict_sha256"]
+    assert record["gate_config"] == "configs/evaluation/pretrain_gate_v3.json"
+    # A license decision is not a gate v3 concept, so a v3 pass never promotes.
+    assert record["public_release_eligible"] is False
+    assert record["limitations"] == ["trained 168000 steps, not the planned 172000"]
+
+
+def test_candidate_registration_rejects_a_verdict_for_another_evaluation(
+    tmp_path: Path,
+) -> None:
+    from python_starter.experiments.registry import LocalCandidateRegistry
+
+    checkpoint = tmp_path / "checkpoint.pt"
+    checkpoint.write_bytes(b"weights")
+    evaluation = tmp_path / "candidate_a.json"
+    evaluation.write_text(json.dumps({"gate": {}}), encoding="utf-8")
+    verdict = tmp_path / "verdict_b.json"
+    verdict.write_text(
+        json.dumps({"evaluation": "artifacts/evaluation/candidate_b.json", "passed": True}),
+        encoding="utf-8",
+    )
+    failing = tmp_path / "verdict_a.json"
+    failing.write_text(
+        json.dumps({"evaluation": "candidate_a.json", "passed": False}),
+        encoding="utf-8",
+    )
+    registry = LocalCandidateRegistry(tmp_path / "registry.json")
+
+    with pytest.raises(ValueError, match="does not judge this evaluation"):
+        registry.register(
+            name="mismatched",
+            checkpoint_path=checkpoint,
+            evaluation_path=evaluation,
+            verdict_path=verdict,
+        )
+    with pytest.raises(ValueError, match="internally passing"):
+        registry.register(
+            name="failing",
+            checkpoint_path=checkpoint,
+            evaluation_path=evaluation,
+            verdict_path=failing,
+        )

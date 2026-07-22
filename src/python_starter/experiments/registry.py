@@ -6,6 +6,7 @@ Convenience wrappers for registering, versioning, and promoting models.
 from __future__ import annotations
 
 import json
+from collections.abc import Sequence
 from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, cast
@@ -137,15 +138,13 @@ class LocalCandidateRegistry:
         evaluation_path: str | Path,
         training_summary_path: str | Path | None = None,
         preflight_path: str | Path | None = None,
+        verdict_path: str | Path | None = None,
+        limitations: Sequence[str] | None = None,
     ) -> dict[str, Any]:
         """Register an internally passing candidate with immutable identities."""
         checkpoint = Path(checkpoint_path).resolve(strict=True)
         evaluation = Path(evaluation_path).resolve(strict=True)
         evaluation_data = json.loads(evaluation.read_text(encoding="utf-8"))
-        gate = evaluation_data.get("gate", {})
-        if gate.get("internal_candidate_passed") is not True:
-            raise ValueError("only an internally passing candidate can be registered")
-
         registry = self._read()
         record = {
             "name": name,
@@ -154,9 +153,39 @@ class LocalCandidateRegistry:
             "checkpoint_sha256": sha256_file(checkpoint),
             "evaluation_path": str(evaluation),
             "evaluation_sha256": sha256_file(evaluation),
-            "public_release_eligible": gate.get("public_release_passed") is True,
             "registered_at": datetime.now(UTC).isoformat(),
         }
+
+        if verdict_path is None:
+            # The gate embedded in the evaluation is whichever gate was current
+            # when the evaluation ran.
+            gate = evaluation_data.get("gate", {})
+            if gate.get("internal_candidate_passed") is not True:
+                raise ValueError("only an internally passing candidate can be registered")
+            record["gate_source"] = "evaluation"
+            record["public_release_eligible"] = gate.get("public_release_passed") is True
+        else:
+            # A standalone verdict re-judges an existing evaluation under a
+            # later gate, so the two have to be checked as a pair: a passing
+            # verdict for some other evaluation says nothing about this
+            # candidate. Release eligibility is not a gate v3 concept -- it is
+            # a license decision, made and recorded outside this registry.
+            verdict = Path(verdict_path).resolve(strict=True)
+            verdict_data = json.loads(verdict.read_text(encoding="utf-8"))
+            judged = verdict_data.get("evaluation")
+            if not isinstance(judged, str) or Path(judged).name != evaluation.name:
+                raise ValueError(f"verdict does not judge this evaluation: {judged!r}")
+            if verdict_data.get("passed") is not True:
+                raise ValueError("only an internally passing candidate can be registered")
+            record["gate_source"] = "verdict"
+            record["verdict_path"] = str(verdict)
+            record["verdict_sha256"] = sha256_file(verdict)
+            record["gate_config"] = verdict_data.get("gate")
+            record["gate_reference"] = verdict_data.get("reference")
+            record["public_release_eligible"] = False
+
+        if limitations:
+            record["limitations"] = list(limitations)
         # Data identity already reaches the record through the evaluation
         # provenance. The training summary carries the run's seed and consumed
         # tokens, and the preflight record carries the source commit, which is
