@@ -1,0 +1,96 @@
+{
+  "schema_version": 3,
+  "gate_kind": "pretrain",
+  "design": {
+    "structure": "ratchet + canary",
+    "why": "The v2 gate carried eight absolute loss thresholds copied from a legacy 80M reference checkpoint. Candidates now clear them by 0.27 to 1.24 nats against a measured seed-to-seed noise floor of 0.0003 to 0.0051, so those criteria no longer separate anything and the verdict had quietly moved to the two instruments known to be invalid. Absolute thresholds are retired to canary duty; ranking is done by ratchet against a reference.",
+    "ratchet_rule": "A candidate must not be worse than the reference by more than tolerance_noise_multiple times that metric's noise floor.",
+    "reference_rule": "Stricter of the external anchor and the best historical candidate. Absent reference yields verdict no_reference, never a silent pass."
+  },
+  "tolerance_noise_multiple": 3.0,
+  "noise_floors": {
+    "source": "Measured on full168k seed 20260511 vs 20260721: identical recipe, identical data order, initialisation only. This is a LOWER BOUND on training randomness; data-order perturbation is not yet included.",
+    "measured_at": "2026-07-22",
+    "strict_val": 0.0068,
+    "strict_test": 0.0068,
+    "domain.code_like": 0.0144,
+    "domain.english_or_code_heavy": 0.0144,
+    "domain.length_long": 0.0144,
+    "domain.math_like": 0.0144,
+    "domain.quality_pass": 0.0144,
+    "domain.repeat_high": 0.0144,
+    "generation_health.degenerate_count": 1,
+    "generation_health.mean_top_bigram_mass": 0.005,
+    "mcq.accuracy": 0.099
+  },
+  "criteria": {
+    "strict_val": {
+      "path": "strict_val.loss",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.42,
+      "note": "Canary bound is the retired v2 absolute threshold, kept to catch catastrophic regression."
+    },
+    "strict_test": {
+      "path": "strict_test.loss",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.44
+    },
+    "domain.code_like": {
+      "path": "domain.code_like",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.388202319542567
+    },
+    "domain.english_or_code_heavy": {
+      "path": "domain.english_or_code_heavy",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.903274053707719
+    },
+    "domain.length_long": {
+      "path": "domain.length_long",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.616696572303772
+    },
+    "domain.math_like": {
+      "path": "domain.math_like",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.0446277409791946
+    },
+    "domain.quality_pass": {
+      "path": "domain.quality_pass",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.28850013948977
+    },
+    "domain.repeat_high": {
+      "path": "domain.repeat_high",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 2.2572996597737074
+    },
+    "generation_health.degenerate_count": {
+      "path": "generation_health.degenerate_count",
+      "direction": "lower_is_better",
+      "gating": true,
+      "canary_max": 20,
+      "note": "Fixed-length greedy generation over 100 independent probes, scored by top-bigram concentration. Qualified: invariance tested against length, early stopping and script; seed-to-seed spread 0 of 100. Canary at 20 of 100 catches collapse."
+    },
+    "generation.repetition_count": {
+      "path": "generation.repetition_count",
+      "direction": "lower_is_better",
+      "gating": false,
+      "note": "NOT QUALIFIED. Early stopping is a free pass: a model emitting end-of-sequence after seven characters scored a perfect zero. n=10, and seed-to-seed spread is 4 of 10 on models whose loss differs by 0.002. Reported for continuity with historical artifacts only."
+    },
+    "mcq.accuracy": {
+      "path": "mcq.accuracy",
+      "direction": "higher_is_better",
+      "gating": false,
+      "note": "NOT QUALIFIED. Maintainer review of a seeded 32-item sample found every label correct but ruled the suite inadmissible as capability evidence: 32 long_context records are 4 templates copied 8 times, two category names do not describe what they measure, and distractors sit at a different semantic level from the key. Seed-to-seed spread 9.9 percentage points against an effect size of interest near 3 to 5. Reported, never gating."
+    }
+  }
+}
