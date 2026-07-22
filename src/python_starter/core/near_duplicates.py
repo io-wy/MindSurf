@@ -111,7 +111,8 @@ def signature(hashes: np.ndarray, a: np.ndarray, b: np.ndarray) -> np.ndarray:
         # all into one near-duplicate group.
         return np.full(a.size, EMPTY_SENTINEL, dtype=np.uint32)
     permuted = (np.outer(a, hashes) + b[:, None]) % MERSENNE_PRIME
-    return (permuted.min(axis=1) % (MAX_HASH + 1)).astype(np.uint32)
+    signature: np.ndarray = (permuted.min(axis=1) % (MAX_HASH + 1)).astype(np.uint32)
+    return signature
 
 
 def band_keys(signatures: np.ndarray, config: MinHashConfig) -> np.ndarray:

@@ -6,17 +6,24 @@ real verdict during this project.
 
 from __future__ import annotations
 
+from typing import Any
+
 import pytest
 from scripts.judge_gate_v3 import MissingMetricError, judge_criterion, read_metric
 
-NOISE = {"strict_val": 0.0068, "mcq.accuracy": 0.099}
+NOISE: dict[str, Any] = {"strict_val": 0.0068, "mcq.accuracy": 0.099}
 TOLERANCE = 3.0
 
-LOWER = {"path": "strict_val.loss", "direction": "lower_is_better", "gating": True}
-HIGHER = {"path": "mcq.accuracy", "direction": "higher_is_better", "gating": False}
+LOWER: dict[str, Any] = {"path": "strict_val.loss", "direction": "lower_is_better", "gating": True}
+HIGHER: dict[str, Any] = {"path": "mcq.accuracy", "direction": "higher_is_better", "gating": False}
 
 
-def _judge(spec, candidate, reference=None, name="strict_val"):
+def _judge(
+    spec: dict[str, Any],
+    candidate: dict[str, Any],
+    reference: dict[str, Any] | None = None,
+    name: str = "strict_val",
+) -> dict[str, Any]:
     return judge_criterion(name, spec, candidate, reference, NOISE, TOLERANCE)
 
 

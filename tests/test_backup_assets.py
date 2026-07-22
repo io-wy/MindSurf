@@ -6,6 +6,7 @@ import json
 import subprocess
 import sys
 from pathlib import Path
+from typing import Any, cast
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "scripts" / "backup_assets.py"
@@ -13,7 +14,7 @@ SCRIPT = ROOT / "scripts" / "backup_assets.py"
 
 def _run(
     repo: Path, backup_root: Path, output: Path, *extra: str, expect_failure: bool = False
-) -> dict:
+) -> dict[str, Any]:
     completed = subprocess.run(
         [
             sys.executable,
@@ -34,7 +35,7 @@ def _run(
     # A failed asset has to reach the caller's exit code, not only the JSON:
     # an inventory nobody reads is how a lost asset stays unnoticed.
     assert (completed.returncode != 0) is expect_failure, completed.stderr.decode()
-    return json.loads(output.read_text(encoding="utf-8"))
+    return cast(dict[str, Any], json.loads(output.read_text(encoding="utf-8")))
 
 
 def test_copying_backup_stores_the_asset_under_its_digest(tmp_path: Path) -> None:

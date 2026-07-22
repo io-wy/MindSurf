@@ -9,9 +9,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import torch
+from transformers import PreTrainedTokenizerBase
 
 from python_starter.core.evaluation import evaluate_generation_health
 
@@ -69,8 +70,12 @@ def _probes(path: Path, count: int = 4) -> Path:
 
 
 def _run(model: Any, path: Path, new_tokens: int = 40) -> dict[str, Any]:
+    # The stub implements only the encode/decode surface the instrument uses;
+    # requiring a real PreTrainedTokenizerBase here would put a model's
+    # vocabulary between the test and the behaviour under test.
+    tokenizer = cast(PreTrainedTokenizerBase, _StubTokenizer())
     return evaluate_generation_health(
-        model, _StubTokenizer(), path, torch.device("cpu"), new_tokens=new_tokens
+        model, tokenizer, path, torch.device("cpu"), new_tokens=new_tokens
     )
 
 

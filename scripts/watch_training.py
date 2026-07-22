@@ -14,6 +14,7 @@ import sys
 import time
 from datetime import UTC, datetime
 from pathlib import Path
+from typing import cast
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "src"))
@@ -136,7 +137,7 @@ def main() -> None:
         for alert in evaluate_alerts(state, thresholds):
             key = str(alert["alert"])
             if key in seen:
-                seen[key]["occurrences"] = int(seen[key]["occurrences"]) + 1
+                seen[key]["occurrences"] = int(cast(int, seen[key]["occurrences"])) + 1
                 seen[key]["last_observed_at"] = datetime.now(UTC).isoformat()
                 continue
             record = {

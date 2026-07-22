@@ -341,8 +341,8 @@ class PackedBlockDataset(IterableDataset[dict[str, torch.Tensor]]):
                 "to preserve an exact resume cursor"
             )
 
-        array = np.memmap(self.data_path, dtype=np.uint16, mode="r")
-        array = array.reshape(-1, self.block_size)
+        flat = np.memmap(self.data_path, dtype=np.uint16, mode="r")
+        array = flat.reshape(-1, self.block_size)
         total = self.blocks_per_epoch * self.epochs
         for emitted, absolute in enumerate(range(self.skip_blocks, total)):
             if self.max_blocks is not None and emitted >= self.max_blocks:

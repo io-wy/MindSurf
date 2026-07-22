@@ -146,7 +146,7 @@ class LocalCandidateRegistry:
         evaluation = Path(evaluation_path).resolve(strict=True)
         evaluation_data = json.loads(evaluation.read_text(encoding="utf-8"))
         registry = self._read()
-        record = {
+        record: dict[str, Any] = {
             "name": name,
             "stage": "candidate",
             "checkpoint_path": str(checkpoint),

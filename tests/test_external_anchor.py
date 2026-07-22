@@ -13,6 +13,7 @@ from __future__ import annotations
 import importlib.util
 import sys
 from pathlib import Path
+from typing import Any
 
 import pytest
 import torch
@@ -80,7 +81,13 @@ def test_qk_norm_false_removes_the_norms() -> None:
 def test_qk_norm_changes_the_function() -> None:
     """Guard against the flag becoming decorative: the two models must differ."""
     torch.manual_seed(0)
-    kwargs = {"vocab_size": 64, "n_embed": 64, "n_layer": 2, "n_head": 4, "max_seq_len": 32}
+    kwargs: dict[str, Any] = {
+        "vocab_size": 64,
+        "n_embed": 64,
+        "n_layer": 2,
+        "n_head": 4,
+        "max_seq_len": 32,
+    }
     with_norm = TransformerLM(ModelConfig(**kwargs)).eval()
     without_norm = TransformerLM(ModelConfig(**kwargs, qk_norm=False)).eval()
     shared = {

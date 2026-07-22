@@ -96,7 +96,9 @@ def test_lease_store_acquire_update_release(
     assert json.loads((tmp_path / "leases.json").read_text(encoding="utf-8"))["leases"] == []
 
 
-def test_lease_on_another_card_does_not_block_this_one(tmp_path, monkeypatch) -> None:
+def test_lease_on_another_card_does_not_block_this_one(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
     """A reservation constrains only the card it was taken on."""
     from python_starter.infrastructure import gpu_capacity
 

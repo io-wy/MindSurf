@@ -45,7 +45,7 @@ def _correlation(left: list[float], right: list[float]) -> float:
     variance_right = sum((b - mean_right) ** 2 for b in right)
     if variance_left <= 0 or variance_right <= 0:
         return 0.0
-    return covariance / (variance_left * variance_right) ** 0.5
+    return float(covariance / (variance_left * variance_right) ** 0.5)
 
 
 def _sample_corpus(path: Path, limit: int) -> list[str]:
