@@ -87,8 +87,15 @@ class CausalSelfAttention(nn.Module):
         self.k_proj = nn.Linear(config.n_embed, kv_dim, bias=False)
         self.v_proj = nn.Linear(config.n_embed, kv_dim, bias=False)
         self.o_proj = nn.Linear(config.n_embed, config.n_embed, bias=False)
-        self.q_norm = RMSNorm(self.head_dim, eps=config.rms_norm_eps)
-        self.k_norm = RMSNorm(self.head_dim, eps=config.rms_norm_eps)
+        # Identity rather than a no-op flag: a disabled norm must contribute no
+        # parameters, so loading such a checkpoint fails loudly on key mismatch
+        # instead of quietly running trained weights through an untrained norm.
+        self.q_norm: nn.Module = (
+            RMSNorm(self.head_dim, eps=config.rms_norm_eps) if config.qk_norm else nn.Identity()
+        )
+        self.k_norm: nn.Module = (
+            RMSNorm(self.head_dim, eps=config.rms_norm_eps) if config.qk_norm else nn.Identity()
+        )
 
         self.rotary = RotaryEmbedding(
             self.head_dim,
@@ -188,6 +195,9 @@ class ModelConfig:
     tie_weights: bool = True
     rope_theta: float = 1_000_000.0
     rms_norm_eps: float = 1e-6
+    # Only external anchors set this false: upstream MiniMind's released
+    # checkpoints predate its own QK normalization and carry no norm weights.
+    qk_norm: bool = True
 
     def __post_init__(self) -> None:
         if self.vocab_size <= 0 or self.n_embed <= 0 or self.n_layer <= 0:
@@ -210,8 +220,17 @@ class ModelConfig:
             raise ValueError("rms_norm_eps must be in (0, 1e-4)")
 
     def to_dict(self) -> dict[str, Any]:
-        """Return a checkpoint-safe plain mapping."""
-        return asdict(self)
+        """Return a checkpoint-safe plain mapping.
+
+        ``qk_norm`` is omitted while it holds its default so that checkpoints
+        written before the field existed still compare equal to a freshly built
+        configuration. Trainer resume tests the two mappings for exact equality,
+        so emitting the key unconditionally would reject every prior checkpoint.
+        """
+        values = asdict(self)
+        if values["qk_norm"]:
+            del values["qk_norm"]
+        return values
 
     @classmethod
     def from_dict(cls, values: dict[str, Any]) -> ModelConfig:
