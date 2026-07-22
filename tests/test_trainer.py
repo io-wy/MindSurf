@@ -11,7 +11,12 @@ import torch
 from torch.utils.data import DataLoader, IterableDataset
 
 from python_starter.core.model import ModelConfig, TransformerLM
-from python_starter.core.trainer import Trainer, TrainerConfig, get_wsd_schedule
+from python_starter.core.trainer import (
+    Trainer,
+    TrainerConfig,
+    build_training_summary,
+    get_wsd_schedule,
+)
 
 
 class _CursorDataset(IterableDataset[dict[str, torch.Tensor]]):
@@ -188,6 +193,19 @@ def test_training_with_validation_saves_best_checkpoint(tmp_path: Path) -> None:
     assert summary["checkpoint_write_seconds"] >= 0
     assert summary["last_gradient_norm"] is not None
     assert summary["identity"]["training_view_sha256"] == "a" * 64
+
+    # A run that dies mid-budget never reaches this call, so the same summary
+    # has to be recoverable from a checkpoint alone.
+    checkpoint = torch.load(tmp_path / "best_model.pt", map_location="cpu", weights_only=False)
+    derived = build_training_summary(
+        progress=checkpoint["progress"],
+        run_config=checkpoint["run_config"],
+        parameter_count=summary["parameter_count"],
+    )
+    assert derived["consumed_tokens"] == summary["consumed_tokens"]
+    assert derived["global_step"] == summary["global_step"]
+    assert derived["identity"] == summary["identity"]
+    assert derived["last_gradient_norm"] == summary["last_gradient_norm"]
 
 
 def test_trainer_and_schedule_validation() -> None:
