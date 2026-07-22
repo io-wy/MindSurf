@@ -21,7 +21,8 @@ COPY --from=ghcr.io/astral-sh/uv:latest /uv /usr/local/bin/uv
 COPY pyproject.toml uv.lock ./
 
 # Override torch source to use CUDA index
-RUN uv sync --no-dev --frozen --index-url https://download.pytorch.org/whl/cu122
+RUN uv sync --no-dev --frozen --no-install-project \
+    --index-url https://download.pytorch.org/whl/cu122
 
 # =============================================================================
 # Runtime stage
