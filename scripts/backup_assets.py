@@ -41,10 +41,6 @@ DEFAULT_ASSETS: dict[str, str] = {
 }
 
 
-def _resolve(relative: str) -> Path:
-    return (ROOT / relative).resolve()
-
-
 def _store_path(backup_root: Path, digest: str) -> Path:
     return backup_root / "sha256" / digest[:2] / digest
 
@@ -69,9 +65,30 @@ def main() -> None:
         action="store_true",
         help="Re-hash the stored copies without writing anything new",
     )
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=ROOT,
+        help="Where the assets live; defaults to this checkout",
+    )
+    parser.add_argument(
+        "--in-place",
+        action="store_true",
+        help=(
+            "Record and verify each asset where it already lies instead of "
+            "copying it under its digest. For a backup root that is a separate "
+            "machine holding the assets at their normal paths -- a second copy "
+            "on the same disk buys no durability, so it is not made"
+        ),
+    )
+    parser.add_argument(
+        "--no-defaults",
+        action="store_true",
+        help="Record only the named --asset entries, for a host that holds a subset",
+    )
     args = parser.parse_args()
 
-    assets = dict(DEFAULT_ASSETS)
+    assets = {} if args.no_defaults else dict(DEFAULT_ASSETS)
     for item in args.asset:
         name, _, relative = item.partition("=")
         if not name or not relative:
@@ -84,19 +101,21 @@ def main() -> None:
     failed: list[str] = []
 
     for name, relative in sorted(assets.items()):
-        source = _resolve(relative)
+        source = (args.repo_root / relative).resolve()
         if not source.is_file():
             missing.append(name)
             continue
 
         digest = sha256_file(source)
-        stored = _store_path(backup_root, digest)
-        if not args.verify_only and not stored.is_file():
+        stored = source if args.in_place else _store_path(backup_root, digest)
+        if not args.verify_only and not args.in_place and not stored.is_file():
             stored.parent.mkdir(parents=True, exist_ok=True)
             staging = stored.with_suffix(".partial")
             shutil.copyfile(source, staging)
             staging.replace(stored)
 
+        # Re-read from the stored path, so a copy that silently truncated or a
+        # transfer that corrupted a byte fails here rather than at restore.
         verified = stored.is_file() and sha256_file(stored) == digest
         if not verified:
             failed.append(name)
@@ -122,9 +141,14 @@ def main() -> None:
             "recorded_at": datetime.now(UTC).isoformat(),
             "backup_root": str(backup_root),
             "durability_scope": (
-                "second filesystem on the training host; survives workspace loss and "
-                "accidental deletion, not host loss"
+                "assets recorded where they lie on this host; the durability they "
+                "have is whatever this host has, and re-hashing them here proves "
+                "they are readable and intact, not that a second copy exists"
+                if args.in_place
+                else "second filesystem on the training host; survives workspace "
+                "loss and accidental deletion, not host loss"
             ),
+            "in_place": args.in_place,
             "verify_only": args.verify_only,
             "asset_count": len(entries),
             "total_bytes": total_bytes,
