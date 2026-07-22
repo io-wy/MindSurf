@@ -13,6 +13,7 @@ import os
 import random
 import time
 import uuid
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any, cast
@@ -31,6 +32,47 @@ from python_starter.infrastructure.logging import get_logger
 
 logger = get_logger(__name__)
 CHECKPOINT_SCHEMA_VERSION = 2
+
+
+def build_training_summary(
+    *,
+    progress: Mapping[str, Any],
+    run_config: Mapping[str, Any],
+    parameter_count: int,
+) -> dict[str, Any]:
+    """Build the training summary from a progress record and its run config.
+
+    A run that dies before its last step never writes a summary, but every
+    field of one is already inside the checkpoint's progress block, so the
+    summary of an interrupted run can still be derived rather than lost.
+    """
+    training_view = run_config.get("training_view", {})
+    elapsed = progress.get("training_elapsed_seconds") or 0.0
+    consumed_tokens = progress.get("consumed_tokens", 0)
+    return {
+        "schema_version": 1,
+        "global_step": progress.get("global_step", 0),
+        "micro_step": progress.get("micro_step", 0),
+        "consumed_blocks": progress.get("consumed_blocks", 0),
+        "consumed_tokens": consumed_tokens,
+        "training_elapsed_seconds": elapsed,
+        "tokens_per_second": consumed_tokens / elapsed if elapsed > 0 else 0.0,
+        "parameter_count": parameter_count,
+        "final_train_loss": progress.get("last_train_loss"),
+        "best_eval_loss": progress.get("best_eval_loss"),
+        "peak_cuda_allocated_bytes": progress.get("peak_cuda_allocated_bytes"),
+        "peak_cuda_reserved_bytes": progress.get("peak_cuda_reserved_bytes"),
+        "data_wait_seconds": progress.get("data_wait_seconds"),
+        "optimizer_step_seconds": progress.get("optimizer_step_seconds"),
+        "checkpoint_write_seconds": progress.get("checkpoint_write_seconds"),
+        "last_gradient_norm": progress.get("last_gradient_norm"),
+        "identity": {
+            "dataset_id": run_config.get("data", {}).get("dataset_id"),
+            "dataset_revision": run_config.get("data", {}).get("dataset_revision"),
+            "training_view_sha256": training_view.get("output", {}).get("sha256"),
+            "seed": run_config.get("seed"),
+        },
+    }
 
 
 def get_wsd_schedule(
@@ -550,34 +592,27 @@ class Trainer:
         )
 
     def _write_training_summary(self) -> dict[str, Any]:
-        training_view = self.run_config.get("training_view", {})
-        identity = {
-            "dataset_id": self.run_config.get("data", {}).get("dataset_id"),
-            "dataset_revision": self.run_config.get("data", {}).get("dataset_revision"),
-            "training_view_sha256": training_view.get("output", {}).get("sha256"),
-            "seed": self.run_config.get("seed"),
-        }
-        summary: dict[str, Any] = {
-            "schema_version": 1,
-            "global_step": self.global_step,
-            "micro_step": self.micro_step,
-            "consumed_blocks": self.consumed_blocks,
-            "consumed_tokens": self.consumed_tokens,
-            "training_elapsed_seconds": self.training_elapsed_seconds,
-            "tokens_per_second": self._tokens_per_second(),
-            "parameter_count": sum(
+        summary = build_training_summary(
+            progress={
+                "global_step": self.global_step,
+                "micro_step": self.micro_step,
+                "consumed_blocks": self.consumed_blocks,
+                "consumed_tokens": self.consumed_tokens,
+                "best_eval_loss": self.best_eval_loss,
+                "last_train_loss": self.last_train_loss,
+                "training_elapsed_seconds": self.training_elapsed_seconds,
+                "peak_cuda_allocated_bytes": self.peak_cuda_allocated_bytes,
+                "peak_cuda_reserved_bytes": self.peak_cuda_reserved_bytes,
+                "data_wait_seconds": self.data_wait_seconds,
+                "optimizer_step_seconds": self.optimizer_step_seconds,
+                "checkpoint_write_seconds": self.checkpoint_write_seconds,
+                "last_gradient_norm": self.last_gradient_norm,
+            },
+            run_config=self.run_config,
+            parameter_count=sum(
                 parameter.numel() for parameter in self._model_for_state().parameters()
             ),
-            "final_train_loss": self.last_train_loss,
-            "best_eval_loss": self.best_eval_loss,
-            "peak_cuda_allocated_bytes": self.peak_cuda_allocated_bytes,
-            "peak_cuda_reserved_bytes": self.peak_cuda_reserved_bytes,
-            "data_wait_seconds": self.data_wait_seconds,
-            "optimizer_step_seconds": self.optimizer_step_seconds,
-            "checkpoint_write_seconds": self.checkpoint_write_seconds,
-            "last_gradient_norm": self.last_gradient_norm,
-            "identity": identity,
-        }
+        )
         path = self.config.output_dir / "training_summary.json"
         temporary = path.with_name(f".{path.name}.{uuid.uuid4().hex}.tmp")
         try:
