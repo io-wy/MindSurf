@@ -58,6 +58,7 @@ coverage.xml
 /models/*
 !/models/.gitkeep
 /artifacts/
+/release/
 /outputs/
 /data/*
 !/data/.gitkeep
