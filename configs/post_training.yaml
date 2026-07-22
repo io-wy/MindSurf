@@ -1,0 +1,26 @@
+defaults:
+  - post_training: sft
+  - peft: lora
+  - _self_
+
+stage: ${post_training.stage}
+
+model:
+  name_or_path: ???
+  tokenizer_name_or_path: ${model.name_or_path}
+  ref_model_name_or_path: null
+  trust_remote_code: false
+
+data:
+  train_path: ???
+  eval_path: null
+
+artifacts:
+  # Keep the adapter in output_dir and write a reloadable full checkpoint here.
+  save_merged_model: true
+  merged_subdir: merged
+
+# TRL arguments are kept under one stable key for the runtime factory.
+training: ${post_training}
+
+seed: 42
