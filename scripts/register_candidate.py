@@ -24,6 +24,21 @@ def main() -> None:
         help="Preflight record; binds the source commit to the candidate",
     )
     parser.add_argument(
+        "--verdict",
+        type=Path,
+        help=(
+            "Gate verdict that re-judges --evaluation under a later gate; "
+            "without it the gate embedded in the evaluation decides"
+        ),
+    )
+    parser.add_argument(
+        "--limitation",
+        action="append",
+        default=[],
+        dest="limitations",
+        help="Known limitation of this candidate; repeatable, recorded verbatim",
+    )
+    parser.add_argument(
         "--registry",
         type=Path,
         default=Path("artifacts/model_registry.json"),
@@ -35,6 +50,8 @@ def main() -> None:
         evaluation_path=args.evaluation,
         training_summary_path=args.training_summary,
         preflight_path=args.preflight,
+        verdict_path=args.verdict,
+        limitations=args.limitations,
     )
     print(json.dumps(record, ensure_ascii=False, sort_keys=True))
 
