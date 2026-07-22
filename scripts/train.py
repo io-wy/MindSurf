@@ -170,13 +170,14 @@ def main(cfg: DictConfig) -> None:
             # very end: a 172,000-step request against 171,892 available steps
             # cost two GPUs seven hours before it surfaced.
             available_blocks = train_dataset.blocks_per_epoch * train_dataset.epochs
-            required_blocks = int(cfg.training.max_steps) * int(cfg.training.batch_size) * int(
-                cfg.training.get("accumulation_steps", 1)
+            required_blocks = (
+                int(cfg.training.max_steps)
+                * int(cfg.training.batch_size)
+                * int(cfg.training.get("accumulation_steps", 1))
             )
             if required_blocks > available_blocks:
                 affordable = available_blocks // (
-                    int(cfg.training.batch_size)
-                    * int(cfg.training.get("accumulation_steps", 1))
+                    int(cfg.training.batch_size) * int(cfg.training.get("accumulation_steps", 1))
                 )
                 raise ValueError(
                     f"training budget exceeds the corpus: {cfg.training.max_steps} steps need "

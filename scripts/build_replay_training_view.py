@@ -89,13 +89,17 @@ def _write_interleaved(
                 if official_index >= len(official):
                     break
                 handle.write(
-                    json.dumps(official[official_index][1], ensure_ascii=False, separators=(",", ":"))
+                    json.dumps(
+                        official[official_index][1], ensure_ascii=False, separators=(",", ":")
+                    )
                     + "\n"
                 )
                 official_index += 1
             if targeted_index < len(targeted):
                 handle.write(
-                    json.dumps(targeted[targeted_index][1], ensure_ascii=False, separators=(",", ":"))
+                    json.dumps(
+                        targeted[targeted_index][1], ensure_ascii=False, separators=(",", ":")
+                    )
                     + "\n"
                 )
                 targeted_index += 1
@@ -111,9 +115,7 @@ def main() -> None:
     parser.add_argument(
         "--output",
         type=Path,
-        default=Path(
-            "data/processed/mindsurf_official_targeted_replay_v1/pretrain_train.jsonl"
-        ),
+        default=Path("data/processed/mindsurf_official_targeted_replay_v1/pretrain_train.jsonl"),
     )
     parser.add_argument(
         "--manifest",

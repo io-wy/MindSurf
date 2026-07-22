@@ -166,8 +166,7 @@ def main() -> None:
     recovered = _load(recovered_path)
     progress_keys = ("global_step", "micro_step", "consumed_blocks", "consumed_tokens")
     progress_continuity = {
-        key: baseline["progress"][key] == recovered["progress"][key]
-        for key in progress_keys
+        key: baseline["progress"][key] == recovered["progress"][key] for key in progress_keys
     }
     model_exact = all(
         torch.equal(value, recovered["model_state_dict"][name])
@@ -179,18 +178,12 @@ def main() -> None:
             interruption_progress["global_step"] == args.interrupt_step
         ),
         "optimizer_state_exact": (
-            _state_equal(
-                baseline["optimizer_state_dict"], recovered["optimizer_state_dict"]
-            )
+            _state_equal(baseline["optimizer_state_dict"], recovered["optimizer_state_dict"])
         ),
         "scheduler_state_exact": (
-            _state_equal(
-                baseline["scheduler_state_dict"], recovered["scheduler_state_dict"]
-            )
+            _state_equal(baseline["scheduler_state_dict"], recovered["scheduler_state_dict"])
         ),
-        "rng_state_exact": (
-            _state_equal(baseline["rng_state"], recovered["rng_state"])
-        ),
+        "rng_state_exact": (_state_equal(baseline["rng_state"], recovered["rng_state"])),
         "model_state_exact": model_exact,
         **{f"progress_{key}_continuous": value for key, value in progress_continuity.items()},
     }
@@ -202,9 +195,7 @@ def main() -> None:
         "interrupt_step": args.interrupt_step,
         "interrupted_return_code": interrupted_return_code,
         "checks": checks,
-        "interruption_progress": {
-            key: interruption_progress[key] for key in progress_keys
-        },
+        "interruption_progress": {key: interruption_progress[key] for key in progress_keys},
         "final_progress": {key: recovered["progress"][key] for key in progress_keys},
         "artifacts": {
             "parent_sha256": sha256_file(args.parent),

@@ -95,7 +95,9 @@ def main() -> None:
             "tokens_per_parameter": int(summary["consumed_tokens"]) / parameter_count,
         },
     )
-    print(f"tokens/s {tokens_per_second:,.0f}  achieved {flops_per_token * tokens_per_second / 1e12:.1f} TFLOPS  MFU {mfu:.1%}")
+    print(
+        f"tokens/s {tokens_per_second:,.0f}  achieved {flops_per_token * tokens_per_second / 1e12:.1f} TFLOPS  MFU {mfu:.1%}"
+    )
 
 
 if __name__ == "__main__":

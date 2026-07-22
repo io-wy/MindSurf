@@ -104,7 +104,11 @@ def main() -> None:
         },
         args.output,
     )
-    manifest = {**release, "weights_file": args.output.name, "weights_sha256": sha256_file(args.output)}
+    manifest = {
+        **release,
+        "weights_file": args.output.name,
+        "weights_sha256": sha256_file(args.output),
+    }
     write_json_atomic(args.output.with_suffix(".manifest.json"), manifest)
     print(json.dumps(manifest, ensure_ascii=False, sort_keys=True))
 

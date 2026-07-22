@@ -92,7 +92,11 @@ def _git(*arguments: str) -> str:
 
 
 def _staged_files() -> list[str]:
-    return [line for line in _git("diff", "--cached", "--diff-filter=ACMR", "--name-only").splitlines() if line]
+    return [
+        line
+        for line in _git("diff", "--cached", "--diff-filter=ACMR", "--name-only").splitlines()
+        if line
+    ]
 
 
 def _range_files(commit_range: str) -> list[str]:

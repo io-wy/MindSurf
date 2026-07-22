@@ -74,9 +74,7 @@ def test_abandoned_run_is_retryable_but_live_run_is_not(
     with pytest.raises(ValueError, match="duplicate"):
         registry.transition("run-killed", "queued")
 
-    monkeypatch.setattr(
-        "python_starter.experiments.run_registry._pid_alive", lambda pid: False
-    )
+    monkeypatch.setattr("python_starter.experiments.run_registry._pid_alive", lambda pid: False)
     record = registry.transition("run-killed", "queued")
 
     assert record["status"] == "queued"
@@ -96,9 +94,7 @@ def test_completed_run_stays_blocked_even_when_owner_is_gone(
     registry.transition("run-done", "queued")
     registry.transition("run-done", "completed")
 
-    monkeypatch.setattr(
-        "python_starter.experiments.run_registry._pid_alive", lambda pid: False
-    )
+    monkeypatch.setattr("python_starter.experiments.run_registry._pid_alive", lambda pid: False)
 
     with pytest.raises(ValueError, match="duplicate"):
         registry.transition("run-done", "queued")

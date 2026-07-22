@@ -157,7 +157,9 @@ def main() -> None:
     if signatures:
         stacked = np.vstack(signatures)
         # Indices here are into the survivor list, mapped back to source rows.
-        near_duplicates = {survivor_positions[index] for index in duplicate_indices(stacked, config)}
+        near_duplicates = {
+            survivor_positions[index] for index in duplicate_indices(stacked, config)
+        }
     reason_counts["near_duplicate"] = len(near_duplicates)
 
     digest = hashlib.sha256()
