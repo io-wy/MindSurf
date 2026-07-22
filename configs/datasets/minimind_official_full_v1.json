@@ -1,0 +1,62 @@
+{
+  "dataset_id": "gongjy/minimind_dataset",
+  "declared_token_count": null,
+  "derived_from": {
+    "base_identity": "minimind_official_v1",
+    "base_spec": "configs/datasets/minimind_official_v1.json",
+    "note": "Same upstream dataset id and revision; the corpus file differs. The strict holdout is inherited unchanged so gate thresholds and prior comparisons remain valid."
+  },
+  "files": {
+    "source": {
+      "path": "pretrain_strict_train_full.jsonl",
+      "rows": 8464823,
+      "sha256": "2c1175c6f67a54768f1c8d3e617236781761b48688a96b45b4f5141dfa445ba6",
+      "size": 8271117328
+    },
+    "test": {
+      "path": "strict_splits/pretrain_strict_test_2k.jsonl",
+      "rows": 2000,
+      "sha256": "a09ece1f82cf059b570f0ed27a758c87929bbd04d9518bf118d118b23cfb4daa",
+      "size": 1931190
+    },
+    "train": {
+      "path": "strict_splits/pretrain_strict_train_full.jsonl",
+      "rows": 8464823,
+      "sha256": "2c1175c6f67a54768f1c8d3e617236781761b48688a96b45b4f5141dfa445ba6",
+      "size": 8271117328
+    },
+    "validation": {
+      "path": "strict_splits/pretrain_strict_val_2k.jsonl",
+      "rows": 2000,
+      "sha256": "664772d3a8420fe49104c6c531c7eebeeaf92290dd4ab3d5bb34fe88a2fc1f34",
+      "size": 2022637
+    }
+  },
+  "license": "CC-BY-NC-4.0",
+  "license_status": "noncommercial_and_attribution_review_required_before_public_model_release",
+  "provider": "ModelScope",
+  "repository_url": "https://www.modelscope.cn/datasets/gongjy/minimind_dataset.git",
+  "revision": "74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5",
+  "schema": {
+    "text": "string"
+  },
+  "schema_version": 1,
+  "split_seed": 20260511,
+  "tokenizer": {
+    "files": {
+      "tokenizer.json": {
+        "path": "model/tokenizer.json",
+        "sha256": "71f32c68cf63a15355a8fc171b7594b3d41870fe0ddb54fc6aefa55f73a4a668",
+        "size": 451182
+      },
+      "tokenizer_config.json": {
+        "path": "model/tokenizer_config.json",
+        "sha256": "d7cd6a60c9f191c4f9ffec69b2eb289ad2f960366724f328b681ae1e46e4c110",
+        "size": 13308
+      }
+    },
+    "repository_url": "https://github.com/jingyaogong/minimind",
+    "revision": "512eed0b6556e741d80864f054d45d271459772a",
+    "vocab_size": 6400
+  }
+}
