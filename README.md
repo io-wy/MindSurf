@@ -103,13 +103,12 @@ uv run python scripts/export_release_weights.py --name <n> --output <weights.pt>
   100 条独立探针消模板繁殖、脚本中立统计量消书写系统代理）。
 - **门 v3**：棘轮 + 金丝雀取代照当前最好模型描出的绝对阈值。
 - **预算护栏**：`train.py` 构造数据集后立即比对所需 block 与语料容量，超出即拒
-  并给出最大可承受步数——172k 预算比语料多要 107 步，此前只在单 epoch 跑到最
-  末尾时才暴露，两卡各损失 7 小时。
+  并给出最大可承受步数，不再等到单 epoch 读空才失败。
 - **中断 run 的摘要可恢复**：`scripts/summarize_checkpoint.py` 从 checkpoint 的
   `progress` 块反推 `training_summary.json`，并标注来源。
 - **候选注册接受后期门的判定**：评测产物内嵌的是评测运行时的当期门，被后来的
   门 v3 重判后需与判定产物配对登记（`--verdict`），已知限定随记录一同登记
-  （`--limitation`），不留给正文散文。
+  （`--limitation`）。
 - **外部锚点：端口成立，锚点作废。** 上游 MiniMind 已发布的预训练 checkpoint
   已逐位忠实移植（对上游自己的模型代码最大绝对 logit 差 0.0），但它们训练所用的
   tokenizer 与本项目的不是同一个，同为 6,400 词表却有 1,772 个 token 互不存在。

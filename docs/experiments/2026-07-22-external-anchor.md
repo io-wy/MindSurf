@@ -79,11 +79,10 @@ RoPE 且 cos/sin 构造一致、`rope_theta` 1e6、pre-norm 块接线、SwiGLU
 6,400 词表均匀猜测的 loss 是 **8.7641**。用本项目 tokenizer 时两个锚点都**比
 随机猜还差**——这是"自信地答错"，正是 token id 被重映射的定量特征。
 
-**如果没有这道闸门，这次评测会打印出"本项目 89M 候选 1.7248 完胜上游 104M 的
-12.02"，而这个十 nats 的优势完全由 tokenizer 错配制造。** 本项目的清单
-§2 存在，就是因为这类"测得像回事但量的不是那个东西"的事故已经发生过三次。
-因此 `scripts/evaluate_external_anchor.py` 的 tokenizer 闸门**失败即拒且不写
-任何产物**。
+**若不核对 tokenizer，这次评测会得出"本项目 89M 候选 1.7248 优于上游 104M 的
+12.02"，而这十 nats 的差距完全由 tokenizer 错配制造。** 因此
+`scripts/evaluate_external_anchor.py` 的 tokenizer 闸门**失败即拒且不写任何
+产物**。
 
 自身 tokenizer 那一列也**不能**当替代锚点：per-token 交叉熵只在固定分词下可比，
 同一份 2k holdout 在锚点 tokenizer 下产生 559,488 token、在本项目 tokenizer 下

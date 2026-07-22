@@ -107,6 +107,29 @@ def _range_files(commit_range: str) -> list[str]:
     ]
 
 
+def _message_findings(commit_range: str) -> list[str]:
+    """Audit commit messages, which reach the shared branch alongside the files.
+
+    Section 7 forbids agent process records in what is published. A trailer
+    naming the tool that helped write a commit is exactly that, and it lives
+    only in the message, so a file-content scan never sees it.
+    """
+    findings: list[str] = []
+    # -z separates commits with NUL in the output; the separator cannot be put
+    # in the format string, because Windows refuses a NUL inside an argument.
+    log = _git("log", "-z", "--format=%H%n%B", commit_range)
+    for entry in log.split("\x00"):
+        lines = entry.strip().splitlines()
+        if not lines:
+            continue
+        commit, message = lines[0], lines[1:]
+        for line_number, line in enumerate(message, start=1):
+            for rule, pattern, reason in CONTENT_RULES:
+                if re.search(pattern, line, re.IGNORECASE):
+                    findings.append(f"{commit[:12]} message:{line_number}: {rule} — {reason}")
+    return findings
+
+
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
@@ -117,7 +140,7 @@ def main() -> None:
     args = parser.parse_args()
 
     files = _range_files(args.commit_range) if args.commit_range else _staged_files()
-    findings: list[str] = []
+    findings: list[str] = _message_findings(args.commit_range) if args.commit_range else []
 
     for name in files:
         if name in EXEMPT:

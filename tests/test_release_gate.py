@@ -83,3 +83,27 @@ def test_every_exempt_file_exists() -> None:
     missing = sorted(name for name in EXEMPT if not (ROOT / Path(name)).is_file())
 
     assert missing == []
+
+
+def test_commit_messages_are_audited_not_only_files(
+    tmp_path: object, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """A tool trailer never touches a file, so a content scan alone misses it."""
+    from scripts import release_gate
+
+    log = (
+        "1111111111111111111111111111111111111111\n"
+        "feat: add a thing\n\n"
+        "Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>\n"
+        "\x00"
+        "2222222222222222222222222222222222222222\n"
+        "fix: correct the other thing\n"
+        "\x00"
+    )
+    monkeypatch.setattr(release_gate, "_git", lambda *arguments: log)
+
+    findings = release_gate._message_findings("origin/pretrain...HEAD")
+
+    assert len(findings) == 1
+    assert findings[0].startswith("111111111111 message:")
+    assert "agent_process_record" in findings[0]
