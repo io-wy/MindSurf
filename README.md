@@ -6,21 +6,25 @@
 
 ## 数据与边界
 
-仓库保留两套并列数据源，默认仍是此前实验使用的 MiniMind 官方
-`pretrain_t2t_mini.jsonl`；团队数据是新增实验臂，不冒充官方数据：
+仓库保留两套并列数据源。团队数据是实验臂，不冒充官方数据：
 
-| 数据臂 | 身份 | Strict train | Validation / test | 许可状态 |
-| --- | --- | ---: | ---: | --- |
-| Official | `gongjy/minimind_dataset@74aad49` | 1,265,983 | 2,000 / 2,000 | `CC-BY-NC-4.0` |
-| Team | `wyywnab/mindsurf_pretrain_dataset@ab97cc8` | 2,177,856 | 2,000 / 2,000 | `other`，来源许可待澄清 |
+| 数据臂 | 身份 | Validation / test | 许可状态 |
+| --- | --- | ---: | --- |
+| Official | `gongjy/minimind_dataset@74aad49` | 2,000 / 2,000 | `CC-BY-NC-4.0` |
+| Team | `wyywnab/mindsurf_pretrain_dataset@ab97cc8` | 2,000 / 2,000 | `other`，来源许可待澄清 |
 
-两臂固定同一 MiniMind tokenizer、seed、模型、优化器、seen tokens 和评测套件。
-每个候选都在 official 与 team 两套 strict holdout 上交叉评测，避免把“更贴合本域”
-误判为通用提升。详细身份和发布措辞见
+**已发布权重只用 Official 数据训练，无一行 Team 数据**，因此 Team 的许可待澄清
+问题不传导到发布物。Team holdout 只用作**异源**评测，度量跨源泛化——同分布
+holdout loss 只度量对自家语料的压缩，单独不构成质量声明。两臂固定同一 MiniMind
+tokenizer、模型、优化器和评测套件。详细身份和发布措辞见
 [数据集对照说明](docs/data/pretraining-dataset-comparison.md)与
 [团队数据集说明](docs/data/mindsurf-team-dataset-v1.md)。
 
-## 冻结候选
+## 已发布候选
+
+当前交付物是 **Official 数据单臂、168,000 步**的 89,864,448 参数基座，双 seed
+各一份。发布说明、许可传导与全部限定见
+[2026-07-22 权重发布说明](docs/releases/2026-07-22-pretrain-80m.md)。
 
 | 配置项 | 数值 |
 | --- | ---: |
@@ -30,73 +34,87 @@
 | Vocabulary | 6,400 |
 | 参数量 | 89,864,448 |
 | Sequence length / batch size | 384 / 32 |
-| Optimizer steps | 10,000 |
-| Seen tokens | 122,880,000 |
-| Learning rate | `5e-4` |
-| Schedule | warmup 200 + stable 80% + cosine decay |
+| Optimizer steps | 168,000 |
+| Seen tokens | 2,064,384,000（约 23 tokens/参数） |
+| Learning rate | `5e-4`，AdamW betas `(0.9, 0.95)` |
+| Schedule | WSD：warmup 200 + stable 80% + cosine decay |
 
-模型使用 QK RMSNorm、RoPE、MHA 和 SwiGLU。两套源训练 split 都经同一 NFKC
-规范化去重。团队臂移除 11 条等价重复记录，形成 2,177,845 行、SHA-256 为
-`37800ee01d5294e3d40765ec686fce7d0c917d7cea79343e57526a3229e8a999`
-的训练视图。数据按 JSONL 流式读取并跨文档打包；checkpoint 原子保存模型、
-optimizer、scheduler、AMP scaler、随机数状态和绝对 packed-block 游标，可在
-optimizer 边界精确恢复，并只保留最近两个恢复点控制磁盘占用。
+模型使用 QK RMSNorm、RoPE、MHA 和 SwiGLU。训练语料经 NFKC 归一、质量过滤、
+PII、MinHash 近似去重与**全局置换打散**后预分词为 memmap 块
+（5,500,556 块 = 2.117B tokens）。checkpoint 原子保存模型、optimizer、
+scheduler、AMP scaler、随机数状态和绝对 packed-block 游标，可在 optimizer
+边界精确恢复。
 
-## 正式对照结果
+## 门 v3 判定结果
 
-两臂均已完成 10,000 optimizer steps 和 122,880,000 seen tokens。下表每列使用
-同一套 holdout，因此可以比较两个训练候选；不同列之间的 loss 不直接比较。
+判据是**棘轮**（不得比参照差超过 3×噪声底，参照 = 外部锚点与历史最优取严）
++ **金丝雀**（退役绝对阈值抓灾难回归）+ **生成健康**，取代 v1 照着当时最好模型
+描出来的绝对阈值。两个 seed 均 `passed: true`，八项门控判据全过。
 
-| 训练候选 | Official val / test | Team val / test | MCQ | 固定提示词 | 高重复 |
-| --- | ---: | ---: | ---: | ---: | ---: |
-| Official-only | **2.384 / 2.361** | 3.738 / 3.765 | **20 / 48** | **0.240** | **6** |
-| Team-only | 3.073 / 3.098 | **2.941 / 2.974** | 15 / 48 | 0.161 | 10 |
+| 判据（均有门控资格） | 候选 seed20260511 | 参照 | 余量 | 3×噪声底容差 |
+| --- | ---: | ---: | ---: | ---: |
+| strict_val | 1.7268 | 1.8364 | +0.1096 | 0.0204 |
+| strict_test | 1.7210 | 1.8283 | +0.1074 | 0.0204 |
+| 六项 domain 切片 | 1.3229–1.9050 | 1.4431–2.0054 | +0.1005~+0.1719 | 0.0432 |
+| generation_health.degenerate | 0 / 100 | 0 / 100 | 0 | 3（金丝雀 20） |
 
-结果显示明显的同域优势：Official-only 在 Official holdout 上更低，Team-only 在
-Team holdout 上更低。在固定能力套件上 Official-only 也更强，但两者都未通过完整
-能力门；Team 数据的逐来源许可尚未澄清，两者的公开许可门也均未通过。因此没有登记
-内部 candidate，也没有公开发布权重。完整指标、失败门项和数据身份见
-[实验报告](docs/experiments/2026-07-18-pretraining-dataset-ablation-80m.md)与
-[机器可读结果](docs/experiments/2026-07-18-pretraining-dataset-ablation-80m.json)。
+跨源泛化（Team 异源 holdout，同参照同管线）：val 3.1927 → 3.0550，
+test 3.2170 → 3.0765，效应 −0.135~−0.141 nats，是双 seed 差（0.0030–0.0045）
+的 30–45 倍。
+
+**MCQ 准确率与旧版 generation.repetition 没有门控资格**，只记录不作能力证据：
+MCQ v2 经用户审核判定不一致且功效不足（192 题极限 ±7pp），旧 repetition 仪器
+早停免检且样本量 n=10。任何能力性表述只能追溯到上表这些有资格的仪器。
 
 ## 复现
 
 ```bash
 uv sync --extra dev --frozen
-uv run dvc repro build_official_training_view
-uv run dvc repro build_team_training_view
+uv run dvc repro build_official_training_view    # 清洗 → 过滤 → PII → 去重 → 全局打散
+uv run python scripts/pretokenize_training_view.py   # → blocks_384.u16 memmap
 uv run python scripts/preflight_training.py --require-cuda
-uv run python scripts/run_dataset_ablation.py
+uv run python scripts/train.py                        # 预算超语料即拒，不会跑到末尾才炸
 ```
 
-DVC 描述相同的 fetch → audit → train → evaluate 依赖图：
+DVC 描述相同的 fetch → audit → train → evaluate 依赖图（`uv run dvc dag`）。
+
+从 checkpoint 到发布物：
 
 ```bash
-uv run dvc dag
+uv run python scripts/evaluate_candidate.py --checkpoint <ckpt> --output <eval.json>
+uv run python scripts/judge_gate_v3.py --evaluation <eval.json> --output <verdict.json>
+uv run python scripts/register_candidate.py --name <n> --checkpoint <ckpt> \
+  --evaluation <eval.json> --verdict <verdict.json> \
+  --training-summary <summary.json> --preflight <preflight.json> --limitation "…"
+uv run python scripts/export_release_weights.py --name <n> --output <weights.pt>
 ```
 
-完整评测同时检查两套 strict validation/test loss、六类诊断域、48 道本地 MCQ、
-固定提示词启发式分数和生成重复度。只有内部能力门全部通过时才登记 candidate；
-只有能力门和对应数据许可门同时通过时才允许公开发布。任何发布必须明确写出使用
-的是 Official、Team 还是混合数据；本对照实验本身不训练混合臂。
+登记只接受门控判定为通过的候选；发布物的血缘从注册表读出而非重敲，权重文件与
+其许可条款一同写入，两者不可分离。任何发布必须写明用的是 Official、Team 还是
+混合数据。
 
 ## 最新预训练与训练 Infra 进展
 
-阶段正确的 192 题预训练门、统一数据索引、共享 GPU 容量准入、训练遥测和精确恢复
-演练已经落地。基于 Official 父模型的 targeted-only、低学习率 targeted-only 和
-80:20 Official/targeted replay 三个 1,000-step pilot 均未达到预先冻结的扩大条件，
-因此没有启动正式训练或登记新候选。完整结果、统计检验、吞吐和恢复证据见
-[2026-07-20 预训练 pilot 与训练恢复报告](docs/experiments/2026-07-20-pretrain-pilots-and-training-recovery.md)。
+阶段正确的预训练门、统一数据索引、共享 GPU 容量准入、训练遥测和精确恢复演练
+已经落地。本轮新增：
 
-构建审计后的 80:20 replay 训练视图：
+- **仪器效度前置**：任何度量参与门控前须过不变性、区分度、一致性、噪声底、
+  样本量五问并在效度台账留证。生成健康仪器按此重建（固定生成长度消早停免检、
+  100 条独立探针消模板繁殖、脚本中立统计量消书写系统代理）。
+- **门 v3**：棘轮 + 金丝雀取代照当前最好模型描出的绝对阈值。
+- **预算护栏**：`train.py` 构造数据集后立即比对所需 block 与语料容量，超出即拒
+  并给出最大可承受步数——172k 预算比语料多要 107 步，此前只在单 epoch 跑到最
+  末尾时才暴露，两卡各损失 7 小时。
+- **中断 run 的摘要可恢复**：`scripts/summarize_checkpoint.py` 从 checkpoint 的
+  `progress` 块反推 `training_summary.json`，并标注来源。
+- **候选注册接受后期门的判定**：评测产物内嵌的是评测运行时的当期门，被后来的
+  门 v3 重判后需与判定产物配对登记（`--verdict`），已知限定随记录一同登记
+  （`--limitation`），不留给正文散文。
 
-```bash
-uv run dvc repro build_official_targeted_replay_training_view
-```
-
-该 replay 视图继承 Team 数据许可限制，不可作为公开发布数据。正式 checkpoint
-远端副本、干净环境重建、主机重启演练以及 loss 突升/无进展告警闭环仍未完成，
-所以预训练与训练 Infra 的状态仍是进行中。
+历史 targeted-only / replay pilot 均未达到预先冻结的扩大条件，未登记候选；结果
+见 [2026-07-20 预训练 pilot 与训练恢复报告](docs/experiments/2026-07-20-pretrain-pilots-and-training-recovery.md)。
+`replay` 视图继承 Team 数据许可限制，不可作为公开发布数据。主机重启演练因无权限
+仍为阻塞，已用 SIGKILL 注入替代并通过 10 项一致性检查。
 
 ## 推理与服务
 
@@ -104,10 +122,14 @@ uv run dvc repro build_official_targeted_replay_training_view
 
 ```bash
 uv run python scripts/inference.py \
-  --checkpoint models/checkpoints/minimind_official_v1_80m/final_model.pt \
+  --checkpoint mindsurf-pretrain-80m-seed20260721.pt \
   --tokenizer data/raw/minimind_official_v1/tokenizer \
   --prompt "你好，请介绍一下机器学习。"
 ```
+
+发布的权重文件只带 `model_config`、`model_state_dict` 和 `release` 血缘块，
+与完整训练 checkpoint 走同一加载路径。**这是预训练基座，不是指令模型**：它续写
+文本，不遵循指令，指令遵循要等 SFT 阶段。
 
 API 通过 `INFERENCE_CHECKPOINT` 和 `INFERENCE_TOKENIZER` 加载同一模型。未配置或
 加载失败时 `/inference` 明确返回 `503`，不会返回模拟结果。长训练任务由 Celery

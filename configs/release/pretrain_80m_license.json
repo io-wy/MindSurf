@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "license": "CC-BY-NC-4.0",
+  "license_inheritance": "The weights inherit the license of the data they were trained on. gongjy/minimind_dataset is CC-BY-NC-4.0 (confirmed independently from the ModelScope API and the dataset card front-matter). MIT is the license of the MiniMind *code* repository and does not apply to these weights.",
+  "attribution": {
+    "dataset": "gongjy/minimind_dataset",
+    "dataset_revision": "74aad49fa4443e7ed640d44bc4e9c7d1fe71ada5",
+    "dataset_source": "https://www.modelscope.cn/datasets/gongjy/minimind_dataset",
+    "reference_implementation": "https://github.com/jingyaogong/minimind"
+  },
+  "license_status": "contribution_permitted_by_upstream_author",
+  "authorization": {
+    "granted_by": "gongjy (jingyaogong), author of MiniMind and of gongjy/minimind_dataset",
+    "attested_by": "maintainer",
+    "attested_at": "2026-07-22",
+    "scope": "non-commercial, study and research use only",
+    "evidence": "maintainer verbal attestation"
+  },
+  "downstream_obligations": [
+    "BY: cite gongjy/minimind_dataset at the revision above as the data source.",
+    "NC: no commercial use of these weights or anything derived from them.",
+    "The NC restriction transfers to every derivative, including fine-tunes."
+  ]
+}
