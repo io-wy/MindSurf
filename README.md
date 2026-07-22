@@ -110,6 +110,12 @@ uv run python scripts/export_release_weights.py --name <n> --output <weights.pt>
 - **候选注册接受后期门的判定**：评测产物内嵌的是评测运行时的当期门，被后来的
   门 v3 重判后需与判定产物配对登记（`--verdict`），已知限定随记录一同登记
   （`--limitation`），不留给正文散文。
+- **外部锚点：端口成立，锚点作废。** 上游 MiniMind 已发布的预训练 checkpoint
+  已逐位忠实移植（对上游自己的模型代码最大绝对 logit 差 0.0），但它们训练所用的
+  tokenizer 与本项目的不是同一个，同为 6,400 词表却有 1,772 个 token 互不存在。
+  用本项目 tokenizer 评测，锚点 loss 12.02–12.57，而均匀猜测是 8.76——比随机还差。
+  闸门失败即拒、不写产物、不报告任何方向的比较，M1 如实降级为三支柱。见
+  [外部锚点报告](docs/experiments/2026-07-22-external-anchor.md)。
 
 历史 targeted-only / replay pilot 均未达到预先冻结的扩大条件，未登记候选；结果
 见 [2026-07-20 预训练 pilot 与训练恢复报告](docs/experiments/2026-07-20-pretrain-pilots-and-training-recovery.md)。
