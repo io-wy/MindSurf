@@ -571,11 +571,7 @@ def source_tree_sha256(root: Path, paths: Iterable[Path]) -> str:
             try:
                 label = path.relative_to(root).as_posix()
             except ValueError:
-                relative = (
-                    path.relative_to(input_path)
-                    if input_path.is_dir()
-                    else Path(path.name)
-                )
+                relative = path.relative_to(input_path) if input_path.is_dir() else Path(path.name)
                 label = (Path(input_path.name) / relative).as_posix()
             files.append((label, path))
     for label, path in sorted(files):

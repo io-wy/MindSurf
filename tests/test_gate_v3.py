@@ -43,7 +43,9 @@ def test_an_improvement_passes_with_positive_margin() -> None:
 
 def test_margin_sign_means_better_for_higher_is_better_metrics_too() -> None:
     """Downstream readers must not have to re-derive which way a metric points."""
-    better = _judge(HIGHER, {"mcq": {"accuracy": 0.40}}, {"mcq": {"accuracy": 0.30}}, "mcq.accuracy")
+    better = _judge(
+        HIGHER, {"mcq": {"accuracy": 0.40}}, {"mcq": {"accuracy": 0.30}}, "mcq.accuracy"
+    )
     worse = _judge(HIGHER, {"mcq": {"accuracy": 0.20}}, {"mcq": {"accuracy": 0.30}}, "mcq.accuracy")
 
     assert better["margin"] > 0
@@ -80,7 +82,9 @@ def test_a_non_numeric_metric_is_rejected() -> None:
 
 def test_non_gating_criteria_carry_their_disqualification() -> None:
     """An invalid instrument may be reported but must never decide."""
-    result = _judge(HIGHER, {"mcq": {"accuracy": 0.01}}, {"mcq": {"accuracy": 0.38}}, "mcq.accuracy")
+    result = _judge(
+        HIGHER, {"mcq": {"accuracy": 0.01}}, {"mcq": {"accuracy": 0.38}}, "mcq.accuracy"
+    )
 
     assert result["gating"] is False
     assert result["verdict"] == "regressed"

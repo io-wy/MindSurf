@@ -204,17 +204,17 @@ def evaluate_alerts(state: MonitorState, thresholds: AlertThresholds) -> list[di
         and all(value > thresholds.gpu_temperature_max_celsius for value in recent_temperatures)
     ):
         alerts.append(
-                {
-                    "alert": "gpu_temperature",
-                    "severity": "warning",
-                    "step": samples[-1].step if samples else None,
-                    "detail": (
-                        f"{sustained} consecutive samples above "
-                        f"{thresholds.gpu_temperature_max_celsius:.0f}C, "
-                        f"latest {recent_temperatures[-1]:.0f}C"
-                    ),
-                }
-            )
+            {
+                "alert": "gpu_temperature",
+                "severity": "warning",
+                "step": samples[-1].step if samples else None,
+                "detail": (
+                    f"{sustained} consecutive samples above "
+                    f"{thresholds.gpu_temperature_max_celsius:.0f}C, "
+                    f"latest {recent_temperatures[-1]:.0f}C"
+                ),
+            }
+        )
 
     # A single large gradient is ordinary; a monotone climb is divergence
     # building up, which is what the trend rule is for.
@@ -226,16 +226,16 @@ def evaluate_alerts(state: MonitorState, thresholds: AlertThresholds) -> list[di
         and all(later > earlier for earlier, later in zip(norms[:-1], norms[1:], strict=True))
     ):
         alerts.append(
-                {
-                    "alert": "gradient_norm_rising",
-                    "severity": "critical",
-                    "step": samples[-1].step,
-                    "detail": (
-                        f"gradient norm rose on {window} consecutive logged steps, "
-                        f"{norms[0]:.4f} -> {norms[-1]:.4f}"
-                    ),
-                }
-            )
+            {
+                "alert": "gradient_norm_rising",
+                "severity": "critical",
+                "step": samples[-1].step,
+                "detail": (
+                    f"gradient norm rose on {window} consecutive logged steps, "
+                    f"{norms[0]:.4f} -> {norms[-1]:.4f}"
+                ),
+            }
+        )
 
     order = {"critical": 0, "warning": 1}
     alerts.sort(key=lambda item: order.get(str(item["severity"]), 2))

@@ -100,9 +100,10 @@ def test_rms_norm_eps_is_validated() -> None:
         with pytest.raises(ValueError, match="rms_norm_eps"):
             ModelConfig(vocab_size=64, n_embed=16, n_layer=1, n_head=2, rms_norm_eps=bad)
 
-    assert ModelConfig(
-        vocab_size=64, n_embed=16, n_layer=1, n_head=2, rms_norm_eps=1e-6
-    ).rms_norm_eps == 1e-6
+    assert (
+        ModelConfig(vocab_size=64, n_embed=16, n_layer=1, n_head=2, rms_norm_eps=1e-6).rms_norm_eps
+        == 1e-6
+    )
 
 
 def test_rms_norm_reduces_in_float32_under_half_precision() -> None:

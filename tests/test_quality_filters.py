@@ -54,8 +54,7 @@ def test_quality_rules_fire(text: str, reason: str) -> None:
 
 def test_ordinary_prose_passes_every_rule() -> None:
     text = (
-        "深度学习模型的训练需要大量算力与高质量语料，"
-        "数据管线的每一个环节都会影响最终的模型表现。"
+        "深度学习模型的训练需要大量算力与高质量语料，数据管线的每一个环节都会影响最终的模型表现。"
     )
 
     assert quality_reasons(text, THRESHOLDS) == []

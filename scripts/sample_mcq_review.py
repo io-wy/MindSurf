@@ -28,9 +28,7 @@ from python_starter.core.data_contract import (  # noqa: E402
 LETTERS = "ABCD"
 
 
-def _stratified_sample(
-    items: list[dict[str, Any]], count: int, seed: int
-) -> list[dict[str, Any]]:
+def _stratified_sample(items: list[dict[str, Any]], count: int, seed: int) -> list[dict[str, Any]]:
     """Spread the sample evenly over categories, then fill by global draw."""
     by_category: dict[str, list[dict[str, Any]]] = defaultdict(list)
     for item in items:

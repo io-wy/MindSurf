@@ -43,7 +43,9 @@ def _measure(path: Path) -> dict[str, Any]:
 
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--corpus", type=Path, required=True, help="Prepared holdout-disjoint train file")
+    parser.add_argument(
+        "--corpus", type=Path, required=True, help="Prepared holdout-disjoint train file"
+    )
     parser.add_argument("--root", type=Path, required=True)
     parser.add_argument(
         "--base-spec",

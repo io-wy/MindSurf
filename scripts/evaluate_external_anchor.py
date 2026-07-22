@@ -277,9 +277,7 @@ def main() -> None:
         )
 
     model, config = build_anchor_model(state_dict)
-    parameter_count = sum(
-        parameter.numel() for parameter in model.parameters()
-    )
+    parameter_count = sum(parameter.numel() for parameter in model.parameters())
 
     verification: dict[str, Any] | None = None
     if args.upstream_module is not None:

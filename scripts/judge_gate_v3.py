@@ -112,7 +112,9 @@ def judge_criterion(
 def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--evaluation", type=Path, required=True)
-    parser.add_argument("--gate", type=Path, default=ROOT / "configs/evaluation/pretrain_gate_v3.json")
+    parser.add_argument(
+        "--gate", type=Path, default=ROOT / "configs/evaluation/pretrain_gate_v3.json"
+    )
     parser.add_argument(
         "--reference",
         default="none",

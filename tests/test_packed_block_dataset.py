@@ -80,8 +80,7 @@ def test_epochs_wrap_the_cursor_without_re_reading_from_zero(tmp_path: Path) -> 
 
     one = [item["input_ids"].tolist() for item in PackedBlockDataset(blocks, max_length=7)]
     three = [
-        item["input_ids"].tolist()
-        for item in PackedBlockDataset(blocks, max_length=7, epochs=3)
+        item["input_ids"].tolist() for item in PackedBlockDataset(blocks, max_length=7, epochs=3)
     ]
 
     assert three == one * 3

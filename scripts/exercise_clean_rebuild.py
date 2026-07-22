@@ -34,7 +34,9 @@ def _run(
     )
 
 
-def _step(records: list[dict[str, Any]], name: str, completed: subprocess.CompletedProcess[str]) -> bool:
+def _step(
+    records: list[dict[str, Any]], name: str, completed: subprocess.CompletedProcess[str]
+) -> bool:
     ok = completed.returncode == 0
     records.append(
         {
@@ -79,7 +81,15 @@ def main() -> None:
         steps,
         "git_clone",
         _run(
-            ["git", "clone", "--branch", args.branch, "--single-branch", args.remote, str(checkout)],
+            [
+                "git",
+                "clone",
+                "--branch",
+                args.branch,
+                "--single-branch",
+                args.remote,
+                str(checkout),
+            ],
             cwd=args.workdir,
         ),
     )
@@ -117,7 +127,9 @@ def main() -> None:
                 entry["matches"] = digest == asset["sha256"]
             restored.append(entry)
         ok = all(item.get("matches") for item in restored)
-        steps.append({"step": "restore_assets", "ok": ok, "returncode": 0 if ok else 1, "stderr_tail": []})
+        steps.append(
+            {"step": "restore_assets", "ok": ok, "returncode": 0 if ok else 1, "stderr_tail": []}
+        )
 
     if ok:
         ok = _step(
